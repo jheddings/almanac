@@ -32,3 +32,46 @@ the work that uncovered it, following
 
 Before you finish a branch, ask explicitly: _did this teach us anything an entry should
 carry?_ Answer it out loud, even when the answer is no.
+
+## Commit conventions
+
+Use [Conventional Commits](https://www.conventionalcommits.org/) format:
+
+```
+<type>(<scope>): <description>
+```
+
+Types: `feat`, `fix`, `chore`, `docs`, `refactor`, `test`, `style`, `perf`
+
+Scope is optional but encouraged — `fix(auth): ...`, `feat(events): ...`.
+
+## Branch naming
+
+Use the same type prefixes as commits, followed by a short description of the intended
+change:
+
+```
+<type>/<change-slug>
+```
+
+Examples: `feat/email-notifications`, `fix/sidebar-delete-width`, `chore/update-deps`.
+Optionally include the issue number: `feat/279-email-notifications`.
+
+## Worktrees
+
+Use a dedicated git worktree for development to keep the main working directory clean.
+Worktrees live in `.worktrees/` and are specific to an **agent session**, not to the
+feature or the changes — each session gets a fresh worktree with a unique name. Always
+announce your worktree name when creating or switching to one; feel free to be
+creative or silly with the name.
+
+```bash
+# Create a worktree based on origin/main
+git worktree add .worktrees/<name> -b <branch-name> origin/main
+
+# Clean up after merging
+git worktree remove .worktrees/<name>
+```
+
+This repo has no remote yet, so `origin/main` will not resolve — branch from `main`
+until one is added.
