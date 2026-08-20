@@ -36,12 +36,14 @@ The skills require an almanac to work on: a directory named `almanac` containing
 `README.md`. They Glob for `**/almanac/README.md` and stop if there isn't one, rather
 than creating it as a side effect.
 
-Bootstrap it by copying the shipped template:
+Bootstrap it by asking Claude, from the repo you want the almanac in:
 
-```bash
-mkdir -p docs
-cp -r <plugin>/templates/almanac docs/almanac
-```
+> Copy the almanac plugin's template from
+> `${CLAUDE_PLUGIN_ROOT}/templates/almanac/README.md` to `docs/almanac/README.md`.
+
+The plugin's install path isn't something you can resolve from a shell, which is why
+this is a request rather than a `cp` you can paste. `${CLAUDE_PLUGIN_ROOT}` expands only
+inside the plugin's own context.
 
 Then do two things:
 
@@ -55,6 +57,11 @@ Then do two things:
    are procedures and live in these skills; _consulting_ is a trigger, and belongs in
    the instructions every tool already reads. See this repo's own [AGENTS.md](AGENTS.md)
    for wording you can lift.
+
+Leave the `<!-- almanac-template: N -->` comment on the first line alone. It records
+which revision of the contract text your copy came from, so a later release can tell you
+whether yours is stale. It is bumped only when the shared text changes — not on every
+plugin release — and your local block is excluded from it by definition.
 
 An `almanac:init` skill that does all of this is planned; see
 [Not in this release](#not-in-this-release).
@@ -84,14 +91,20 @@ The cost, plainly: agents on tools that read `README.md` but cannot load skills 
 local rules and not the method. The template is written so that file stands alone as a
 usable contract for them.
 
-**`audit` reaches past what every tool can run.** It invokes the Workflow tool, which is
-Claude Code only and gated. That reintroduces one layer up the same asymmetry the
-almanac exists to remove, and it is a real cost rather than an oversight — accepted
-because auditing is rare and batch fan-out is what makes it cheap enough to happen at
-all. The mitigation is in the skill: if the Workflow tool is unavailable, `audit` falls
-back to dispatching the same prompt and the same verdict schema to ordinary subagents,
-and every rule that makes the result trustworthy is prose, not code. The workflow is an
-optimization, not a dependency.
+**No skill depends on a gated tool.** `audit` verifies entries by fanning them out to
+ordinary subagents, or sequentially in the main thread when none are available —
+parallelism is an optimization, never a runtime dependency. An earlier draft bundled a
+Claude Code Workflow script for the fan-out and accepted the resulting asymmetry as a
+cost; that was the wrong trade. The almanac exists because `.claude/CLAUDE.md` was
+Claude-only and other tools saw nothing, and an audit that only some harnesses can run
+reintroduces exactly that one layer up.
+
+The price of dropping it is real and worth naming: the script hard-validated the verdict
+schema at the subagent boundary, which is what stopped a worker returning `holds`
+without evidence. That enforcement is now prose in the skill — four rules it instructs
+you to restate in every worker prompt. Prose that holds everywhere beats a guarantee
+that holds on one tool, but it is a guarantee downgraded to an instruction, and the
+skill says so.
 
 **Nothing writes to the almanac automatically.** No background summarizer, no
 session-end capture, no auto-generated index. An agent cannot validate its own entry,

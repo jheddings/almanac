@@ -8,7 +8,7 @@ tidy:
     npx prettier --write .
 
 # run all checks
-check: style validate drift
+check: style validate manifests drift
 
 # check style
 style:
@@ -17,6 +17,10 @@ style:
 # validate all skills against the Agent Skills spec
 validate:
     for dir in skills/*/; do npx skills-ref validate "$dir"; done
+
+# confirm the two manifests agree — a name mismatch breaks installation
+manifests:
+    ./scripts/check-manifests.sh
 
 # confirm this repo's almanac README is still an instance of the shipped template
 drift:

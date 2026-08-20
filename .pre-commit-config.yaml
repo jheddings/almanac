@@ -15,6 +15,13 @@ repos:
 
     - repo: local
       hooks:
+          - id: plugin-manifests
+            name: plugin and marketplace manifests agree
+            entry: scripts/check-manifests.sh
+            language: system
+            pass_filenames: false
+            files: ^\.claude-plugin/.*\.json$
+
           - id: template-drift
             name: almanac README matches the shipped template
             entry: python3 scripts/check-template-drift.py

@@ -1,3 +1,5 @@
+<!-- almanac-template: 1 -->
+
 # Almanac
 
 Discovered facts about this codebase, recorded by agents for agents.

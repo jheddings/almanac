@@ -105,13 +105,21 @@ prompt**, since the subagent does not inherit them.
 that shape in anything new. An agent cannot validate its own conclusions, and a wrong
 deletion is invisible afterwards because nothing remains to review.
 
-### Don't let a bundled tool become a dependency
+### No skill may depend on a gated tool
 
-`audit` bundles `audit.workflow.js` for batch fan-out, and the Workflow tool is Claude
-Code only. The skill therefore carries a fallback that reaches the same result with
-ordinary subagents, and every rule that makes the verdicts trustworthy is stated in
-prose rather than enforced in code. Hold new tooling to the same bar: if the script is
-the only place a rule lives, the skill breaks on every tool that can't run it.
+Every rule that makes a skill's output trustworthy must be stated in the skill, not
+enforced by something it bundles. `audit` shipped a Claude Code Workflow script for
+batch fan-out in an early draft; it was removed before the first release, because a
+guarantee that only holds on one harness is the asymmetry this plugin exists to remove.
+
+The bar for new tooling: if a script is the only place a rule lives, the skill silently
+degrades on every tool that can't run it, and nothing announces the degradation. Bundled
+tooling may make a skill faster or cheaper. It may not be the reason the skill is
+correct.
+
+Where a rule was previously enforced mechanically and is now prose, **say so in the
+skill.** An instruction and a validated schema are not the same guarantee, and
+pretending otherwise is how a downgrade goes unnoticed.
 
 ## The template and this repo's instance
 
@@ -137,7 +145,7 @@ skills exist to prevent. Zero entries is a perfectly good state.
 ## Checks
 
 ```bash
-just check   # style + validate + drift
+just check   # style + validate + manifests + drift
 just tidy    # prettier --write .
 ```
 
@@ -145,7 +153,13 @@ just tidy    # prettier --write .
   in CI). Note `proseWrap: always` at 88 columns: prettier reflows Markdown prose.
 - `just validate` — `skills-ref validate` per skill directory, matching the
   `validate-skill` workflow.
+- `just manifests` — asserts `plugin.json` and `marketplace.json` agree on name and
+  description. `claude plugin validate` passes each manifest separately even when the
+  two disagree, and a mismatch breaks installation for whoever installs the release.
 - `just drift` — the template check described above.
+
+The last two are also pre-commit hooks, and both call `scripts/*` rather than `just`,
+since the CI image that runs pre-commit has no `just`.
 
 ## Testing skills
 
