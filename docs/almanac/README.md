@@ -51,7 +51,7 @@ readable knowledge on its own.
 title: Out-of-order migrations are silently skipped on deploy
 recorded: 2026-08-15
 source: PR #1129
-verify: check the deploy workflow for `--include-all` on the db push step
+verify: "`rg -- '--include-all' .github/workflows/deploy.yml` returns no matches"
 verified: 2026-08-16
 tags: [migrations, deploy, ci, silent-failure]
 ---
@@ -67,9 +67,10 @@ One or two sentences stating the fact plainly.
 fact was observed directly rather than uncovered by a change — a short description of the
 circumstances.
 
-`verify` is strongly encouraged: a command or check that re-tests the claim cheaply. It is
-the only real defense against an entry that quietly went stale, because it lets a future
-agent re-check instead of trusting blindly.
+`verify` is strongly encouraged: a cheap, read-only command or check plus the observation
+that confirms the claim. It must test the load-bearing detail rather than merely locating
+the subject. This is the only real defense against an entry that quietly went stale,
+because it lets a future agent re-check instead of trusting blindly.
 
 `verified` is optional and means exactly one thing: **someone ran the `verify` line on that
 date and the claim held.** Never set it on the strength of having read the entry, edited
@@ -78,6 +79,14 @@ re-check is worse than no signal, because it launders a stale fact as a current 
 ran the check and it held, bump it. Otherwise leave it alone.
 
 `tags` aid discovery; use them freely, since search is how entries get found.
+
+## Method vs. local convention
+
+This file is the local contract: entry format, repository-specific destinations, wrapping,
+and review conventions. The shared recording and auditing method is carried by the
+`almanac-record` and `almanac-audit` skills. Where they disagree about method, the skill
+wins; where they disagree about a convention this file identifies as local, this file
+wins. Agents that cannot load the skills should apply this README as the complete contract.
 
 ## Using the almanac
 

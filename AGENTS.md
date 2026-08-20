@@ -73,5 +73,4 @@ git worktree add .worktrees/<name> -b <branch-name> origin/main
 git worktree remove .worktrees/<name>
 ```
 
-This repo has no remote yet, so `origin/main` will not resolve — branch from `main`
-until one is added.
+The repository has an `origin`; base new worktrees on `origin/main` after fetching.

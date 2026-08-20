@@ -1,0 +1,12 @@
+{
+  "name": "almanac",
+  "description": "Shared repository memory for facts agents learn the hard way",
+  "version": "0.1.0",
+  "author": {
+    "name": "jheddings"
+  },
+  "homepage": "https://github.com/jheddings/almanac",
+  "repository": "https://github.com/jheddings/almanac",
+  "license": "MIT",
+  "keywords": ["agents", "memory", "knowledge", "documentation"]
+}
