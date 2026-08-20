@@ -27,15 +27,23 @@ If you can't state the fact in one sentence, it's probably a design doc, not an 
 
 <!-- almanac:local -->
 
-| If it is...                        | It goes...                      |
-| ---------------------------------- | ------------------------------- |
-| A rule you're required to follow   | `AGENTS.md` / `CONTRIBUTING.md` |
-| Designed intent, a spec, or a plan | `docs/design/`                  |
-| The status of in-flight work       | A GitHub issue or PR            |
-| Your own working preferences       | Your agent's private memory     |
+**Replace this block when you adopt the almanac.** The plugin's skills own the
+_questions_ — is this designed intent? a rule someone is required to follow? the status
+of in-flight work? your own working preference? — and this table owns the _answers_ for
+this repository.
 
-This repo is small enough that design intent, specs, and plans share one directory
-rather than three.
+Keep only the rows that name a destination which actually exists here. An answer
+pointing at a directory you don't have is worse than no row at all: it sends an agent to
+file something into nowhere, and the usual outcome is that the content lands in the
+almanac instead.
+
+| If it is...                                        | It goes...                      |
+| -------------------------------------------------- | ------------------------------- |
+| Designed intent — how a subsystem is meant to work | `docs/arch/`                    |
+| A rule you're required to follow                   | `CONTRIBUTING.md` / `AGENTS.md` |
+| A spec or implementation plan                      | `docs/specs/`                   |
+| The status of in-flight work                       | An issue or PR                  |
+| Your own working preferences                       | Your agent's private memory     |
 
 <!-- /almanac:local -->
 
