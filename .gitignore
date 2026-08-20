@@ -1,2 +1,9 @@
 # Session worktrees (see AGENTS.md § Worktrees)
 .worktrees/
+
+# Node tooling (prettier, skills-ref via npx)
+node_modules/
+
+# Python bytecode
+__pycache__/
+*.py[cod]

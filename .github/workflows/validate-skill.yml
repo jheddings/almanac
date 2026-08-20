@@ -1,0 +1,48 @@
+name: validate-skill
+
+"on":
+    push:
+        branches: [main]
+        paths: [skills/**]
+    pull_request:
+        branches: [main]
+        paths: [skills/**]
+
+jobs:
+    detect:
+        runs-on: ubuntu-latest
+        outputs:
+            skills: ${{ steps.changed.outputs.skills }}
+        steps:
+            - uses: actions/checkout@v4
+              with:
+                  fetch-depth: 0
+            - id: changed
+              run: |
+                  if [ "${{ github.event_name }}" = "pull_request" ]; then
+                    base="origin/${{ github.base_ref }}"
+                  else
+                    base="HEAD~1"
+                  fi
+
+                  skills=$(git diff --name-only "$base"...HEAD \
+                    | grep '^skills/' \
+                    | cut -d/ -f1-2 \
+                    | sort -u \
+                    | jq -R -s -c 'split("\n") | map(select(length > 0))')
+
+                  echo "skills=$skills" >> "$GITHUB_OUTPUT"
+
+    validate:
+        needs: detect
+        if: needs.detect.outputs.skills != '[]'
+        runs-on: ubuntu-latest
+        strategy:
+            matrix:
+                skill: ${{ fromJson(needs.detect.outputs.skills) }}
+        steps:
+            - uses: actions/checkout@v4
+            - uses: actions/setup-node@v4
+              with:
+                  node-version: lts/*
+            - run: npx skills-ref validate ${{ matrix.skill }}

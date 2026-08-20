@@ -1,0 +1,12 @@
+{
+    "name": "almanac",
+    "description": "Record and audit facts discovered the hard way, for agents",
+    "version": "0.1.0",
+    "author": {
+        "name": "jheddings"
+    },
+    "homepage": "https://github.com/jheddings/almanac",
+    "repository": "https://github.com/jheddings/almanac",
+    "license": "MIT",
+    "keywords": ["almanac", "agents", "documentation", "knowledge"]
+}

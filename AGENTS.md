@@ -4,6 +4,20 @@ Always-applicable instructions for agents working in this repository. This is th
 top-level instruction file; `CLAUDE.md` points here so both conventions resolve to the
 same rules.
 
+## Project
+
+This repo is a **Claude Code plugin** that ships the almanac skills — `almanac:record`
+and `almanac:audit`, in [`skills/`](skills/). [README.md](README.md) states the design
+positions and [CONTRIBUTING.md](CONTRIBUTING.md) the conventions; read both before
+changing a skill.
+
+Two files are easy to confuse.
+[`templates/almanac/README.md`](templates/almanac/README.md) is the **canonical**
+contract text that adopting repos copy.
+[`docs/almanac/README.md`](docs/almanac/README.md) is _this_ repo's live almanac and an
+instance of that template — identical outside the `<!-- almanac:local -->` block. Edit
+the template first, port the change, then run `just drift`.
+
 ## The almanac
 
 [`docs/almanac/`](docs/almanac/) records facts discovered the hard way — silent failure
@@ -27,11 +41,15 @@ hits, move on.
 
 **Record an entry when** you finish being surprised — a debugging session that ended in
 "oh, _that's_ why," or a green build that hid a real failure. Write it in the same PR as
-the work that uncovered it, following
-[docs/almanac/README.md](docs/almanac/README.md).
+the work that uncovered it, following [docs/almanac/README.md](docs/almanac/README.md).
 
 Before you finish a branch, ask explicitly: _did this teach us anything an entry should
-carry?_ Answer it out loud, even when the answer is no.
+carry?_ Answer it out loud, even when the answer is no. Most branches produce no entry —
+zero is a normal outcome, and an invented one is worse than none.
+
+The _procedures_ for recording and auditing are this plugin's own skills,
+`almanac:record` and `almanac:audit`. Consulting stays here on purpose: it is a trigger,
+and it has to work on tools that read this file but cannot load a skill.
 
 ## Commit conventions
 
@@ -62,8 +80,8 @@ Optionally include the issue number: `feat/279-email-notifications`.
 Use a dedicated git worktree for development to keep the main working directory clean.
 Worktrees live in `.worktrees/` and are specific to an **agent session**, not to the
 feature or the changes — each session gets a fresh worktree with a unique name. Always
-announce your worktree name when creating or switching to one; feel free to be
-creative or silly with the name.
+announce your worktree name when creating or switching to one; feel free to be creative
+or silly with the name.
 
 ```bash
 # Create a worktree based on origin/main
@@ -73,5 +91,8 @@ git worktree add .worktrees/<name> -b <branch-name> origin/main
 git worktree remove .worktrees/<name>
 ```
 
-This repo has no remote yet, so `origin/main` will not resolve — branch from `main`
-until one is added.
+## Checks
+
+`just check` runs everything: `prettier --check .`, `skills-ref validate` per skill, and
+the template drift check. `just tidy` formats. Prettier uses `proseWrap: always` at 88
+columns, so it reflows Markdown prose — expect it to rewrap paragraphs you edit.
