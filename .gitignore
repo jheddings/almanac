@@ -7,3 +7,7 @@ node_modules/
 # Python bytecode
 __pycache__/
 *.py[cod]
+
+# Local Claude Code settings (prettier honors .gitignore, so this also
+# keeps `just check` green on a working copy that has them)
+.claude/settings.local.json
