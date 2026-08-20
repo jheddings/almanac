@@ -1,26 +1,30 @@
+# justfile for the almanac plugin
+
 # single source of truth for the plugin version
 plugin := ".claude-plugin/plugin.json"
 
-# auto-format all supported files
+# auto-format all files
 tidy:
     npx prettier --write .
 
 # run all checks
-check: style validate manifests
+check: style validate manifests drift
 
-# check formatting
+# check style
 style:
     npx prettier --check .
 
-# validate every skill against the Agent Skills specification
+# validate all skills against the Agent Skills spec
 validate:
     for dir in skills/*/; do npx skills-ref validate "$dir"; done
 
-# validate plugin metadata and internal consistency
+# confirm the two manifests agree — a name mismatch breaks installation
 manifests:
-    jq -e '.name == "almanac" and (.version | test("^[0-9]+\\.[0-9]+\\.[0-9]+$")) and .license == "MIT"' {{plugin}} >/dev/null
-    jq -e '.plugins | length == 1 and .[0].name == "almanac" and .[0].source == "./"' .claude-plugin/marketplace.json >/dev/null
-    test "$(jq -r .name {{plugin}})" = "$(jq -r '.plugins[0].name' .claude-plugin/marketplace.json)"
+    ./scripts/check-manifests.sh
+
+# confirm this repo's almanac README is still an instance of the shipped template
+drift:
+    python3 scripts/check-template-drift.py
 
 # refuse to release unless on main with a clean working tree
 release-guard:
@@ -37,23 +41,23 @@ release-guard:
 release bump="patch": release-guard check
     #!/usr/bin/env bash
     set -euo pipefail
-    current=$(jq -r '.version' {{plugin}})
-    case "{{bump}}" in
+    current=$(jq -r '.version' {{ plugin }})
+    case "{{ bump }}" in
         major|minor|patch)
             IFS=. read -r major minor patch <<< "$current"
-            case "{{bump}}" in
+            case "{{ bump }}" in
                 major) major=$((major + 1)); minor=0; patch=0 ;;
                 minor) minor=$((minor + 1)); patch=0 ;;
                 patch) patch=$((patch + 1)) ;;
             esac
             version="$major.$minor.$patch"
             ;;
-        *) version="{{bump}}" ;;
+        *) version="{{ bump }}" ;;
     esac
     echo "releasing $current -> $version"
-    jq --arg v "$version" '.version = $v' {{plugin}} > tmp.$$.json && mv tmp.$$.json {{plugin}}
-    npx prettier --write {{plugin}}
-    git add {{plugin}}
+    jq --arg v "$version" '.version = $v' {{ plugin }} > tmp.$$.json && mv tmp.$$.json {{ plugin }}
+    npx prettier --write {{ plugin }}
+    git add {{ plugin }}
     git commit -m "chore(release): $version"
     git tag -a "$version" -m "$version"
     git push && git push --tags

@@ -1,14 +1,14 @@
 {
-  "name": "almanac",
-  "description": "Plugins for durable shared repository memory",
-  "owner": {
-    "name": "jheddings"
-  },
-  "plugins": [
-    {
-      "name": "almanac",
-      "source": "./",
-      "description": "Shared repository memory for facts agents learn the hard way"
-    }
-  ]
+    "name": "almanac",
+    "description": "Skills for keeping an almanac of facts discovered the hard way",
+    "owner": {
+        "name": "jheddings"
+    },
+    "plugins": [
+        {
+            "name": "almanac",
+            "source": "./",
+            "description": "Initialize, record, and audit facts discovered the hard way, for agents"
+        }
+    ]
 }
