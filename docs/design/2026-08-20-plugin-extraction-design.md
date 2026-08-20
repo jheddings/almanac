@@ -54,12 +54,23 @@ answers. As a side effect the duplication that made a precedence rule necessary 
 table at all is gone, and `record` gains a red flag for the remaining gap: a category
 with no row is a gap in the README, not a licence to record.
 
-### `verified` is set only by the audit, and only through the PR gate
+### `verified` is set only by having run the check, and the audit's bumps go through the PR gate
 
 Our entry format has an optional `verified:` date meaning exactly one thing: someone ran
 the `verify` line on that date and the claim held. #1194's variant lacked the field. The
-audit is the only process that actually re-runs those lines, so it is the only one
-licensed to set it — otherwise the field is decorative.
+audit is the only process that re-runs those lines _systematically_, so if it never sets
+the field, nothing does and the field is decorative.
+
+**A first draft overclaimed this as "the audit is the only process licensed to set
+it."** A review of this branch flagged the resulting contradiction with the template,
+which says anyone who ran the check may bump — and proposed resolving it by restricting
+the template. That is the wrong direction. The contract already invites non-audit agents
+to run verify lines ("if it carries a `verify` line and you're about to act on something
+expensive, run it"), and evidence produced that way is exactly as real as the audit's.
+Exclusivity would discard it while strengthening nothing: the rule that carries the
+weight is _never set it without having run the check_, and that holds either way. An
+ad-hoc bump also rides a PR diff, so it gets the same review. The skill and plugin
+README were softened to match the template instead.
 
 But a bump is a write, and `almanac-audit` is specified read-only. Resolved as:
 **`verified` bumps ride the same confirmation gate and the same PR as corrections.** No
@@ -118,10 +129,23 @@ in hindsight.
 ### Almanac location: discovered, with a documented default
 
 `docs/almanac/` was hardcoded throughout both skills. A plugin cannot assume it, and
-there is no plugin config mechanism to make it a setting. Both skills now Glob
-`**/almanac/README.md`, document `docs/almanac/` as conventional, and **stop** if there
-is no match rather than creating a directory as a side effect of another job. One cheap
-call; handles a root-level `almanac/`.
+there is no plugin config mechanism to make it a setting.
+
+The first draft globbed `**/almanac/README.md` in one step and asked the operator when
+it found more than one match. **A review of this branch caught that as a bug,
+correctly.** In this repo that glob returns four paths from the primary repo root — the
+real almanac, the shipped template, and one copy per active worktree — so the ambiguity
+prompt would have fired on nearly every invocation, in the one repo that dogfoods the
+plugin. It was a collision between two decisions made separately: cheap discovery, and
+putting the template at `templates/`. Neither was wrong; the interaction was untested.
+
+Both skills now resolve in order: prefer `docs/almanac/README.md`; else glob and discard
+matches under `templates/`, `.worktrees/`, `node_modules/`, `vendor/`, or any nested
+checkout; then require exactly one survivor. The general rule the exclusions encode is
+that **a directory named `almanac` is not evidence of an almanac** — a template or
+another checkout's copy is not this repo's, and treating one as the target means
+recording facts where nobody reads them, or auditing files nobody relies on. Skills hold
+the resolved directory rather than re-globbing.
 
 ### Dogfood and template are two documents, and the template is canonical
 
@@ -170,6 +194,28 @@ published in v0.1.0's setup instructions, so moving it breaks them. And a templa
 buried in a skill's assets is reachable only by agents that can load the skill, which
 defeats the point: the contract text is what an adopter on a harness _without_ skills
 needs most. `init` reads `${CLAUDE_PLUGIN_ROOT}/templates/almanac/README.md`.
+
+### The canonical example modelled the anti-pattern
+
+The template's example entry carried
+`verify: check the deploy workflow for --include-all on the db push step` — a
+description, not a command, stating no observation. `record` teaches in the same breath
+that a verify line must test the load-bearing detail and state what would count as a
+refutation, and offers almost this exact string as its **Bad** example. So the canonical
+text that adopters copy contradicted the skill that governs it, in the one field where
+the whole scheme's value sits. Caught in review of this branch. Now `verify: "`grep -rn
+-- '--include-all' .github/workflows/` returns nothing"`, matching the skill's **Good**
+example, with the observation rule stated in the template rather than only in the skill.
+
+Validating that YAML surfaced a second defect in the same example: **`source: PR #1129`
+parses as `PR`.** Unquoted, `#` opens a YAML comment, so every entry written from the
+template would silently drop its provenance, with nothing warning about it. Both values
+are now quoted, and the template says to quote anything containing `#` or `:`.
+
+Neither is an almanac entry. The verify-line inconsistency was a defect in a file, fixed
+rather than durable. The YAML comment rule is generic YAML knowledge and a two-minute
+derivation — it fails the costly-to-rediscover test even though its effect here was
+silent.
 
 ### Template revision stamp
 

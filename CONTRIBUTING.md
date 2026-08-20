@@ -80,10 +80,20 @@ both.
 
 ### Never hardcode the almanac's path
 
-The conventional location is `docs/almanac/`, and it is not guaranteed. Skills Glob for
-`**/almanac/README.md`, and **stop** if there is no match rather than creating a
-directory as a side effect of some other job. One cheap call, and it handles a
-root-level `almanac/`.
+The conventional location is `docs/almanac/`, and it is not guaranteed. Skills resolve
+it in order: prefer `docs/almanac/README.md`, else glob `**/almanac/README.md` and
+discard matches under `templates/`, `.worktrees/`, `node_modules/`, `vendor/`, or any
+nested checkout; then **stop** if nothing survives, rather than creating a directory as
+a side effect of some other job.
+
+The exclusions are not hypothetical — **this repo trips the naive glob.** From the
+primary repo root, `**/almanac/README.md` matches four paths: the real almanac, the
+shipped template, and one copy per active worktree. An earlier draft globbed in one step
+and would have asked the operator to disambiguate on almost every invocation here, which
+is the worst place for it to happen, since this is the repo that dogfoods the plugin. A
+directory named `almanac` is not evidence of an almanac.
+
+Copy the resolution block verbatim from an existing skill rather than rewording it.
 
 ### Read the repo's README before writing
 

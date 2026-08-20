@@ -33,8 +33,9 @@ behind a confirmation gate.
 ## Setup
 
 The skills require an almanac to work on: a directory named `almanac` containing a
-`README.md`. They Glob for `**/almanac/README.md` and stop if there isn't one, rather
-than creating it as a side effect.
+`README.md`. They prefer `docs/almanac/`, fall back to a glob that ignores `templates/`,
+`.worktrees/`, and nested checkouts, and stop if there is no match rather than creating
+one as a side effect.
 
 Bootstrap it by asking Claude, from the repo you want the almanac in:
 
@@ -115,11 +116,17 @@ and a human approves.
 
 **`verified` is only ever set by something that actually re-ran the check.** The entry
 format has an optional `verified:` date meaning exactly one thing: someone ran the
-`verify` line on that date and the claim held. `audit` is the only process licensed to
-set it, since it is the only one that runs those lines — and it still goes through the
-confirmation gate and the PR, quoting the command and its verbatim output per entry. A
-freshness signal that decouples from an actual re-check is worse than no signal, because
-it launders a stale fact as a current one.
+`verify` line on that date and the claim held. That is the whole rule, and it binds
+everyone — an agent who runs a verify line while consulting an entry may bump it, since
+the evidence is just as real. What `audit` adds is that it is the only thing which does
+this _systematically_, across every entry, so it is what keeps the field from decaying
+into decoration. Its bumps still go through the confirmation gate and the PR, quoting
+the command and verbatim output per entry.
+
+A freshness signal that decouples from an actual re-check is worse than no signal,
+because it launders a stale fact as a current one. Restricting the write to the audit
+would not strengthen that rule — it would only discard real evidence when someone else
+produced it.
 
 **No index, and no frontmatter beyond the specified fields.** A shared index is a merge
 conflict between concurrent sessions that silently duplicates or drops content;

@@ -18,10 +18,20 @@ at all, because it gets trusted instead of checked.
 
 ## Locate the almanac
 
-Glob for `**/almanac/README.md`. The conventional location is `docs/almanac/`, but a
-repo may keep it elsewhere. If there is no match, this repo has no almanac — say so and
-stop, rather than creating one as a side effect of recording. If there is more than one,
-ask which.
+In order — stop at the first step that resolves:
+
+1. **`docs/almanac/README.md`.** The conventional location. If it exists, that is the
+   almanac; do not look further.
+2. **Glob `**/almanac/README.md`**, then discard matches under `templates/`,
+   `.worktrees/`, `node_modules/`, `vendor/`, or any other checkout nested inside this
+   one. A bare directory-name match is not evidence of an almanac — **a template, an
+   example, or a sibling worktree's copy is not this repo's almanac**, and treating one
+   as the target means recording a fact where nobody will read it.
+3. **Exactly one survivor → that is the almanac.** More than one, ask which. None, this
+   repo has no almanac — say so and stop, rather than creating one as a side effect of
+   recording.
+
+Hold the resolved **directory**, not just the README, and write into that directory.
 
 **Read that README before writing anything.** It is the local contract, and it carries
 things this skill deliberately does not: the required frontmatter fields, the wrap

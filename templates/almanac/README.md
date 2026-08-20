@@ -65,8 +65,8 @@ claim is readable knowledge on its own.
 ---
 title: Out-of-order migrations are silently skipped on deploy
 recorded: 2026-08-15
-source: PR #1129
-verify: check the deploy workflow for `--include-all` on the db push step
+source: "PR #1129"
+verify: "`grep -rn -- '--include-all' .github/workflows/` returns nothing"
 verified: 2026-08-16
 tags: [migrations, deploy, ci, silent-failure]
 ---
@@ -82,9 +82,16 @@ One or two sentences stating the fact plainly.
 the fact was observed directly rather than uncovered by a change — a short description
 of the circumstances.
 
-`verify` is strongly encouraged: a command or check that re-tests the claim cheaply. It
-is the only real defense against an entry that quietly went stale, because it lets a
-future agent re-check instead of trusting blindly.
+`verify` is strongly encouraged: a command or check that re-tests the claim cheaply,
+**plus the observation that would confirm it** — "returns nothing", "exits 1", "prints
+`warn`". A bare command tells the next agent what to run and not what would count as a
+refutation, and a check that merely locates the subject passes forever, including after
+the behavior changes. This is the only real defense against an entry that quietly went
+stale, because it lets a future agent re-check instead of trusting blindly.
+
+**Quote any value containing `#` or `:`.** Unquoted, `source: PR #1129` parses as `PR` —
+YAML reads the rest as a comment, and nothing warns you. `verify` lines almost always
+need quoting.
 
 `verified` is optional and means exactly one thing: **someone ran the `verify` line on
 that date and the claim held.** Never set it on the strength of having read the entry,

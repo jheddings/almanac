@@ -40,14 +40,23 @@ README outranked it, one stale local copy would silently override a corrected ru
 
 ## Step 1 — Enumerate the entries
 
-Glob for `**/almanac/README.md` to find the almanac. The conventional location is
-`docs/almanac/`. If there is no match, this repo has no almanac — say so and stop.
+Locate the almanac first, in order — stop at the first step that resolves:
 
-List every entry file in that directory, **excluding `README.md`** (it is the contract,
-not a claim):
+1. **`docs/almanac/README.md`.** The conventional location. If it exists, that is the
+   almanac; do not look further.
+2. **Glob `**/almanac/README.md`**, then discard matches under `templates/`,
+   `.worktrees/`, `node_modules/`, `vendor/`, or any other checkout nested inside this
+   one. A bare directory-name match is not evidence of an almanac — **a template, an
+   example, or a sibling worktree's copy is not this repo's almanac**, and auditing one
+   produces verdicts about files nobody relies on while the real entries go unchecked.
+3. **Exactly one survivor → that is the almanac.** More than one, ask which. None, this
+   repo has no almanac — say so and stop.
+
+Hold the resolved **directory** and enumerate from it. Then list every entry file in it,
+**excluding `README.md`** (it is the contract, not a claim):
 
 ```bash
-ls docs/almanac/*.md | grep -v 'README.md$'
+ls <almanac-dir>/*.md | grep -v 'README.md$'
 ```
 
 If the operator scoped the request ("audit the migration entries"), filter here — but
@@ -148,9 +157,10 @@ approval.
 
 ### Bumping `verified`
 
-If the almanac's README defines a `verified` field, **this audit is the only process
-licensed to set it**, because it is the only one that actually re-runs the `verify`
-line. Leaving it untouched after a `holds` verdict makes the field decorative.
+If the almanac's README defines a `verified` field, this audit is the only thing that
+re-checks entries **systematically** — anyone who happens to run a `verify` line may
+bump that entry's date, but nobody does it across the whole directory. So leaving the
+field untouched after a `holds` verdict is what makes it decorative.
 
 The rules, and they are narrow:
 
