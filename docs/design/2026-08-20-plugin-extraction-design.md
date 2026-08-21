@@ -192,6 +192,14 @@ to fill the local block, and proposes the local contract plus the smallest consu
 trigger that fits the existing `AGENTS.md`. It waits for explicit approval before
 writing and is idempotent: running it against a complete installation proposes no
 changes. It never creates example entries or invents a destination that does not exist.
+When a contract already exists, `init` compares its revision stamp with the canonical
+template and reports whether it is current, behind, ahead of the installed plugin, or
+unversioned; it never upgrades the shared text or local block silently.
+
+The installer README leads with the skill but retains a manual path for adopters without
+the Claude plugin: copy the root template, replace only the local destinations block,
+and add the consult trigger to shared instructions. The initialized files are the
+cross-agent product even when the initialization procedure is not available natively.
 
 **`templates/` is its permanent home — `init` must not move it into
 `skills/init/assets/`.** Two reasons. The path is part of the public setup contract, so

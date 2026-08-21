@@ -47,6 +47,21 @@ The resulting `docs/almanac/README.md` retains its `<!-- almanac-template: N -->
 comment. It records which revision of the shared contract the repository adopted, while
 the `<!-- almanac:local -->` block remains owned by that repository.
 
+### Manual setup
+
+Without the Claude plugin, clone or download this repository and:
+
+1. Copy [`templates/almanac/README.md`](templates/almanac/README.md) to
+   `docs/almanac/README.md` in the adopting repository.
+2. Replace only the `<!-- almanac:local -->` block with destinations that actually exist
+   there. Omit any category whose destination is unknown rather than inventing one.
+3. Add the consult trigger to the repository's `AGENTS.md`; this repo's
+   [almanac section](AGENTS.md#the-almanac) is a starting point.
+
+`record` and `audit` prefer `docs/almanac/`, fall back to discovering another live
+`almanac/README.md`, and stop if none exists. They never initialize one as a side
+effect.
+
 ## Design positions
 
 These are choices, not accidents. Each of them costs something, and the cost is stated.

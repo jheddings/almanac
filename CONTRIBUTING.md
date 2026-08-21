@@ -94,7 +94,9 @@ and would have asked the operator to disambiguate on almost every invocation her
 is the worst place for it to happen, since this is the repo that dogfoods the plugin. A
 directory named `almanac` is not evidence of an almanac.
 
-Copy the resolution block verbatim from an existing skill rather than rewording it.
+Copy the shared resolution steps verbatim from an existing skill rather than rewording
+them. `init` changes only the no-match outcome: no survivor means it may propose a new
+almanac, while `record` and `audit` stop.
 
 ### Read the repo's README before writing
 
@@ -138,6 +140,10 @@ pretending otherwise is how a downgrade goes unnoticed.
 copies. `docs/almanac/README.md` is this repo's own live almanac, and an _instance_ of
 that template: byte-identical outside the block marked `<!-- almanac:local -->`, which
 holds this repo's destinations table.
+
+`init` reads the canonical template from `${CLAUDE_PLUGIN_ROOT}/templates/almanac/`,
+compares its revision stamp with an existing repository copy, and preserves the local
+block. It reports drift but never upgrades the contract as a side effect of setup.
 
 `just drift` (also a pre-commit hook) enforces that. So when you improve the contract
 text:
