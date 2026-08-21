@@ -203,7 +203,9 @@ Bumps `.claude-plugin/plugin.json`, commits, tags, and pushes. CI drafts the Git
 release from the tag. Releases must come from `main` with a clean tree; `release-guard`
 enforces it.
 
-## Commits and branches
+## Commits, branches, and pull requests
 
-See [AGENTS.md](AGENTS.md) — Conventional Commits, `<type>/<change-slug>` branches, and
-session worktrees under `.worktrees/`.
+See [AGENTS.md](AGENTS.md) § Conventions — Conventional Commits, `<type>/<change-slug>`
+branches, pull requests, Markdown wrapping, and session worktrees under `.worktrees/`.
+Those live in `AGENTS.md` rather than here so every harness reads them, not only the
+ones that look for a contributing guide.

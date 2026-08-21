@@ -51,7 +51,9 @@ The _procedures_ for recording and auditing are this plugin's own skills,
 `almanac:record` and `almanac:audit`. Consulting stays here on purpose: it is a trigger,
 and it has to work on tools that read this file but cannot load a skill.
 
-## Commit conventions
+## Conventions
+
+### Commits
 
 Use [Conventional Commits](https://www.conventionalcommits.org/) format:
 
@@ -61,9 +63,10 @@ Use [Conventional Commits](https://www.conventionalcommits.org/) format:
 
 Types: `feat`, `fix`, `chore`, `docs`, `refactor`, `test`, `style`, `perf`
 
-Scope is optional but encouraged — `fix(auth): ...`, `feat(events): ...`.
+Scope is optional but encouraged — `fix(audit): ...`, `feat(init): ...`. Include the
+issue number where one applies — `feat: add the init skill (#3)`.
 
-## Branch naming
+### Branches
 
 Use the same type prefixes as commits, followed by a short description of the intended
 change:
@@ -75,7 +78,31 @@ change:
 Examples: `feat/email-notifications`, `fix/sidebar-delete-width`, `chore/update-deps`.
 Optionally include the issue number: `feat/279-email-notifications`.
 
-## Worktrees
+### Pull requests
+
+- PRs are required to merge to `main`; squash or rebase only, and CI must pass.
+- GitHub composes the squash commit from the **commit messages**, and takes its title
+  from the sole commit when a PR has exactly one and from the PR title otherwise. Both
+  follow the commit convention above.
+- Put issue references in the PR **body**, not the title.
+
+### Markdown
+
+Repository `.md` files are wrapped by tooling: `.prettierrc.json` sets
+`proseWrap: always` at `printWidth: 88`, enforced by `just check` and the prettier
+pre-commit hook. Do not hand-wrap or hand-align prose in them — run `just tidy` and let
+prettier own the line breaks.
+
+Prose written _outside_ the repo — PR descriptions, issue bodies, review comments —
+never passes through prettier, and GitHub renders its line breaks literally rather than
+reflowing them. Hard-wrapping there produces visibly ragged text. Write those paragraphs
+as one continuous line per paragraph and let the browser wrap.
+
+Commit messages are the exception: wrap those at about 72 columns, since they are read
+in terminals that do not reflow — and since squashing puts the commit messages, not the
+PR body, on `main`.
+
+### Worktrees
 
 Use a dedicated git worktree for development to keep the main working directory clean.
 Worktrees live in `.worktrees/` and are specific to an **agent session**, not to the
