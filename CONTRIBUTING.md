@@ -2,8 +2,8 @@
 
 Thanks for helping improve **almanac**. This is a set of harness-neutral skills carrying
 the procedural half of keeping an almanac — a directory of facts discovered the hard way
-— packaged for Claude Code, Codex, and Antigravity (`agy`). The non-procedural half
-deliberately stays in each repo's own instructions; see
+— packaged for Claude Code, Codex, Antigravity (`agy`), and Cursor. The non-procedural
+half deliberately stays in each repo's own instructions; see
 [Design positions](README.md#design-positions) before proposing that a skill absorb it.
 
 ## Design philosophy: do one thing well
@@ -42,6 +42,9 @@ the repo's README owns the _answers_. A skill that hardcodes `docs/arch/` will s
 agent in a repo without that directory to file design intent into nowhere, and the usual
 outcome is that the content lands in the almanac instead. If you find yourself writing a
 path into a skill, that's the signal you've crossed the line.
+
+The same split forbids Cursor `rules/` or hooks that inject consult: consult is a
+trigger, so it stays in each repo's `AGENTS.md`.
 
 ## Skill structure
 
@@ -142,9 +145,11 @@ copies. `docs/almanac/README.md` is this repo's own live almanac, and an _instan
 that template: byte-identical outside the block marked `<!-- almanac:local -->`, which
 holds this repo's destinations table.
 
-`init` reads the canonical template from `${CLAUDE_PLUGIN_ROOT}/templates/almanac/`,
-compares its revision stamp with an existing repository copy, and preserves the local
-block. It reports drift but never upgrades the contract as a side effect of setup.
+`init` reads the canonical template from `${CLAUDE_PLUGIN_ROOT}/templates/almanac/` if
+that variable is set, otherwise `templates/almanac/` relative to the workspace,
+otherwise the plugin install directory as the harness exposes it. It compares the
+revision stamp with an existing repository copy and preserves the local block. It
+reports drift but never upgrades the contract as a side effect of setup.
 
 `just drift` (also a pre-commit hook) enforces that. So when you improve the contract
 text:
@@ -162,14 +167,15 @@ skills exist to prevent. Zero entries is a perfectly good state.
 
 ## Checks and packaging
 
-Packaging for specific harnesses lives in dedicated modules (`mod claude`, `mod agy`),
-while vendor-neutral checks remain at the repository root.
+Packaging for specific harnesses lives in dedicated modules (`mod claude`, `mod cursor`,
+`mod agy`, `mod codex`), while vendor-neutral checks remain at the repository root.
 
 ```bash
-just check          # style + validate + drift + manifests
+just check          # style + validate + drift + per-harness manifests
 just tidy           # prettier --write .
 
 just claude bundle  # stage -> validate -> dist/almanac-plugin-<version>.zip
+just cursor bundle  # stage -> structural checks -> dist/almanac-cursor-plugin-<version>.zip
 just agy bundle     # stage -> validate -> dist/almanac-agy-<version>.zip
 ```
 
@@ -180,6 +186,8 @@ just agy bundle     # stage -> validate -> dist/almanac-agy-<version>.zip
 - `just claude manifests` — asserts Claude's plugin and marketplace manifests agree and
   both carry the shared version. A mismatch breaks installation for whoever installs the
   release.
+- `just cursor manifests` — asserts Cursor's plugin and marketplace manifests agree,
+  carry the shared version, and that the skills and commands paths exist.
 - `just codex manifests` — asserts Codex's manifest carries the shared version and its
   skills path exists.
 - `just agy manifests` — asserts Antigravity's manifest carries the shared version and
@@ -187,7 +195,8 @@ just agy bundle     # stage -> validate -> dist/almanac-agy-<version>.zip
 - `just drift` — the template check described above.
 
 The manifest and drift checks also run from pre-commit, calling `scripts/*` rather than
-`just`, since the CI image that runs pre-commit has no `just`.
+`just`, since the CI image that runs pre-commit has no `just`. A check that is not a
+pre-commit hook is not enforced in CI.
 
 ## Testing skills
 

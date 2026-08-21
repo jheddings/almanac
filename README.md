@@ -1,8 +1,8 @@
 # almanac
 
 Skills for keeping an **almanac** — a directory of facts your agents discovered the hard
-way, recorded so nobody learns them twice. Packaged for Claude Code, Codex, and
-Antigravity; the skills themselves assume no particular harness.
+way, recorded so nobody learns them twice. Packaged for Claude Code, Codex, Antigravity,
+and Cursor; the skills themselves assume no particular harness.
 
 An almanac entry is a silent failure mode, a tool that lies, a constraint that isn't
 visible from the code. Not documentation, not a plan: a claim a future agent will act on
@@ -35,6 +35,20 @@ behind a confirmation gate.
 /plugin install almanac@almanac
 ```
 
+### Cursor
+
+Install from this repository as a Cursor Plugin (IDE or Agent CLI), for example:
+
+- symlink or copy the repo into `~/.cursor/plugins/local/almanac`, or
+- `agent --plugin-dir /path/to/almanac` (the Agent CLI also accepts
+  `cursor agent --plugin-dir`), or
+- import the repo as a team marketplace source pointing at `./`
+
+A distributable archive is produced by `just cursor bundle`
+(`dist/almanac-cursor-plugin-<version>.zip`). Commands live under
+`.cursor-plugin/commands/` so a Claude marketplace install of the same tree does not
+auto-discover them.
+
 ### Codex
 
 The Codex manifest packages the shared skills, but this is a distribution stub: it has
@@ -56,7 +70,8 @@ From the repository you want to adopt the almanac, ask your agent:
 `almanac:init` inspects the repository, proposes a local contract based on the canonical
 template, and adds the consult trigger to shared agent instructions. It shows the exact
 files and repository-local destinations before writing anything, and a second invocation
-should propose no changes.
+should propose no changes. Cursor's `/init` command (when the plugin is loaded) is a
+stub that names that skill; it does not duplicate the procedure.
 
 The resulting `docs/almanac/README.md` retains its `<!-- almanac-template: N -->`
 comment. It records which revision of the shared contract the repository adopted, while
@@ -77,9 +92,11 @@ repository:
 
 `record` and `audit` are ordinary [Agent Skills](https://agentskills.io/specification) —
 no bundled executables, no hooks, nothing resolved from a plugin root — so a harness
-that reads `skills/<name>/SKILL.md` can load them straight from that checkout. `init` is
-the exception: it resolves the template through `${CLAUDE_PLUGIN_ROOT}` and therefore
-needs Claude Code, which is why the steps above exist.
+that reads `skills/<name>/SKILL.md` can load them straight from that checkout. `init`
+resolves the canonical template from `${CLAUDE_PLUGIN_ROOT}` if set, otherwise
+`templates/almanac/README.md` relative to the workspace, otherwise the plugin's
+installed directory as the harness exposes it. The steps above remain for checkouts
+where none of those apply.
 
 `record` and `audit` prefer `docs/almanac/`, fall back to discovering another live
 `almanac/README.md`, and stop if none exists. They never initialize one as a side
@@ -160,13 +177,12 @@ and no `status`, because an entry you aren't confident about should not exist.
 
 ## Not in this release
 
-- **Codex distribution and init portability.** The Codex manifest exposes the shared
-  skills, but marketplace publishing and installation guidance are intentionally
-  deferred. `init` still relies on `${CLAUDE_PLUGIN_ROOT}`, so it remains Claude Code
-  specific.
-- **Adapters beyond Codex.** `record` and `audit` are repo-agnostic and stack-neutral
-  and load from a checkout today; see [Manual setup](#manual-setup). Purpose-built
-  packaging for other harnesses, such as Gemini, waits until something needs it.
+- **Codex distribution.** The Codex manifest exposes the shared skills, but marketplace
+  publishing and installation guidance are intentionally deferred.
+- **Adapters beyond the four harnesses.** `record` and `audit` are repo-agnostic and
+  stack-neutral and load from a checkout today; see [Manual setup](#manual-setup).
+  Purpose-built packaging for other harnesses, such as Gemini, waits until something
+  needs it.
 
 ## Development
 
