@@ -1,8 +1,8 @@
 # almanac
 
 Skills for keeping an **almanac** — a directory of facts your agents discovered the hard
-way, recorded so nobody learns them twice. Packaged as a Claude Code plugin; the skills
-themselves assume no particular harness.
+way, recorded so nobody learns them twice. Packaged as a Claude Code plugin and a Codex
+manifest stub; the skills themselves assume no particular harness.
 
 An almanac entry is a silent failure mode, a tool that lies, a constraint that isn't
 visible from the code. Not documentation, not a plan: a claim a future agent will act on
@@ -28,10 +28,17 @@ behind a confirmation gate.
 
 ## Installation
 
+### Claude Code
+
 ```bash
 /plugin marketplace add jheddings/almanac
 /plugin install almanac@almanac
 ```
+
+### Codex
+
+The Codex manifest packages the shared skills, but this is a distribution stub: it has
+no marketplace entry or installation flow yet.
 
 ## Setup
 
@@ -146,10 +153,13 @@ and no `status`, because an entry you aren't confident about should not exist.
 
 ## Not in this release
 
-- **Adapters for other tools.** `record` and `audit` are repo-agnostic and stack-neutral
+- **Codex distribution and init portability.** The Codex manifest exposes the shared
+  skills, but marketplace publishing and installation guidance are intentionally
+  deferred. `init` still relies on `${CLAUDE_PLUGIN_ROOT}`, so it remains Claude Code
+  specific.
+- **Adapters beyond Codex.** `record` and `audit` are repo-agnostic and stack-neutral
   and load from a checkout today; see [Manual setup](#manual-setup). Purpose-built
-  packaging for Codex or Gemini — and an `init` that does not depend on
-  `${CLAUDE_PLUGIN_ROOT}` — wait until something needs them.
+  packaging for other harnesses, such as Gemini, waits until something needs it.
 
 ## Development
 

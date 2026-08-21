@@ -5,18 +5,17 @@
 # sibling module per harness as they are added.
 
 mod claude '.claude-plugin/.justfile'
+mod codex '.codex-plugin/.justfile'
 
-# Single source of truth for the version. It lives in Claude's manifest today,
-# which makes the project version a Claude artifact; a second harness is the
-# point at which that should move somewhere neutral.
-plugin := ".claude-plugin/plugin.json"
+# Single source of truth for the version, shared by all plugin manifests.
+plugin := "VERSION"
 
 # auto-format all files
 tidy:
     npx prettier --write .
 
 # run all checks
-check: style validate drift claude::manifests
+check: style validate drift claude::manifests codex::manifests
 
 # check style
 style:
@@ -45,7 +44,7 @@ release-guard:
 release bump="patch": release-guard check
     #!/usr/bin/env bash
     set -euo pipefail
-    current=$(jq -r '.version' {{ plugin }})
+    current=$(cat {{ plugin }})
     case "{{ bump }}" in
         major|minor|patch)
             IFS=. read -r major minor patch <<< "$current"
@@ -59,9 +58,13 @@ release bump="patch": release-guard check
         *) version="{{ bump }}" ;;
     esac
     echo "releasing $current -> $version"
-    jq --arg v "$version" '.version = $v' {{ plugin }} > tmp.$$.json && mv tmp.$$.json {{ plugin }}
-    npx prettier --write {{ plugin }}
-    git add {{ plugin }}
+    for manifest in .claude-plugin/plugin.json .codex-plugin/plugin.json; do
+        jq --arg v "$version" '.version = $v' "$manifest" > tmp.$$.json
+        mv tmp.$$.json "$manifest"
+    done
+    printf '%s\n' "$version" > {{ plugin }}
+    npx prettier --write .claude-plugin/plugin.json .codex-plugin/plugin.json
+    git add {{ plugin }} .claude-plugin/plugin.json .codex-plugin/plugin.json
     git commit -m "chore(release): $version"
     git tag -a "$version" -m "$version"
     git push && git push --tags

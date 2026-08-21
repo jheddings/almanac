@@ -16,11 +16,18 @@ repos:
     - repo: local
       hooks:
           - id: plugin-manifests
-            name: plugin and marketplace manifests agree
+            name: Claude plugin and marketplace manifests agree
             entry: scripts/check-manifests.sh
             language: system
             pass_filenames: false
-            files: ^\.claude-plugin/.*\.json$
+            files: ^(?:VERSION|\.claude-plugin/.*\.json)$
+
+          - id: codex-plugin-manifest
+            name: Codex plugin manifest agrees
+            entry: scripts/check-codex-manifest.sh
+            language: system
+            pass_filenames: false
+            files: ^(?:VERSION|\.codex-plugin/.*)$
 
           - id: template-drift
             name: almanac README matches the shipped template

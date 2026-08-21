@@ -2,9 +2,9 @@
 
 Thanks for helping improve **almanac**. This is a set of harness-neutral skills carrying
 the procedural half of keeping an almanac — a directory of facts discovered the hard way
-— packaged as a Claude Code plugin. The non-procedural half deliberately stays in each
-repo's own instructions; see [Design positions](README.md#design-positions) before
-proposing that a skill absorb it.
+— packaged as a Claude Code plugin with a Codex manifest stub. The non-procedural half
+deliberately stays in each repo's own instructions; see
+[Design positions](README.md#design-positions) before proposing that a skill absorb it.
 
 ## Design philosophy: do one thing well
 
@@ -171,13 +171,15 @@ just tidy    # prettier --write .
   in CI). Note `proseWrap: always` at 88 columns: prettier reflows Markdown prose.
 - `just validate` — `skills-ref validate` per skill directory, matching the
   `validate-skill` workflow.
-- `just manifests` — asserts `plugin.json` and `marketplace.json` agree on name and
-  description. `claude plugin validate` passes each manifest separately even when the
-  two disagree, and a mismatch breaks installation for whoever installs the release.
+- `just claude manifests` — asserts Claude's plugin and marketplace manifests agree and
+  both carry the shared version. A mismatch breaks installation for whoever installs the
+  release.
+- `just codex manifests` — asserts Codex's manifest carries the shared version and its
+  skills path exists.
 - `just drift` — the template check described above.
 
-The last two are also pre-commit hooks, and both call `scripts/*` rather than `just`,
-since the CI image that runs pre-commit has no `just`.
+The manifest and drift checks also run from pre-commit, calling `scripts/*` rather than
+`just`, since the CI image that runs pre-commit has no `just`.
 
 ## Testing skills
 
@@ -200,9 +202,9 @@ in practice:
 just release patch   # or minor / major / an explicit version
 ```
 
-Bumps `.claude-plugin/plugin.json`, commits, tags, and pushes. CI drafts the GitHub
-release from the tag. Releases must come from `main` with a clean tree; `release-guard`
-enforces it.
+Bumps `VERSION` and both plugin manifests, commits, tags, and pushes. CI drafts the
+GitHub release from the tag. Releases must come from `main` with a clean tree;
+`release-guard` enforces it.
 
 ## Commits, branches, and pull requests
 
