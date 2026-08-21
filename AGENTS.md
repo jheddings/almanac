@@ -122,6 +122,14 @@ git worktree remove .worktrees/<name>
 
 ## Checks
 
-`just check` runs everything: `prettier --check .`, `skills-ref validate` per skill, and
-the template drift check. `just tidy` formats. Prettier uses `proseWrap: always` at 88
-columns, so it reflows Markdown prose — expect it to rewrap paragraphs you edit.
+`just check` runs everything: `prettier --check .`, `skills-ref validate` per skill, the
+manifest and template-drift checks, and the structural test suite in [`tests/`](tests/).
+`just test` runs the suite alone; `just tidy` formats.
+
+Prettier uses `proseWrap: always` at 88 columns, so it reflows Markdown prose — expect
+it to rewrap paragraphs you edit.
+
+The suite is deterministic and free, so run it before proposing a change to a skill, the
+template, or the almanac. Note the prose ratchet in `tests/baselines.json`: editing a
+skill so it grows past its recorded word count fails the build on purpose. See
+[CONTRIBUTING.md](CONTRIBUTING.md#the-structural-suite).

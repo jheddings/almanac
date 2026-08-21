@@ -14,3 +14,6 @@ __pycache__/
 
 # Build output (see `just claude bundle`)
 dist/
+
+# pytest
+.pytest_cache/

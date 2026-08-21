@@ -36,6 +36,14 @@ repos:
             pass_filenames: false
             files: ^(?:VERSION|\.agy-plugin/.*)$
 
+          - id: structural-tests
+            name: structural test suite
+            entry: pytest
+            language: python
+            additional_dependencies: [pytest, pyyaml]
+            pass_filenames: false
+            always_run: true
+
           - id: template-drift
             name: almanac README matches the shipped template
             entry: python3 scripts/check-template-drift.py

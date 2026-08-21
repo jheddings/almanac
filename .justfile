@@ -19,7 +19,7 @@ tidy:
     npx prettier --write .
 
 # run all checks
-check: style validate drift claude::manifests codex::manifests agy::manifests
+check: style validate drift test claude::manifests codex::manifests agy::manifests
 
 # check style
 style:
@@ -36,6 +36,10 @@ manifests:
 # confirm this repo's almanac README is still an instance of the shipped template
 drift:
     python3 scripts/check-template-drift.py
+
+# run the structural test suite (deps are ephemeral, like npx)
+test:
+    uv run --quiet --with pytest --with pyyaml pytest
 
 # remove all build output across harnesses
 clean:

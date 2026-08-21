@@ -1,0 +1,8 @@
+{
+    "_comment": "Ratchet, not a target. CONTRIBUTING asks for well under 500 words; these are the counts as of the compression debt being taken on. Lower them when a skill shrinks; raising one is a deliberate decision that belongs in the PR description.",
+    "skill_word_ceilings": {
+        "audit": 1905,
+        "init": 702,
+        "record": 1458
+    }
+}
