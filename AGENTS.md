@@ -7,11 +7,11 @@ same rules.
 ## Project
 
 This repo ships the almanac skills — `almanac:init`, `almanac:record`, and
-`almanac:audit`, in [`skills/`](skills/) — packaged for **Claude Code** and
-**Antigravity (`agy`)**. The skills are harness-neutral, and an almanac exists to be
-readable by whatever agent shows up next. [README.md](README.md) states the design
-positions and [CONTRIBUTING.md](CONTRIBUTING.md) the conventions; read both before
-changing a skill.
+`almanac:audit`, in [`skills/`](skills/) — **packaged for Claude Code, Codex, and
+Antigravity (`agy`)**. The packaging is harness-specific; the skills deliberately are
+not, and an almanac exists to be readable by whatever agent shows up next.
+[README.md](README.md) states the design positions and
+[CONTRIBUTING.md](CONTRIBUTING.md) the conventions; read both before changing a skill.
 
 Two files are easy to confuse.
 [`templates/almanac/README.md`](templates/almanac/README.md) is the **canonical**

@@ -25,7 +25,7 @@ bundle: manifests
     set -euo pipefail
     cd "{{ root }}"
 
-    version=$(jq -r .version .claude-plugin/plugin.json)
+    version=$(cat VERSION)
     stage="dist/almanac"
     out="$(pwd)/dist/almanac-plugin-${version}.zip"
 
@@ -48,7 +48,12 @@ bundle: manifests
     # An archive that lost .claude-plugin/ still loads: the session starts clean
     # and the plugin is simply absent, with no error on the way in. Prove it is
     # there rather than assuming the copy worked.
-    unzip -l "$out" | grep -q '\.claude-plugin/plugin\.json' \
+    #
+    # Capture the listing first. Piping straight into `grep -q` races: grep exits
+    # on the first match, unzip takes SIGPIPE, and `pipefail` reports 141 for a
+    # perfectly good archive. See docs/almanac/.
+    listing=$(unzip -l "$out")
+    grep -q '\.claude-plugin/plugin\.json' <<<"$listing" \
         || { echo "error: archive has no .claude-plugin/plugin.json" >&2; exit 1; }
 
     echo

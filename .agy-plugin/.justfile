@@ -13,18 +13,17 @@ root := justfile_directory()
 # repo's own live almanac, not an adopter's.
 payload := "skills templates README.md LICENSE"
 
+# Check the Antigravity manifest's cross-file and filesystem invariants.
+manifests:
+    cd {{ root }} && ./scripts/check-agy-manifest.sh
+
 # validate the plugin manifest and skills
-validate:
+validate: manifests
     #!/usr/bin/env bash
     set -euo pipefail
     cd "{{ root }}"
 
     manifest=".agy-plugin/plugin.json"
-    jq -e '(.version | test("^[0-9]+\\.[0-9]+\\.[0-9]+$")) and .license == "MIT"' \
-        "$manifest" >/dev/null || {
-        echo "error: $manifest needs an N.N.N version and an MIT license" >&2
-        exit 1
-    }
 
     stage="dist/.validate-agy"
     rm -rf "$stage"
@@ -61,7 +60,11 @@ bundle: validate
     (cd "$stage" && zip -rXq "$out" . -x '.DS_Store')
 
     # An archive that lost plugin.json is invalid. Prove it is at archive root.
-    unzip -l "$out" | grep -q '[[:space:]]plugin\.json$' \
+    # Capture the listing first. Piping straight into `grep -q` races: grep exits
+    # on the first match, unzip takes SIGPIPE, and `pipefail` reports 141 for a
+    # perfectly good archive. See docs/almanac/.
+    listing=$(unzip -l "$out")
+    grep -q '[[:space:]]plugin\.json$' <<<"$listing" \
         || { echo "error: archive has no root plugin.json" >&2; exit 1; }
 
     echo

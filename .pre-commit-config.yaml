@@ -16,11 +16,25 @@ repos:
     - repo: local
       hooks:
           - id: plugin-manifests
-            name: plugin and marketplace manifests agree
+            name: Claude plugin and marketplace manifests agree
             entry: scripts/check-manifests.sh
             language: system
             pass_filenames: false
-            files: ^(\.claude-plugin|\.agy-plugin)/.*\.json$
+            files: ^(?:VERSION|\.claude-plugin/.*\.json)$
+
+          - id: codex-plugin-manifest
+            name: Codex plugin manifest agrees
+            entry: scripts/check-codex-manifest.sh
+            language: system
+            pass_filenames: false
+            files: ^(?:VERSION|\.codex-plugin/.*)$
+
+          - id: agy-plugin-manifest
+            name: Antigravity plugin manifest agrees
+            entry: scripts/check-agy-manifest.sh
+            language: system
+            pass_filenames: false
+            files: ^(?:VERSION|\.agy-plugin/.*)$
 
           - id: template-drift
             name: almanac README matches the shipped template

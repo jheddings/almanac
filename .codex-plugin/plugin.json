@@ -1,0 +1,26 @@
+{
+    "name": "almanac",
+    "version": "0.1.0",
+    "description": "Initialize, record, and audit facts discovered the hard way, for agents",
+    "author": {
+        "name": "jheddings"
+    },
+    "homepage": "https://github.com/jheddings/almanac",
+    "repository": "https://github.com/jheddings/almanac",
+    "license": "MIT",
+    "keywords": ["almanac", "agents", "documentation", "knowledge"],
+    "skills": "./skills/",
+    "interface": {
+        "displayName": "Almanac",
+        "shortDescription": "Keep agents from rediscovering costly facts.",
+        "longDescription": "Initialize, record, and audit durable facts discovered the hard way.",
+        "developerName": "jheddings",
+        "category": "Productivity",
+        "capabilities": ["Read", "Write"],
+        "defaultPrompt": [
+            "Initialize an almanac for this repository.",
+            "Record what we just learned the hard way.",
+            "Audit this repository's almanac."
+        ]
+    }
+}
