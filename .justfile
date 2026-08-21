@@ -1,6 +1,14 @@
-# justfile for the almanac plugin
+# justfile for the almanac skills.
+#
+# Recipes here are harness-neutral. Anything specific to packaging for a
+# particular harness lives in its own module — `just claude ...` today, and a
+# sibling module per harness as they are added.
 
-# single source of truth for the plugin version
+mod claude '.claude-plugin/.justfile'
+
+# Single source of truth for the version. It lives in Claude's manifest today,
+# which makes the project version a Claude artifact; a second harness is the
+# point at which that should move somewhere neutral.
 plugin := ".claude-plugin/plugin.json"
 
 # auto-format all files
@@ -8,19 +16,15 @@ tidy:
     npx prettier --write .
 
 # run all checks
-check: style validate manifests drift
+check: style validate drift claude::manifests
 
 # check style
 style:
     npx prettier --check .
 
-# validate all skills against the Agent Skills spec
+# validate all skills against the vendor-neutral Agent Skills spec
 validate:
     for dir in skills/*/; do npx skills-ref validate "$dir"; done
-
-# confirm the two manifests agree — a name mismatch breaks installation
-manifests:
-    ./scripts/check-manifests.sh
 
 # confirm this repo's almanac README is still an instance of the shipped template
 drift:
