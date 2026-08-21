@@ -1,22 +1,23 @@
 # justfile for the almanac skills.
 #
 # Recipes here are harness-neutral. Anything specific to packaging for a
-# particular harness lives in its own module — `just claude ...` today, and a
-# sibling module per harness as they are added.
+# particular harness lives in its own module — `just claude ...`, `just agy ...`,
+# and a sibling module per harness as they are added.
 
+mod agy '.agy-plugin/.justfile'
 mod claude '.claude-plugin/.justfile'
 
-# Single source of truth for the version. It lives in Claude's manifest today,
-# which makes the project version a Claude artifact; a second harness is the
-# point at which that should move somewhere neutral.
-plugin := ".claude-plugin/plugin.json"
+# Single source of truth for the version, shared across all plugin manifests.
+version_file := "VERSION"
+claude_plugin := ".claude-plugin/plugin.json"
+agy_plugin := ".agy-plugin/plugin.json"
 
 # auto-format all files
 tidy:
     npx prettier --write .
 
 # run all checks
-check: style validate drift claude::manifests
+check: style validate drift manifests
 
 # check style
 style:
@@ -26,9 +27,17 @@ style:
 validate:
     for dir in skills/*/; do npx skills-ref validate "$dir"; done
 
+# confirm all manifests agree across harnesses — a mismatch breaks installation
+manifests:
+    ./scripts/check-manifests.sh
+
 # confirm this repo's almanac README is still an instance of the shipped template
 drift:
     python3 scripts/check-template-drift.py
+
+# remove all build output across harnesses
+clean:
+    rm -rf dist
 
 # refuse to release unless on main with a clean working tree
 release-guard:
@@ -41,11 +50,11 @@ release-guard:
     fi
     test -z "$(git status --porcelain -uno)" || (echo "error: working tree is dirty"; exit 1)
 
-# bump the plugin version, commit, tag, and push (CI drafts the GitHub release)
+# bump the plugin version across harnesses, commit, tag, and push (CI drafts the GitHub release)
 release bump="patch": release-guard check
     #!/usr/bin/env bash
     set -euo pipefail
-    current=$(jq -r '.version' {{ plugin }})
+    current=$(tr -d '[:space:]' < {{ version_file }})
     case "{{ bump }}" in
         major|minor|patch)
             IFS=. read -r major minor patch <<< "$current"
@@ -59,9 +68,12 @@ release bump="patch": release-guard check
         *) version="{{ bump }}" ;;
     esac
     echo "releasing $current -> $version"
-    jq --arg v "$version" '.version = $v' {{ plugin }} > tmp.$$.json && mv tmp.$$.json {{ plugin }}
-    npx prettier --write {{ plugin }}
-    git add {{ plugin }}
+    for mf in {{ claude_plugin }} {{ agy_plugin }}; do
+        jq --arg v "$version" '.version = $v' "$mf" > tmp.$$.json && mv tmp.$$.json "$mf"
+    done
+    printf '%s\n' "$version" > {{ version_file }}
+    npx prettier --write {{ claude_plugin }} {{ agy_plugin }}
+    git add {{ version_file }} {{ claude_plugin }} {{ agy_plugin }}
     git commit -m "chore(release): $version"
     git tag -a "$version" -m "$version"
     git push && git push --tags

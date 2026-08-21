@@ -35,8 +35,14 @@ Also check for:
 - an almanac consult trigger in `AGENTS.md` or another always-read instruction file;
 - tool-specific instruction files that already point to `AGENTS.md`.
 
-Read the canonical contract at `${CLAUDE_PLUGIN_ROOT}/templates/almanac/README.md` and
-extract its integer from `<!-- almanac-template: N -->`. The revision comment and the
+Read the canonical contract template. Resolve it in order:
+
+1. `${CLAUDE_PLUGIN_ROOT}/templates/almanac/README.md` if set;
+2. `templates/almanac/README.md` relative to the workspace or repository root;
+3. `templates/almanac/README.md` relative to the plugin's installed directory, however
+   your harness exposes it (for example, inside your harness's plugins directory).
+
+Extract its integer from `<!-- almanac-template: N -->`. The revision comment and the
 `<!-- almanac:local -->` block are load-bearing; preserve both.
 
 ## Build the proposal

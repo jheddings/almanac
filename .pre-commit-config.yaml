@@ -20,7 +20,7 @@ repos:
             entry: scripts/check-manifests.sh
             language: system
             pass_filenames: false
-            files: ^\.claude-plugin/.*\.json$
+            files: ^(\.claude-plugin|\.agy-plugin)/.*\.json$
 
           - id: template-drift
             name: almanac README matches the shipped template

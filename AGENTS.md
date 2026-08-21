@@ -7,9 +7,9 @@ same rules.
 ## Project
 
 This repo ships the almanac skills — `almanac:init`, `almanac:record`, and
-`almanac:audit`, in [`skills/`](skills/) — **packaged as a Claude Code plugin**. The
-packaging is Claude-specific; the skills deliberately are not, and an almanac exists to
-be readable by whatever agent shows up next. [README.md](README.md) states the design
+`almanac:audit`, in [`skills/`](skills/) — packaged for **Claude Code** and
+**Antigravity (`agy`)**. The skills are harness-neutral, and an almanac exists to be
+readable by whatever agent shows up next. [README.md](README.md) states the design
 positions and [CONTRIBUTING.md](CONTRIBUTING.md) the conventions; read both before
 changing a skill.
 

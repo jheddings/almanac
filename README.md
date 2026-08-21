@@ -1,8 +1,8 @@
 # almanac
 
 Skills for keeping an **almanac** — a directory of facts your agents discovered the hard
-way, recorded so nobody learns them twice. Packaged as a Claude Code plugin; the skills
-themselves assume no particular harness.
+way, recorded so nobody learns them twice. Packaged for **Claude Code** and
+**Antigravity (`agy`)**; the skills themselves are harness-neutral.
 
 An almanac entry is a silent failure mode, a tool that lies, a constraint that isn't
 visible from the code. Not documentation, not a plan: a claim a future agent will act on
@@ -28,14 +28,23 @@ behind a confirmation gate.
 
 ## Installation
 
+### Claude Code
+
 ```bash
 /plugin marketplace add jheddings/almanac
 /plugin install almanac@almanac
 ```
 
+### Antigravity (`agy`)
+
+```bash
+just agy bundle
+agy plugin install dist/almanac-agy
+```
+
 ## Setup
 
-From the repository you want to adopt the almanac, ask Claude:
+From the repository you want to adopt the almanac, ask your agent:
 
 > Initialize the almanac in this repository.
 
@@ -148,8 +157,7 @@ and no `status`, because an entry you aren't confident about should not exist.
 
 - **Adapters for other tools.** `record` and `audit` are repo-agnostic and stack-neutral
   and load from a checkout today; see [Manual setup](#manual-setup). Purpose-built
-  packaging for Codex or Gemini — and an `init` that does not depend on
-  `${CLAUDE_PLUGIN_ROOT}` — wait until something needs them.
+  packaging for other harnesses (e.g. Codex) waits until something needs them.
 
 ## Development
 
