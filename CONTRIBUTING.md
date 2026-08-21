@@ -2,7 +2,7 @@
 
 Thanks for helping improve **almanac**. This is a set of harness-neutral skills carrying
 the procedural half of keeping an almanac — a directory of facts discovered the hard way
-— packaged as a Claude Code plugin with a Codex manifest stub. The non-procedural half
+— packaged for Claude Code, Codex, and Antigravity (`agy`). The non-procedural half
 deliberately stays in each repo's own instructions; see
 [Design positions](README.md#design-positions) before proposing that a skill absorb it.
 
@@ -160,11 +160,17 @@ Never seed `docs/almanac/` with illustrative or invented entries. It is a real a
 an entry that is not a fact somebody discovered here is exactly the artifact these
 skills exist to prevent. Zero entries is a perfectly good state.
 
-## Checks
+## Checks and packaging
+
+Packaging for specific harnesses lives in dedicated modules (`mod claude`, `mod agy`),
+while vendor-neutral checks remain at the repository root.
 
 ```bash
-just check   # style + validate + manifests + drift
-just tidy    # prettier --write .
+just check          # style + validate + drift + manifests
+just tidy           # prettier --write .
+
+just claude bundle  # stage -> validate -> dist/almanac-plugin-<version>.zip
+just agy bundle     # stage -> validate -> dist/almanac-agy-<version>.zip
 ```
 
 - `just style` — `prettier --check .` (also a pre-commit hook, so it runs on commit and
@@ -176,6 +182,8 @@ just tidy    # prettier --write .
   release.
 - `just codex manifests` — asserts Codex's manifest carries the shared version and its
   skills path exists.
+- `just agy manifests` — asserts Antigravity's manifest carries the shared version and
+  an MIT license.
 - `just drift` — the template check described above.
 
 The manifest and drift checks also run from pre-commit, calling `scripts/*` rather than
@@ -202,7 +210,7 @@ in practice:
 just release patch   # or minor / major / an explicit version
 ```
 
-Bumps `VERSION` and both plugin manifests, commits, tags, and pushes. CI drafts the
+Bumps `VERSION` and every harness manifest, commits, tags, and pushes. CI drafts the
 GitHub release from the tag. Releases must come from `main` with a clean tree;
 `release-guard` enforces it.
 

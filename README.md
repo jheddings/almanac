@@ -1,8 +1,8 @@
 # almanac
 
 Skills for keeping an **almanac** — a directory of facts your agents discovered the hard
-way, recorded so nobody learns them twice. Packaged as a Claude Code plugin and a Codex
-manifest stub; the skills themselves assume no particular harness.
+way, recorded so nobody learns them twice. Packaged for Claude Code, Codex, and
+Antigravity; the skills themselves assume no particular harness.
 
 An almanac entry is a silent failure mode, a tool that lies, a constraint that isn't
 visible from the code. Not documentation, not a plan: a claim a future agent will act on
@@ -40,9 +40,16 @@ behind a confirmation gate.
 The Codex manifest packages the shared skills, but this is a distribution stub: it has
 no marketplace entry or installation flow yet.
 
+### Antigravity (`agy`)
+
+```bash
+just agy bundle
+agy plugin install dist/almanac-agy
+```
+
 ## Setup
 
-From the repository you want to adopt the almanac, ask Claude:
+From the repository you want to adopt the almanac, ask your agent:
 
 > Initialize the almanac in this repository.
 

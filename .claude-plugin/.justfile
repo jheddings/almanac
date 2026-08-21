@@ -62,4 +62,4 @@ bundle: manifests
 
 # remove build output
 clean:
-    rm -rf {{ root }}/dist
+    rm -rf {{ root }}/dist/almanac {{ root }}/dist/almanac-plugin-*.zip
