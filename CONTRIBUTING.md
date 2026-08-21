@@ -1,9 +1,10 @@
 # Contributing
 
-Thanks for helping improve **almanac**. This is a Claude Code plugin carrying the
-procedural half of keeping an almanac — a directory of facts discovered the hard way.
-The non-procedural half deliberately stays in each repo's own instructions; see
-[Design positions](README.md#design-positions) before proposing that a skill absorb it.
+Thanks for helping improve **almanac**. This is a set of harness-neutral skills carrying
+the procedural half of keeping an almanac — a directory of facts discovered the hard way
+— packaged as a Claude Code plugin. The non-procedural half deliberately stays in each
+repo's own instructions; see [Design positions](README.md#design-positions) before
+proposing that a skill absorb it.
 
 ## Design philosophy: do one thing well
 

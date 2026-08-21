@@ -1,7 +1,8 @@
 # almanac
 
-A Claude Code plugin for keeping an **almanac** — a directory of facts your agents
-discovered the hard way, recorded so nobody learns them twice.
+Skills for keeping an **almanac** — a directory of facts your agents discovered the hard
+way, recorded so nobody learns them twice. Packaged as a Claude Code plugin; the skills
+themselves assume no particular harness.
 
 An almanac entry is a silent failure mode, a tool that lies, a constraint that isn't
 visible from the code. Not documentation, not a plan: a claim a future agent will act on
@@ -49,7 +50,9 @@ the `<!-- almanac:local -->` block remains owned by that repository.
 
 ### Manual setup
 
-Without the Claude plugin, clone or download this repository and:
+`almanac:init` is a convenience, not a requirement. The contract text is one ordinary
+file, so a repository can adopt an almanac on any harness. From a checkout of this
+repository:
 
 1. Copy [`templates/almanac/README.md`](templates/almanac/README.md) to
    `docs/almanac/README.md` in the adopting repository.
@@ -57,6 +60,12 @@ Without the Claude plugin, clone or download this repository and:
    there. Omit any category whose destination is unknown rather than inventing one.
 3. Add the consult trigger to the repository's `AGENTS.md`; this repo's
    [almanac section](AGENTS.md#the-almanac) is a starting point.
+
+`record` and `audit` are ordinary [Agent Skills](https://agentskills.io/specification) —
+no bundled executables, no hooks, nothing resolved from a plugin root — so a harness
+that reads `skills/<name>/SKILL.md` can load them straight from that checkout. `init` is
+the exception: it resolves the template through `${CLAUDE_PLUGIN_ROOT}` and therefore
+needs Claude Code, which is why the steps above exist.
 
 `record` and `audit` prefer `docs/almanac/`, fall back to discovering another live
 `almanac/README.md`, and stop if none exists. They never initialize one as a side
@@ -137,8 +146,10 @@ and no `status`, because an entry you aren't confident about should not exist.
 
 ## Not in this release
 
-- **Adapters for other tools.** The skills are written repo-agnostic and stack-neutral,
-  but packaging for Codex or Gemini waits until something needs it.
+- **Adapters for other tools.** `record` and `audit` are repo-agnostic and stack-neutral
+  and load from a checkout today; see [Manual setup](#manual-setup). Purpose-built
+  packaging for Codex or Gemini — and an `init` that does not depend on
+  `${CLAUDE_PLUGIN_ROOT}` — wait until something needs them.
 
 ## Development
 

@@ -99,14 +99,16 @@ confident about should not exist.
 
 ## Using the almanac
 
-**Read the directory listing.** `ls docs/almanac/` is the table of contents: every
-filename is a claim, so scanning them tells you what this codebase already knows. There
-is no index file to consult and none to maintain. Do this when you start work in an
-unfamiliar area, not only once you're stuck — the entries worth most are silent failures
-you would never think to search for.
+**Read the directory listing.** `ls <almanac-dir>/` is the table of contents: every
+filename is a claim, so scanning them tells you what this codebase already knows.
+`<almanac-dir>` is wherever this file lives — conventionally `docs/almanac/`, but the
+path is this repository's call, not the contract's. There is no index file to consult
+and none to maintain. Do this when you start work in an unfamiliar area, not only once
+you're stuck — the entries worth most are silent failures you would never think to
+search for.
 
 Grep it before assuming something is undocumented — filenames state claims, so
-`grep -rl <keyword> docs/almanac/` (or `rg -l`) is usually enough.
+`grep -rl <keyword> <almanac-dir>/` (or `rg -l`) is usually enough.
 
 Read the entry, and if it carries a `verify` line and you're about to act on something
 expensive, run it.
