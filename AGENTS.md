@@ -38,8 +38,9 @@ code. It is authoritative for this repo, and
 - You're about to do something whose failure would be silent or costly to undo:
   migrations, deploys, CI config, release tooling, anything touching production.
 
-One keyword grep is enough (`grep -rl <keyword> docs/almanac/`, or `rg -l`). If nothing
-hits, move on.
+One keyword grep is enough — `grep -rl --exclude=README.md <keyword> docs/almanac/`, or
+`rg -l --glob '!README.md'`. Skip `README.md`: it is the contract rather than a claim,
+and its worked example matches almost any probe. If nothing hits, move on.
 
 **Record an entry when** you finish being surprised — a debugging session that ended in
 "oh, _that's_ why," or a green build that hid a real failure. Write it in the same PR as
