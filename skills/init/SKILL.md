@@ -66,11 +66,18 @@ a category whose destination cannot be established; never invent `docs/arch/`,
 `CONTRIBUTING.md`, or an issue tracker. Explain any omitted category so the operator can
 supply an answer before approving the file.
 
+A **section** of a file is a valid destination, and usually a better one than a bare
+filename — `CLAUDE.md § Architecture` sends an agent somewhere specific. Two categories
+resolving to the same destination is fine; that is a fact about the repository, not a
+collision to resolve.
+
 If the README already exists, preserve it. Compare its template revision with the
 canonical revision and report one of these outcomes:
 
 - equal — the shared contract is current;
-- local lower — a newer contract exists and needs a separately reviewed upgrade;
+- local lower — the plugin ships a newer contract. Name both revisions and stop.
+  Upgrading means splicing this repository's `almanac:local` block into the newer
+  template, which is a separate reviewed change and not one to make here;
 - local higher — the installed plugin is older than the repository's contract;
 - missing or malformed — the local contract is unversioned.
 
@@ -79,6 +86,11 @@ silently merge a newer template into it; repository-local conventions and templa
 upgrades require review.
 
 ### Consult trigger
+
+First establish **which instruction file the agent that will use this almanac loads
+automatically**, and say so in the proposal. This is the highest-consequence decision in
+the whole initialization: a trigger in a file nothing reads is dormant, which leaves the
+almanac inert and everything else here decorative.
 
 If `AGENTS.md` exists, match its structure and propose the smallest addition that says:
 
@@ -97,13 +109,22 @@ Do not create example entries. An empty almanac is the correct initial state.
 
 ## Confirm, apply, and verify
 
+Check the repository's own contribution rules before writing — many forbid committing to
+the default branch. Initialization changes shared instructions, so it ships the way any
+other change to them does: a branch and a PR, unless the operator says otherwise.
+
 Get explicit approval for the proposed files and local destinations before writing.
 Apply only what was approved, then:
 
 1. list the almanac and confirm it contains `README.md` without seeded entries;
-2. show the consult trigger now present in the shared instructions;
-3. confirm the template revision marker remains intact;
-4. run the repository's formatting or documentation checks when available;
+2. name the instruction file the running agent auto-loads, and show the consult trigger
+   either in that file or reachable by a pointer from it — a string that is present but
+   never loaded is not a trigger;
+3. confirm the template revision marker and both `almanac:local` delimiters remain
+   intact;
+4. run the repository's formatting or documentation checks when available. If they
+   rewrite files rather than just failing — prettier, markdownlint, a
+   trailing-whitespace hook — re-check step 3 afterwards;
 5. report every created or modified file.
 
 Finally, re-run the inspection steps against the resulting tree. A second invocation
