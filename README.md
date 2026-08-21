@@ -8,13 +8,15 @@ visible from the code. Not documentation, not a plan: a claim a future agent wil
 without re-deriving it. One fact per file, filename states the claim, and the directory
 listing is the index.
 
-This plugin carries the two procedures that keep such a directory honest. Consulting the
-almanac is deliberately **not** one of them — see [Design positions](#design-positions).
+This plugin initializes the repository-level pieces and carries the two procedures that
+keep such a directory honest. Consulting the almanac is deliberately **not** a skill —
+see [Design positions](#design-positions).
 
 ## Skills
 
 | Skill            | Use it when                                                             |
 | ---------------- | ----------------------------------------------------------------------- |
+| `almanac:init`   | You want to add or repair an almanac in a repository                    |
 | `almanac:record` | You just finished being surprised, and something durable came out of it |
 | `almanac:audit`  | You want to know whether the recorded facts are still true              |
 
@@ -32,40 +34,33 @@ behind a confirmation gate.
 
 ## Setup
 
-The skills require an almanac to work on: a directory named `almanac` containing a
-`README.md`. They prefer `docs/almanac/`, fall back to a glob that ignores `templates/`,
-`.worktrees/`, and nested checkouts, and stop if there is no match rather than creating
-one as a side effect.
+From the repository you want to adopt the almanac, ask Claude:
 
-Bootstrap it by asking Claude, from the repo you want the almanac in:
+> Initialize the almanac in this repository.
 
-> Copy the almanac plugin's template from
-> `${CLAUDE_PLUGIN_ROOT}/templates/almanac/README.md` to `docs/almanac/README.md`.
+`almanac:init` inspects the repository, proposes a local contract based on the canonical
+template, and adds the consult trigger to shared agent instructions. It shows the exact
+files and repository-local destinations before writing anything, and a second invocation
+should propose no changes.
 
-The plugin's install path isn't something you can resolve from a shell, which is why
-this is a request rather than a `cp` you can paste. `${CLAUDE_PLUGIN_ROOT}` expands only
-inside the plugin's own context.
+The resulting `docs/almanac/README.md` retains its `<!-- almanac-template: N -->`
+comment. It records which revision of the shared contract the repository adopted, while
+the `<!-- almanac:local -->` block remains owned by that repository.
 
-Then do two things:
+### Manual setup
 
-1. **Fill in the local block.** Inside `docs/almanac/README.md` is a block marked
-   `<!-- almanac:local -->`. Replace it with a table naming where non-almanac content
-   goes _in your repo_ — design intent, required rules, in-flight status, personal
-   preferences. Keep only rows whose destination actually exists. This is the one part
-   of the contract the plugin cannot write for you, and it is the part that decides what
-   stays out.
-2. **Add the consult trigger** to `AGENTS.md` (or `CLAUDE.md`). Recording and auditing
-   are procedures and live in these skills; _consulting_ is a trigger, and belongs in
-   the instructions every tool already reads. See this repo's own [AGENTS.md](AGENTS.md)
-   for wording you can lift.
+Without the Claude plugin, clone or download this repository and:
 
-Leave the `<!-- almanac-template: N -->` comment on the first line alone. It records
-which revision of the contract text your copy came from, so a later release can tell you
-whether yours is stale. It is bumped only when the shared text changes — not on every
-plugin release — and your local block is excluded from it by definition.
+1. Copy [`templates/almanac/README.md`](templates/almanac/README.md) to
+   `docs/almanac/README.md` in the adopting repository.
+2. Replace only the `<!-- almanac:local -->` block with destinations that actually exist
+   there. Omit any category whose destination is unknown rather than inventing one.
+3. Add the consult trigger to the repository's `AGENTS.md`; this repo's
+   [almanac section](AGENTS.md#the-almanac) is a starting point.
 
-An `almanac:init` skill that does all of this is planned; see
-[Not in this release](#not-in-this-release).
+`record` and `audit` prefer `docs/almanac/`, fall back to discovering another live
+`almanac/README.md`, and stop if none exists. They never initialize one as a side
+effect.
 
 ## Design positions
 
@@ -78,6 +73,12 @@ to look. That has to live in always-on instructions. It also has to work under C
 Cursor, and anything else that reads `AGENTS.md` but cannot load a skill. There is
 deliberately no `almanac:consult`, and deliberately no session-start hook: a hook that
 lists entries would be Claude-only, which is the fragmentation an almanac exists to fix.
+
+**Initialization proposes shared state; it does not silently install it.** The template
+and consult trigger are durable, cross-agent repository state, but the destinations in
+the template's local block are decisions only the adopting repository can make.
+`almanac:init` inspects real destinations, shows its proposal, and waits for approval.
+It never invents a directory or seeds an example entry.
 
 **The skill owns the method; the repo's README owns local convention.** Where they
 disagree about the admission tests, verification, or procedure, the skill wins. Where
@@ -136,9 +137,6 @@ and no `status`, because an entry you aren't confident about should not exist.
 
 ## Not in this release
 
-- **`almanac:init`** — bootstrapping is two manual steps today (copy the template, add
-  the trigger). Making it a skill is the plan for the next release, and it is also what
-  makes template drift detectable rather than silent.
 - **Adapters for other tools.** The skills are written repo-agnostic and stack-neutral,
   but packaging for Codex or Gemini waits until something needs it.
 

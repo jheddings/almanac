@@ -8,9 +8,10 @@ The non-procedural half deliberately stays in each repo's own instructions; see
 ## Design philosophy: do one thing well
 
 Each skill follows the Unix principle — **do one thing, and do it very well.** A skill
-has a single, nameable job (`record` writes an entry; `audit` re-checks the ones that
-exist) and resists growing a second one. When a skill starts to need a second
-responsibility, that is the signal to write a _new_ skill, not to widen an existing one.
+has a single, nameable job (`init` installs the repository pieces; `record` writes an
+entry; `audit` re-checks the ones that exist) and resists growing a second one. When a
+skill starts to need a second responsibility, that is the signal to write a _new_ skill,
+not to widen an existing one.
 
 Concretely:
 
@@ -93,7 +94,9 @@ and would have asked the operator to disambiguate on almost every invocation her
 is the worst place for it to happen, since this is the repo that dogfoods the plugin. A
 directory named `almanac` is not evidence of an almanac.
 
-Copy the resolution block verbatim from an existing skill rather than rewording it.
+Copy the shared resolution steps verbatim from an existing skill rather than rewording
+them. `init` changes only the no-match outcome: no survivor means it may propose a new
+almanac, while `record` and `audit` stop.
 
 ### Read the repo's README before writing
 
@@ -137,6 +140,10 @@ pretending otherwise is how a downgrade goes unnoticed.
 copies. `docs/almanac/README.md` is this repo's own live almanac, and an _instance_ of
 that template: byte-identical outside the block marked `<!-- almanac:local -->`, which
 holds this repo's destinations table.
+
+`init` reads the canonical template from `${CLAUDE_PLUGIN_ROOT}/templates/almanac/`,
+compares its revision stamp with an existing repository copy, and preserves the local
+block. It reports drift but never upgrades the contract as a side effect of setup.
 
 `just drift` (also a pre-commit hook) enforces that. So when you improve the contract
 text:
@@ -183,6 +190,8 @@ in practice:
   so, not file a hedged entry and leave the call to a reviewer.
 - `audit` given a deliberately broken `verify` line should return `unverifiable`, never
   `falsified` — a command that no longer runs says nothing about the claim.
+- `init` run twice should propose nothing on the second run, and must preserve an
+  existing local destinations block rather than replacing it from the template.
 
 ## Releasing
 

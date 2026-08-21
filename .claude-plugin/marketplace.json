@@ -8,7 +8,7 @@
         {
             "name": "almanac",
             "source": "./",
-            "description": "Record and audit facts discovered the hard way, for agents"
+            "description": "Initialize, record, and audit facts discovered the hard way, for agents"
         }
     ]
 }

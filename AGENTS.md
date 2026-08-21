@@ -6,10 +6,10 @@ same rules.
 
 ## Project
 
-This repo is a **Claude Code plugin** that ships the almanac skills — `almanac:record`
-and `almanac:audit`, in [`skills/`](skills/). [README.md](README.md) states the design
-positions and [CONTRIBUTING.md](CONTRIBUTING.md) the conventions; read both before
-changing a skill.
+This repo is a **Claude Code plugin** that ships the almanac skills — `almanac:init`,
+`almanac:record`, and `almanac:audit`, in [`skills/`](skills/). [README.md](README.md)
+states the design positions and [CONTRIBUTING.md](CONTRIBUTING.md) the conventions; read
+both before changing a skill.
 
 Two files are easy to confuse.
 [`templates/almanac/README.md`](templates/almanac/README.md) is the **canonical**

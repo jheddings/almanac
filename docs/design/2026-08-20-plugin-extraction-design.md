@@ -10,8 +10,8 @@ Turn this repo into the distributable plugin for the almanac skills, porting
 first publishing target; the structure follows `jheddings/obsidian-steward`, which the
 same operator maintains.
 
-Two skills ship: `almanac:record` and `almanac:audit`. Consulting the almanac does not
-become a skill, and no session hook is added.
+Three skills ship: `almanac:init`, `almanac:record`, and `almanac:audit`. Consulting the
+almanac does not become a skill, and no session hook is added.
 
 ## Decisions
 
@@ -181,19 +181,32 @@ contract had argued for keeping the prefix so the names self-identify outside a 
 namespace; that cost is accepted, since the namespace is present on the only publishing
 target this release has.
 
-### `almanac:init` deferred to the next release
+### `almanac:init` installs the cross-agent state
 
-Bootstrapping is two manual steps today: copy `templates/almanac/` into `docs/`, then
-add the consult trigger to `AGENTS.md`. An `init` skill would do both and probe the repo
-for real destinations to fill the local block. Deferred to keep the first release to the
-two proven skills; it is the top follow-up.
+Installing a Claude plugin does not create `docs/almanac/` or add the consult trigger to
+the adopting repository's shared instructions. Without those files, the procedures are
+installed but the cross-agent memory never activates. `almanac:init` closes that gap.
+
+Initialization reads the canonical template, probes the repository for real destinations
+to fill the local block, and proposes the local contract plus the smallest consult
+trigger that fits the existing `AGENTS.md`. It waits for explicit approval before
+writing and is idempotent: running it against a complete installation proposes no
+changes. It never creates example entries or invents a destination that does not exist.
+When a contract already exists, `init` compares its revision stamp with the canonical
+template and reports whether it is current, behind, ahead of the installed plugin, or
+unversioned; it never upgrades the shared text or local block silently.
+
+The installer README leads with the skill but retains a manual path for adopters without
+the Claude plugin: copy the root template, replace only the local destinations block,
+and add the consult trigger to shared instructions. The initialized files are the
+cross-agent product even when the initialization procedure is not available natively.
 
 **`templates/` is its permanent home — `init` must not move it into
-`skills/init/assets/`.** Two reasons, and they outlast the deferral. The path is
-published in v0.1.0's setup instructions, so moving it breaks them. And a template
-buried in a skill's assets is reachable only by agents that can load the skill, which
-defeats the point: the contract text is what an adopter on a harness _without_ skills
-needs most. `init` reads `${CLAUDE_PLUGIN_ROOT}/templates/almanac/README.md`.
+`skills/init/assets/`.** Two reasons. The path is part of the public setup contract, so
+moving it breaks adopters. And a template buried in a skill's assets is reachable only
+by agents that can load the skill, which defeats the point: the contract text is what an
+adopter on a harness _without_ skills needs most. `init` reads
+`${CLAUDE_PLUGIN_ROOT}/templates/almanac/README.md`.
 
 ### The canonical example modelled the anti-pattern
 
@@ -238,6 +251,7 @@ unstamped v0.1.0 would be permanently unidentifiable.
 ```
 .claude-plugin/plugin.json          name: almanac, version 0.1.0
 .claude-plugin/marketplace.json     self-hosted, one plugin at ./
+skills/init/SKILL.md
 skills/record/SKILL.md
 skills/audit/SKILL.md
 templates/almanac/README.md         canonical contract text, revision-stamped
