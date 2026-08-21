@@ -11,3 +11,6 @@ __pycache__/
 # Local Claude Code settings (prettier honors .gitignore, so this also
 # keeps `just check` green on a working copy that has them)
 .claude/settings.local.json
+
+# Build output (see `just claude bundle`)
+dist/
