@@ -25,7 +25,7 @@ bundle: manifests
     set -euo pipefail
     cd "{{ root }}"
 
-    version=$(jq -r .version .claude-plugin/plugin.json)
+    version=$(cat VERSION)
     stage="dist/almanac"
     out="$(pwd)/dist/almanac-plugin-${version}.zip"
 

@@ -8,9 +8,11 @@ set -euo pipefail
 
 plugin=".claude-plugin/plugin.json"
 marketplace=".claude-plugin/marketplace.json"
+version=$(cat VERSION)
 
-jq -e '(.version | test("^[0-9]+\\.[0-9]+\\.[0-9]+$")) and .license == "MIT"' \
-    "$plugin" >/dev/null || {
+jq -e --arg version "$version" \
+    '(.version == $version) and ($version | test("^[0-9]+\\.[0-9]+\\.[0-9]+$"))
+    and .license == "MIT"' "$plugin" >/dev/null || {
     echo "error: $plugin needs an N.N.N version and an MIT license" >&2
     exit 1
 }
