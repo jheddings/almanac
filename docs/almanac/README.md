@@ -29,12 +29,13 @@ If you can't state the fact in one sentence, it's probably a design doc, not an 
 
 <!-- almanac:local -->
 
-| If it is...                        | It goes...                      |
-| ---------------------------------- | ------------------------------- |
-| A rule you're required to follow   | `AGENTS.md` / `CONTRIBUTING.md` |
-| Designed intent, a spec, or a plan | `docs/design/`                  |
-| The status of in-flight work       | A GitHub issue or PR            |
-| Your own working preferences       | Your agent's private memory     |
+| If it is...                              | It goes...                      |
+| ---------------------------------------- | ------------------------------- |
+| A rule you're required to follow         | `AGENTS.md` / `CONTRIBUTING.md` |
+| Designed intent, a spec, or a plan       | `docs/design/`                  |
+| The status of in-flight work             | A GitHub issue or PR            |
+| Your own working preferences             | Your agent's private memory     |
+| A fact about your machine, not this repo | Your agent's private memory     |
 
 This repo is small enough that design intent, specs, and plans share one directory
 rather than three.

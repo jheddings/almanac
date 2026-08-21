@@ -77,6 +77,7 @@ Ask each question. Any _yes_ disqualifies the entry:
 3. Is it the **status of in-flight work**?
 4. Is it a **spec or an implementation plan**?
 5. Is it **your own working preference or habit**?
+6. Is it true **only of your machine or environment**, not of this repository?
 
 The questions are the method, so they live here. **The answers are irreducibly
 repo-local, so they live in the almanac's `README.md`** — read its destinations table
@@ -89,7 +90,16 @@ what turned out to be true when someone ran it is an almanac entry.
 Question 5 is the one that traps. A preference is not disqualified by being _about_ a
 real, verified, expensive-to-rediscover fact — most preferences are. Split them: the
 behavior you observed may be a fine entry; "so I do X" is memory. Record the behavior
-and its consequence, not your routine.
+and its consequence, not your routine — then apply question 6 to what is left.
+
+Question 6 is **scope**, and the three tests below cannot catch it: they ask whether a
+fact is durable, discovered, and costly, never _who it is true for_. A proxy on your
+laptop, a path in your shell, a credential CI does not have — all three tests pass and
+the entry is still false for every other contributor. Ask: **would this hold for CI and
+for everyone else who clones this repo?** If no, it is environment-scoped and it goes to
+memory however well it passes the rest. Split it the way question 5 splits: a tool that
+reports a misleading error is a fact about the tool; the local cause that triggered it
+is yours.
 
 ### Does it pass all three?
 
@@ -166,6 +176,8 @@ human can.
   the decision.** Decide, or don't record it.
 - "It's arguably a preference, but the underlying fact is real" — record the fact, drop
   the routine, or file it in memory.
+- "It's only true on my setup, but the fact itself is real" — **that is scope, not
+  truth.** True for you is not true for the repository; it goes in memory.
 - "I noted the caveat in the entry" — a caveat is not a category decision.
 - "The user gave me this, so I don't need to check it" — check it.
 - "No time to verify; I'll record it and confirm later" — later does not come.

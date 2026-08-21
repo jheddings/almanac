@@ -31,8 +31,8 @@ If you can't state the fact in one sentence, it's probably a design doc, not an 
 
 **Replace this block when you adopt the almanac.** The plugin's skills own the
 _questions_ — is this designed intent? a rule someone is required to follow? the status
-of in-flight work? your own working preference? — and this table owns the _answers_ for
-this repository.
+of in-flight work? your own working preference? something true only of your machine? —
+and this table owns the _answers_ for this repository.
 
 Keep only the rows that name a destination which actually exists here. An answer
 pointing at a directory you don't have is worse than no row at all: it sends an agent to
@@ -46,6 +46,7 @@ almanac instead.
 | A spec or implementation plan                      | `docs/specs/`                   |
 | The status of in-flight work                       | An issue or PR                  |
 | Your own working preferences                       | Your agent's private memory     |
+| A fact about your machine, not this repo           | Your agent's private memory     |
 
 <!-- /almanac:local -->
 
