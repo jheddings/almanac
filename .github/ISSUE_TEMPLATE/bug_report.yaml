@@ -1,0 +1,95 @@
+---
+name: Bug Report
+description: >-
+    Report a bug or unexpected behavior in almanac
+title: "[Bug]: "
+labels: ["bug"]
+body:
+    - type: markdown
+      attributes:
+          value: >
+              Thanks for taking the time to report this bug! Please fill out the
+              sections below to help us understand and fix the issue.
+
+    - type: textarea
+      id: description
+      attributes:
+          label: What happened?
+          description: >-
+              Provide a clear and concise description of what the bug is.
+          placeholder: >
+              Example: `almanac:record` accepted an entry with no `verify` line, so
+              `almanac:audit` reported it as unverifiable on the next run.
+      validations:
+          required: true
+
+    - type: textarea
+      id: steps
+      attributes:
+          label: Steps to Reproduce
+          description: >-
+              Tell us how to reproduce this issue. Be as specific as possible.
+          placeholder: |
+              1. Install the plugin into a repo with no `docs/almanac/`
+              2. Invoke `almanac:init`
+              3. Invoke `almanac:record` with a fact to admit
+              4. Observe the resulting entry
+      validations:
+          required: true
+
+    - type: textarea
+      id: expected
+      attributes:
+          label: What did you expect to happen?
+          description: >-
+              Describe what you expected to happen instead.
+          placeholder: >
+              Example: I expected the category gate to reject the fact, or the entry to
+              be written with a `verify` line that fails when the claim fails.
+      validations:
+          required: true
+
+    - type: textarea
+      id: logs
+      attributes:
+          label: Logs or Transcript Excerpt
+          description: >-
+              Paste the relevant part of the agent transcript, or any terminal output.
+          render: shell
+
+    - type: textarea
+      id: environment
+      attributes:
+          label: Environment Information
+          description: Help us understand your setup.
+          placeholder: |
+              - OS: [e.g., macOS 26, Ubuntu 24.04]
+              - Harness: [e.g., Claude Code 2.1.0]
+              - Model: [e.g., Opus 5]
+              - almanac version: [see VERSION, or the installed plugin]
+          value: |
+              - OS:
+              - Harness:
+              - Model:
+              - almanac version:
+
+    - type: dropdown
+      id: occurrence
+      attributes:
+          label: How often does this happen?
+          options:
+              - Every time
+              - Sometimes
+              - Only happened once
+              - Not sure
+
+    - type: textarea
+      id: additional
+      attributes:
+          label: Additional Context
+          description: >
+              Add any other context about the problem here. For example, when did you
+              first notice this issue? Are there any workarounds? Were there any recent
+              version upgrades?
+          placeholder: >-
+              Any additional information that might help us fix this bug.
