@@ -33,7 +33,16 @@ operator wants to keep or migrate it. Never create a competing almanac.
 Also check for:
 
 - an almanac consult trigger in `AGENTS.md` or another always-read instruction file;
-- tool-specific instruction files that already point to `AGENTS.md`.
+- tool-specific instruction files that already point to `AGENTS.md`;
+- repository-local skills that duplicate this plugin's — a copy installed before the
+  plugin is now superseded. Match on what a skill says, not what it is named: read the
+  descriptions under the repository's skills directories and flag any that trigger on
+  recording or auditing the almanac.
+
+Report a superseded copy and leave it in place; removing it is a reviewed change, like
+the README. Name it explicitly, because unlike the README it is invisible in normal use:
+two skills triggering on the same moment is a coin flip, nothing breaks when the stale
+one wins, and the operator keeps running the old method believing they upgraded.
 
 Read the canonical contract template. Resolve it in order:
 
@@ -108,6 +117,11 @@ Do not paste a second almanac section when those concepts already exist. If `AGE
 is absent, propose creating it with a concise section containing those concepts. If a
 tool-specific instruction file already points to `AGENTS.md`, leave it alone. Otherwise
 identify the portability gap and ask before editing any additional instruction file.
+
+You know which files your own runtime loads. For the tools you are not, look rather than
+guess — `CLAUDE.md`, `.claude/CLAUDE.md`, `GEMINI.md`, `.cursor/rules/`, and
+`.github/copilot-instructions.md` are current examples. Conventions change and the list
+goes stale, so treat it as where to start, not as the whole search.
 
 Do not create example entries. An empty almanac is the correct initial state.
 
