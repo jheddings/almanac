@@ -1,12 +1,15 @@
-<!-- almanac-template: 1 -->
+<!-- almanac-template: 2 -->
 
 # Almanac
 
-Discovered facts about this codebase, recorded by agents for agents.
+Discovered facts about working in this repository, recorded by agents for agents.
 
 An almanac entry is something we **learned the hard way** and don't want to learn again:
 a silent failure mode, a tool that lies, a constraint that isn't visible from the code.
-It is not documentation, and it is not a plan. Entries are terse, atomic, and durable.
+The subject is as often the CI, the build tooling, or the agent harness as the code
+itself — what matters is that the fact holds for anyone working here, not which layer
+surfaced it. It is not documentation, and it is not a plan. Entries are terse, atomic,
+and durable.
 
 Humans are welcome here, but the audience is the next agent — likely one with no memory
 of this session, possibly running under a different tool.
@@ -109,7 +112,7 @@ confident about should not exist.
 ## Using the almanac
 
 **Read the directory listing.** `ls <almanac-dir>/` is the table of contents: every
-filename is a claim, so scanning them tells you what this codebase already knows.
+filename is a claim, so scanning them tells you what this repository already knows.
 `<almanac-dir>` is wherever this file lives — conventionally `docs/almanac/`, but the
 path is this repository's call, not the contract's. There is no index file to consult
 and none to maintain. Do this when you start work in an unfamiliar area, not only once
