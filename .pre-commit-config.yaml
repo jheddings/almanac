@@ -13,47 +13,30 @@ repos:
       hooks:
           - id: prettier
 
+    # `tools/` is stdlib-only, so these need no environment of their own — which is
+    # also why they call `python3 -m tools` rather than `just`: the CI image that runs
+    # pre-commit has no `just`. One hook covers every harness in `harnesses.toml`; a
+    # new harness is a row there, not another entry here.
     - repo: local
       hooks:
           - id: plugin-manifests
-            name: Claude plugin and marketplace manifests agree
-            entry: scripts/check-manifests.sh
+            name: every harness manifest agrees
+            entry: python3 -m tools check-manifests
             language: system
             pass_filenames: false
-            files: ^(?:VERSION|\.claude-plugin/.*\.json)$
+            files: ^(?:VERSION|harnesses\.toml|\.[^/]+-plugin/.*\.json)$
 
-          - id: codex-plugin-manifest
-            name: Codex plugin manifest agrees
-            entry: scripts/check-codex-manifest.sh
+          - id: template-drift
+            name: almanac README matches the shipped template
+            entry: python3 -m tools drift
             language: system
             pass_filenames: false
-            files: ^(?:VERSION|\.codex-plugin/.*)$
-
-          - id: agy-plugin-manifest
-            name: Antigravity plugin manifest agrees
-            entry: scripts/check-agy-manifest.sh
-            language: system
-            pass_filenames: false
-            files: ^(?:VERSION|\.agy-plugin/.*)$
-
-          - id: cursor-plugin-manifest
-            name: Cursor plugin and marketplace manifests agree
-            entry: scripts/check-cursor-manifest.sh
-            language: system
-            pass_filenames: false
-            files: ^(?:VERSION|\.cursor-plugin/.*\.json)$
+            always_run: true
 
           - id: structural-tests
             name: structural test suite
             entry: pytest
             language: python
             additional_dependencies: [pytest, pyyaml]
-            pass_filenames: false
-            always_run: true
-
-          - id: template-drift
-            name: almanac README matches the shipped template
-            entry: python3 scripts/check-template-drift.py
-            language: system
             pass_filenames: false
             always_run: true

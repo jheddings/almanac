@@ -1,54 +1,35 @@
-"""The standalone check scripts, run as part of the suite.
+"""Repo-wide checks that span harnesses.
 
-`check-template-drift.py` and `check-manifests.sh` stay standalone so they can be
-pre-commit hooks in an image without pytest. Wrapping them here means `just test` is one
-command rather than three, and a failure shows up in the same report as everything else.
+The per-harness manifest rules live in `test_manifests.py`, against `tools.manifests`.
+What is left here is what only makes sense across the whole set — agreement between
+harnesses, and the revision stamp that makes an adopter's stale copy diagnosable.
+
+This module used to run `scripts/*` as subprocesses and assert on exit codes. The
+checks are importable functions now, so the shell is no longer an intermediate layer.
 """
 
 from __future__ import annotations
 
 import json
 import re
-import subprocess
-
-import pytest
 
 from tests.support import almanac
-
-def _check_scripts():
-    """Every repo check script, discovered rather than listed.
-
-    A per-harness script lands with each new platform. Enumerating them here means the
-    suite silently stops covering whichever one somebody forgot to add.
-    """
-    commands = []
-    for script in sorted((almanac.REPO_ROOT / "scripts").iterdir()):
-        if script.suffix == ".py":
-            commands.append(["python3", f"scripts/{script.name}"])
-        elif script.suffix == ".sh":
-            commands.append([f"./scripts/{script.name}"])
-    return commands
+from tools import drift, harnesses, manifests
 
 
-SCRIPTS = _check_scripts()
+def _relative(path):
+    return str(path.relative_to(almanac.REPO_ROOT))
 
 
-def test_check_scripts_were_discovered():
-    assert SCRIPTS, "no check scripts found under scripts/"
+def test_every_declared_harness_passes_its_manifest_checks():
+    problems = []
+    for harness in harnesses.load().values():
+        problems += manifests.check(harness)
+    assert problems == [], "\n".join(problems)
 
 
-@pytest.mark.parametrize("command", SCRIPTS, ids=lambda c: c[-1])
-def test_check_script_passes(command):
-    result = subprocess.run(
-        command,
-        cwd=almanac.REPO_ROOT,
-        capture_output=True,
-        text=True,
-    )
-    assert result.returncode == 0, (
-        f"{' '.join(command)} exited {result.returncode}\n"
-        f"stdout:\n{result.stdout}\nstderr:\n{result.stderr}"
-    )
+def test_the_almanac_readme_has_not_drifted_from_the_template():
+    assert drift.check() == [], "".join(drift.check())
 
 
 def test_template_and_instance_carry_the_same_revision_stamp():
@@ -69,12 +50,8 @@ def test_template_and_instance_carry_the_same_revision_stamp():
     )
 
 
-def _relative(path):
-    return str(path.relative_to(almanac.REPO_ROOT))
-
-
 def test_platform_manifests_were_discovered():
-    """Guard the guard: an empty glob would make the two checks below vacuous."""
+    """Guard the guard: an empty glob would make the check below vacuous."""
     assert almanac.platform_manifests(), "no .<platform>-plugin/plugin.json found"
 
 
@@ -83,7 +60,8 @@ def test_every_platform_manifest_agrees_on_the_plugin_name():
 
     Each harness places a manifest at `.<platform>-plugin/plugin.json` pointing at the
     same `skills/` directory. A name that disagrees between them breaks installation on
-    whichever one is wrong.
+    whichever one is wrong. The per-harness checks compare a manifest to its own
+    marketplace; only this one compares harnesses to each other.
     """
     names = {
         _relative(m): json.loads(m.read_text()).get("name")
@@ -92,28 +70,12 @@ def test_every_platform_manifest_agrees_on_the_plugin_name():
     assert len(set(names.values())) == 1, f"manifests disagree on name: {names}"
 
 
-def test_every_platform_manifest_carries_the_shared_version():
-    """`VERSION` is the single source of truth, and the release recipe writes N places.
-
-    Three write sites for one fact is how a version silently diverges: a release that
-    updates `VERSION` and one manifest ships a plugin whose reported version is a lie,
-    and nothing at install time contradicts it.
-    """
-    version = (almanac.REPO_ROOT / "VERSION").read_text().strip()
-    assert version, "VERSION is empty"
-
-    versions = {
-        _relative(m): json.loads(m.read_text()).get("version")
-        for m in almanac.platform_manifests()
-    }
-    disagreeing = {k: v for k, v in versions.items() if v != version}
-    assert not disagreeing, (
-        f"VERSION is {version!r} but these manifests disagree: {disagreeing}"
-    )
-
-
 def test_declared_skills_paths_exist():
-    """A manifest may point at a skills directory; if it does, it must be there."""
+    """A manifest may point at a skills directory; if it does, it must be there.
+
+    Deliberately broader than the table's `path_keys`: this catches a manifest that
+    starts declaring `skills` before anyone teaches the table to check it.
+    """
     for manifest in almanac.platform_manifests():
         declared = json.loads(manifest.read_text()).get("skills")
         if not declared:

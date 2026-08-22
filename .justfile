@@ -1,27 +1,18 @@
 # justfile for the almanac skills.
 #
-# Recipes here are harness-neutral. Anything specific to packaging for a
-# particular harness lives in its own module — `just claude ...`, `just cursor ...`,
-# `just agy ...`, and a sibling module per harness as they are added.
-
-mod agy '.agy-plugin/.justfile'
-mod claude '.claude-plugin/.justfile'
-mod codex '.codex-plugin/.justfile'
-mod cursor '.cursor-plugin/.justfile'
-
-# Single source of truth for the version, shared by every harness manifest.
-version_file := "VERSION"
-claude_plugin := ".claude-plugin/plugin.json"
-codex_plugin := ".codex-plugin/plugin.json"
-agy_plugin := ".agy-plugin/plugin.json"
-cursor_plugin := ".cursor-plugin/plugin.json"
+# Every harness is declared in `harnesses.toml`, and the recipes below fan out from that
+# table rather than naming harnesses here. Adding a harness is a row in the table, not a
+# new module, a new script, and four more places that list the same names.
+#
+# The checks themselves live in `tools/`, which is stdlib-only — `python3 -m tools` needs
+# nothing installed. Only the test suite has dependencies.
 
 # auto-format all files
 tidy:
     npx prettier --write .
 
 # run all checks
-check: style validate drift test claude::manifests codex::manifests agy::manifests cursor::manifests
+check: style validate manifests drift test
 
 # check style
 style:
@@ -31,19 +22,27 @@ style:
 validate:
     for dir in skills/*/; do npx skills-ref validate "$dir"; done
 
-# confirm all manifests agree across harnesses — a mismatch breaks installation
-manifests:
-    ./scripts/check-manifests.sh
+# confirm the manifests agree — a mismatch breaks installation for whoever installs
+manifests harness="":
+    python3 -m tools check-manifests {{ harness }}
 
 # confirm this repo's almanac README is still an instance of the shipped template
 drift:
-    python3 scripts/check-template-drift.py
+    python3 -m tools drift
 
-# run the structural test suite (deps are ephemeral, like npx)
+# run the structural test suite
 test:
-    uv run --quiet --with pytest --with pyyaml pytest
+    uv run --quiet pytest
 
-# remove all build output across harnesses
+# stage a harness payload, validate it, and archive it for distribution
+bundle harness:
+    python3 -m tools bundle {{ harness }}
+
+# build and install a harness plugin locally, via that harness's own CLI
+install harness:
+    python3 -m tools install {{ harness }}
+
+# remove all build output
 clean:
     rm -rf dist
 
@@ -58,31 +57,15 @@ release-guard:
     fi
     test -z "$(git status --porcelain -uno)" || (echo "error: working tree is dirty"; exit 1)
 
-# bump the plugin version across harnesses, commit, tag, and push (CI drafts the GitHub release)
+# bump the version across every harness manifest, commit, tag, and push
 release bump="patch": release-guard check
     #!/usr/bin/env bash
     set -euo pipefail
-    current=$(tr -d '[:space:]' < {{ version_file }})
-    case "{{ bump }}" in
-        major|minor|patch)
-            IFS=. read -r major minor patch <<< "$current"
-            case "{{ bump }}" in
-                major) major=$((major + 1)); minor=0; patch=0 ;;
-                minor) minor=$((minor + 1)); patch=0 ;;
-                patch) patch=$((patch + 1)) ;;
-            esac
-            version="$major.$minor.$patch"
-            ;;
-        *) version="{{ bump }}" ;;
-    esac
-    echo "releasing $current -> $version"
-    for manifest in {{ claude_plugin }} {{ codex_plugin }} {{ agy_plugin }} {{ cursor_plugin }}; do
-        jq --arg v "$version" '.version = $v' "$manifest" > tmp.$$.json
-        mv tmp.$$.json "$manifest"
-    done
-    printf '%s\n' "$version" > {{ version_file }}
-    npx prettier --write {{ claude_plugin }} {{ codex_plugin }} {{ agy_plugin }} {{ cursor_plugin }}
-    git add {{ version_file }} {{ claude_plugin }} {{ codex_plugin }} {{ agy_plugin }} {{ cursor_plugin }}
+    version=$(python3 -m tools set-version "{{ bump }}")
+    echo "releasing $version"
+    # Only the manifests: prettier infers no parser for VERSION or a .toml file.
+    npx prettier --write $(python3 -m tools manifest-paths)
+    git add -u
     git commit -m "chore(release): $version"
     git tag -a "$version" -m "$version"
     git push && git push --tags

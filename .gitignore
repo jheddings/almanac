@@ -12,8 +12,12 @@ __pycache__/
 # keeps `just check` green on a working copy that has them)
 .claude/settings.local.json
 
-# Build output (see `just claude bundle` / `just cursor bundle` / `just agy bundle`)
+# Build output (see `just bundle <harness>`)
 dist/
 
 # pytest
 .pytest_cache/
+
+# uv
+.venv/
+uv.lock

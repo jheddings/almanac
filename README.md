@@ -44,7 +44,7 @@ Install from this repository as a Cursor Plugin (IDE or Agent CLI), for example:
   `cursor agent --plugin-dir`), or
 - import the repo as a team marketplace source pointing at `./`
 
-A distributable archive is produced by `just cursor bundle`
+A distributable archive is produced by `just bundle cursor`
 (`dist/almanac-cursor-plugin-<version>.zip`). Commands live under
 `.cursor-plugin/commands/` so a Claude marketplace install of the same tree does not
 auto-discover them.
@@ -57,7 +57,7 @@ no marketplace entry or installation flow yet.
 ### Antigravity (`agy`)
 
 ```bash
-just agy bundle
+just bundle agy
 agy plugin install dist/almanac-agy
 ```
 

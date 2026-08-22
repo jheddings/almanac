@@ -1,0 +1,65 @@
+# Every harness this repo packages for, as data.
+#
+# Adding a harness used to mean touching seven places, five of which were the same
+# list written out five times. It is now this table plus whatever genuinely differs.
+#
+# `manifest` and `marketplace` are repo-relative. `payload` is an allowlist, never a
+# set of exclusions: the repo root doubles as the plugin root, so a denylist ships
+# every new repo-only directory until somebody notices.
+#
+# `manifest_dest` is where the manifest lands inside the archive. Most harnesses keep
+# it at its repo path; Antigravity wants it at the archive root.
+
+[claude]
+manifest = ".claude-plugin/plugin.json"
+marketplace = ".claude-plugin/marketplace.json"
+
+[claude.bundle]
+stage = "almanac"
+archive = "almanac-plugin-{version}.zip"
+payload = [".claude-plugin/plugin.json", "skills", "templates", "README.md", "LICENSE"]
+manifest_dest = ".claude-plugin/plugin.json"
+validate = ["claude", "plugin", "validate", "{stage}"]
+require = ["templates/almanac/README.md", "skills"]
+
+[cursor]
+manifest = ".cursor-plugin/plugin.json"
+marketplace = ".cursor-plugin/marketplace.json"
+# Cursor's manifest points at its own skills and commands directories.
+path_keys = ["skills", "commands"]
+
+[cursor.bundle]
+stage = "almanac-cursor"
+archive = "almanac-cursor-plugin-{version}.zip"
+payload = [
+    ".cursor-plugin/plugin.json",
+    ".cursor-plugin/commands",
+    "skills",
+    "templates",
+    "README.md",
+    "LICENSE",
+]
+manifest_dest = ".cursor-plugin/plugin.json"
+# Cursor ships no archive validator, so the stage checks stand in for one.
+require = [
+    "templates/almanac/README.md",
+    ".cursor-plugin/commands/init.md",
+    "skills",
+]
+
+[codex]
+manifest = ".codex-plugin/plugin.json"
+path_keys = ["skills"]
+# Codex consumes the repo tree directly; there is no archive to build.
+
+[agy]
+manifest = ".agy-plugin/plugin.json"
+
+[agy.bundle]
+stage = "almanac-agy"
+archive = "almanac-agy-{version}.zip"
+payload = ["skills", "templates", "README.md", "LICENSE"]
+manifest_dest = "plugin.json"
+validate = ["agy", "plugin", "validate", "{stage}"]
+install = ["agy", "plugin", "install", "{stage}"]
+require = ["templates/almanac/README.md", "skills"]
