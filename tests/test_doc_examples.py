@@ -16,6 +16,13 @@ from tests.support import almanac
 from tests.test_entry_frontmatter import check_entry_frontmatter
 
 EXAMPLES = almanac.example_frontmatter()
+BLOCKS = almanac.example_blocks()
+
+# Fence languages no formatter parses, so the block round-trips unchanged. Prettier
+# formats YAML embedded in a `markdown` fence; a repo setting `singleQuote: true`
+# rewrites the example's quoted `source` on its first format run — which is the run
+# `init` tells an adopter to make, on the file `init` just wrote.
+INERT_FENCES = {"", "text", "plaintext", "txt"}
 
 
 def _ids(pair):
@@ -68,3 +75,18 @@ def test_yaml_comment_trap_is_real():
     """Pin the behavior this suite defends against, so the rule can't be dismissed."""
     assert yaml.safe_load("source: PR #1129") == {"source": "PR"}
     assert yaml.safe_load('source: "PR #1129"') == {"source": "PR #1129"}
+
+
+@pytest.mark.parametrize("triple", BLOCKS, ids=lambda t: str(t[0].name))
+def test_example_fence_is_inert_to_formatters(triple):
+    """The example must survive the adopting repo's formatter untouched.
+
+    The quoting in this example is the lesson — `source: "PR #1129"` teaches that an
+    unquoted `#` opens a YAML comment. A formatter that normalizes those quotes rewrites
+    the contract file on the adopter's first commit, over text nobody edited.
+    """
+    doc, language, _ = triple
+    assert language in INERT_FENCES, (
+        f"{doc.name}: entry example is fenced as `{language}`, which formatters parse "
+        f"and may rewrite. Use one of {sorted(INERT_FENCES - {''})}."
+    )
