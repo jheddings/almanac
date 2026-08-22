@@ -13,30 +13,31 @@ repos:
       hooks:
           - id: prettier
 
-    # `tools/` is stdlib-only, so these need no environment of their own — which is
-    # also why they call `python3 -m tools` rather than `just`: the CI image that runs
-    # pre-commit has no `just`. One hook covers every harness in `harnesses.toml`; a
-    # new harness is a row there, not another entry here.
+    # These call `uv run` rather than `just`, since the CI image that runs pre-commit
+    # has no `just` — but they use the same environment `just venv` syncs, so there is
+    # one dependency declaration (pyproject.toml) rather than a second copy here.
+    #
+    # One hook covers every harness in `harnesses.toml`; a new harness is a row there,
+    # not another entry here.
     - repo: local
       hooks:
           - id: plugin-manifests
             name: every harness manifest agrees
-            entry: python3 -m tools check-manifests
+            entry: uv run python -m tools check-manifests
             language: system
             pass_filenames: false
             files: ^(?:VERSION|harnesses\.toml|\.[^/]+-plugin/.*\.json)$
 
           - id: template-drift
             name: almanac README matches the shipped template
-            entry: python3 -m tools drift
+            entry: uv run python -m tools drift
             language: system
             pass_filenames: false
             always_run: true
 
           - id: structural-tests
             name: structural test suite
-            entry: pytest
-            language: python
-            additional_dependencies: [pytest, pyyaml]
+            entry: uv run pytest
+            language: system
             pass_filenames: false
             always_run: true

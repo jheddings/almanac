@@ -4,6 +4,10 @@
 # markdown and JSON — so this project exists only for contributors and CI. It is
 # deliberately not a distributable package: `package = false` keeps uv from trying
 # to build it, and pytest's `pythonpath` is what makes `tools/` importable.
+#
+# `uv sync` (via `just venv`) is the only setup step. Every recipe that touches
+# Python depends on it and runs through `uv run`, so there is one environment and
+# one way in.
 
 [project]
 name = "almanac-tools"
@@ -15,7 +19,7 @@ requires-python = ">=3.11"
 package = false
 
 [dependency-groups]
-dev = ["pytest>=8", "pyyaml>=6"]
+dev = ["pytest>=8", "pyyaml>=6", "pre-commit>=4"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]

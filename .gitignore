@@ -18,6 +18,5 @@ dist/
 # pytest
 .pytest_cache/
 
-# uv
+# uv (uv.lock is committed, as in the other projects here)
 .venv/
-uv.lock

@@ -182,10 +182,14 @@ and what must and must not appear in the archive it produces. The recipes and ch
 out from that table, so adding a harness is a row rather than a new justfile module, a
 new check script, a new pre-commit hook, and four more places listing the same names.
 
-The checks themselves live in [`tools/`](tools/), which is stdlib-only —
-`python3 -m tools` needs nothing installed. Only the test suite has dependencies.
+The checks themselves live in [`tools/`](tools/). Everything Python runs through
+`uv run` against the environment `just venv` syncs, so there is one environment and one
+way in — `uv` and `npx` are the only prerequisites.
 
 ```bash
+just setup              # sync the venv and install git hooks — run this first
+just venv               # sync the venv alone
+
 just check              # style + validate + manifests + drift + test
 just test               # the structural suite alone
 just tidy               # prettier --write .
@@ -206,15 +210,17 @@ just install agy        # bundle, then install locally via that harness's own CL
   mismatch breaks installation for whoever installs the release, and only for them.
   `just manifests cursor` narrows it to one harness.
 - `just drift` — the template check described above.
-- `just test` — the structural suite in `tests/`, via `uv run pytest`. Dependencies are
-  declared in `pyproject.toml` under `[dependency-groups]`; `uv` resolves them on the
-  fly, so there is still nothing to install by hand.
+- `just test` — the structural suite in `tests/`, via `uv run pytest`.
+
+Dependencies are declared once, in `pyproject.toml` under `[dependency-groups]`, and
+pinned in the committed `uv.lock`. Every recipe that touches Python depends on `venv`,
+so `uv` syncs the environment before anything runs and there is no separate install step
+to forget.
 
 Everything except `style` and `validate` is also a pre-commit hook. The hooks call
-`python3 -m tools` rather than `just`, since the CI image that runs pre-commit has no
-`just` — and since `tools/` is stdlib-only, those hooks need no environment at all. The
-suite runs there through pre-commit's own `language: python` environment, which installs
-pytest and PyYAML itself and needs no `uv`. A check that is not a pre-commit hook is not
+`uv run` rather than `just`, since the CI image that runs pre-commit has no `just` — but
+they resolve the same environment the recipes do, so the dependency list is not
+duplicated into `additional_dependencies`. A check that is not a pre-commit hook is not
 enforced in CI.
 
 ### The structural suite

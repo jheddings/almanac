@@ -123,9 +123,12 @@ git worktree remove .worktrees/<name>
 
 ## Checks
 
-`just check` runs everything: `prettier --check .`, `skills-ref validate` per skill, the
-manifest and template-drift checks, and the structural test suite in [`tests/`](tests/).
-`just test` runs the suite alone; `just tidy` formats.
+`just setup` syncs the virtual environment and installs the git hooks; run it once when
+you start. After that, `just check` runs everything: `prettier --check .`,
+`skills-ref validate` per skill, the manifest and template-drift checks, and the
+structural test suite in [`tests/`](tests/). `just test` runs the suite alone;
+`just tidy` formats. Every recipe that touches Python syncs the environment first, so
+there is no separate install step to forget.
 
 Prettier uses `proseWrap: always` at 88 columns, so it reflows Markdown prose — expect
 it to rewrap paragraphs you edit.
