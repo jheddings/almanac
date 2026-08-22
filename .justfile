@@ -1,29 +1,39 @@
 # justfile for the almanac skills.
 #
-# Recipes here are harness-neutral. Anything specific to packaging for a
-# particular harness lives in its own module — `just claude ...`, `just cursor ...`,
-# `just agy ...`, and a sibling module per harness as they are added.
+# Harnesses are declared in `harnesses.toml`. The recipes read that table, so a harness
+# is named in one place and the recipes below stay the same as harnesses are added.
+#
+# Everything Python runs through `uv run` against the environment `venv` syncs. Recipes
+# that need it depend on `venv`, so the environment is current before anything runs.
 
-mod agy '.agy-plugin/.justfile'
-mod claude '.claude-plugin/.justfile'
-mod codex '.codex-plugin/.justfile'
-mod cursor '.cursor-plugin/.justfile'
+basedir := justfile_directory()
 
-# Single source of truth for the version, shared by every harness manifest.
-version_file := "VERSION"
-claude_plugin := ".claude-plugin/plugin.json"
-codex_plugin := ".codex-plugin/plugin.json"
-agy_plugin := ".agy-plugin/plugin.json"
-cursor_plugin := ".cursor-plugin/plugin.json"
+# sync the environment, install hooks, and run the full preflight
+default: setup preflight
+
+# set up the local development environment
+setup: venv
+    uv run pre-commit install --install-hooks --overwrite
+
+# sync the virtual environment
+venv:
+    uv sync --all-extras
 
 # auto-format all files
-tidy:
+tidy: venv
     npx prettier --write .
 
-# run all checks
-check: style validate drift test claude::manifests codex::manifests agy::manifests cursor::manifests
+# run all static checks
+check: style validate manifests drift
 
-# check style
+# run unit tests
+test: venv
+    uv run pytest
+
+# full static checks and unit tests
+preflight: check test
+
+# check formatting
 style:
     npx prettier --check .
 
@@ -31,21 +41,41 @@ style:
 validate:
     for dir in skills/*/; do npx skills-ref validate "$dir"; done
 
-# confirm all manifests agree across harnesses — a mismatch breaks installation
-manifests:
-    ./scripts/check-manifests.sh
+# confirm the manifests agree — a mismatch breaks installation for whoever installs
+manifests harness="": venv
+    uv run python -m tools check-manifests {{ harness }}
 
-# confirm this repo's almanac README is still an instance of the shipped template
-drift:
-    python3 scripts/check-template-drift.py
+# confirm this repo's almanac README is an instance of the shipped template
+drift: venv
+    uv run python -m tools drift
 
-# run the structural test suite (deps are ephemeral, like npx)
-test:
-    uv run --quiet --with pytest --with pyyaml pytest
+# stage a harness payload, validate it, and archive it for distribution
+bundle harness: venv
+    uv run python -m tools bundle {{ harness }}
 
-# remove all build output across harnesses
+# build a harness archive and install it through that harness's own CLI
+install harness: venv
+    uv run python -m tools install {{ harness }}
+
+# remove build output and caches
 clean:
-    rm -rf dist
+    rm -rf "{{ basedir }}/dist"
+    rm -rf "{{ basedir }}/.pytest_cache"
+    find "{{ basedir }}" -name "*.pyc" -delete
+    find "{{ basedir }}" -name "__pycache__" -type d -exec rm -rf {} +
+
+# remove everything, including the virtual environment
+clobber: clean
+    #!/usr/bin/env bash
+    set -euo pipefail
+    # Hooks live in the shared common git dir, so uninstalling from a linked worktree
+    # would disarm them for the main checkout too. See docs/almanac/.
+    if [ "$(git rev-parse --git-dir)" = "$(git rev-parse --git-common-dir)" ]; then
+        uv run pre-commit uninstall || true
+    else
+        echo "skipping pre-commit uninstall: hooks are shared, and this is a worktree"
+    fi
+    rm -rf "{{ basedir }}/.venv"
 
 # refuse to release unless on main with a clean working tree
 release-guard:
@@ -58,31 +88,15 @@ release-guard:
     fi
     test -z "$(git status --porcelain -uno)" || (echo "error: working tree is dirty"; exit 1)
 
-# bump the plugin version across harnesses, commit, tag, and push (CI drafts the GitHub release)
-release bump="patch": release-guard check
+# bump the version across every harness manifest, commit, tag, and push
+release bump="patch": release-guard preflight
     #!/usr/bin/env bash
     set -euo pipefail
-    current=$(tr -d '[:space:]' < {{ version_file }})
-    case "{{ bump }}" in
-        major|minor|patch)
-            IFS=. read -r major minor patch <<< "$current"
-            case "{{ bump }}" in
-                major) major=$((major + 1)); minor=0; patch=0 ;;
-                minor) minor=$((minor + 1)); patch=0 ;;
-                patch) patch=$((patch + 1)) ;;
-            esac
-            version="$major.$minor.$patch"
-            ;;
-        *) version="{{ bump }}" ;;
-    esac
-    echo "releasing $current -> $version"
-    for manifest in {{ claude_plugin }} {{ codex_plugin }} {{ agy_plugin }} {{ cursor_plugin }}; do
-        jq --arg v "$version" '.version = $v' "$manifest" > tmp.$$.json
-        mv tmp.$$.json "$manifest"
-    done
-    printf '%s\n' "$version" > {{ version_file }}
-    npx prettier --write {{ claude_plugin }} {{ codex_plugin }} {{ agy_plugin }} {{ cursor_plugin }}
-    git add {{ version_file }} {{ claude_plugin }} {{ codex_plugin }} {{ agy_plugin }} {{ cursor_plugin }}
+    version=$(uv run python -m tools set-version "{{ bump }}")
+    echo "releasing $version"
+    # Prettier infers a parser from the extension, so it takes the manifests only.
+    npx prettier --write $(uv run python -m tools manifest-paths)
+    git add -u
     git commit -m "chore(release): $version"
     git tag -a "$version" -m "$version"
     git push && git push --tags

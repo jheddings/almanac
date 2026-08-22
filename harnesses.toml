@@ -1,0 +1,70 @@
+# Every harness this repo packages for.
+#
+# The checks and the packaging read this table, so a harness is named here and nowhere
+# else. Each row carries only what differs between harnesses.
+#
+# `manifest` and `marketplace` are repo-relative paths.
+#
+# `payload` lists what the archive ships. It is an allowlist: the repo root doubles as
+# the plugin root, so a directory added to the repo stays out of every archive until a
+# payload names it.
+#
+# `manifest_dest` is where the manifest sits inside the archive, which is the repo path
+# for some harnesses and the archive root for others.
+#
+# `validate` and `install` are command templates; `{stage}` expands to the staging
+# directory. `require` lists paths the archive would be useless without.
+
+[claude]
+manifest = ".claude-plugin/plugin.json"
+marketplace = ".claude-plugin/marketplace.json"
+
+[claude.bundle]
+stage = "almanac"
+archive = "almanac-plugin-{version}.zip"
+payload = [".claude-plugin/plugin.json", "skills", "templates", "README.md", "LICENSE"]
+manifest_dest = ".claude-plugin/plugin.json"
+validate = ["claude", "plugin", "validate", "{stage}"]
+require = ["templates/almanac/README.md", "skills"]
+
+[cursor]
+manifest = ".cursor-plugin/plugin.json"
+marketplace = ".cursor-plugin/marketplace.json"
+# Cursor's manifest points at its own skills and commands directories.
+path_keys = ["skills", "commands"]
+
+[cursor.bundle]
+stage = "almanac-cursor"
+archive = "almanac-cursor-plugin-{version}.zip"
+payload = [
+    ".cursor-plugin/plugin.json",
+    ".cursor-plugin/commands",
+    "skills",
+    "templates",
+    "README.md",
+    "LICENSE",
+]
+manifest_dest = ".cursor-plugin/plugin.json"
+# Cursor ships no archive validator, so `require` names what a usable archive holds.
+require = [
+    "templates/almanac/README.md",
+    ".cursor-plugin/commands/init.md",
+    "skills",
+]
+
+[codex]
+manifest = ".codex-plugin/plugin.json"
+path_keys = ["skills"]
+# Codex consumes the repo tree directly; there is no archive to build.
+
+[agy]
+manifest = ".agy-plugin/plugin.json"
+
+[agy.bundle]
+stage = "almanac-agy"
+archive = "almanac-agy-{version}.zip"
+payload = ["skills", "templates", "README.md", "LICENSE"]
+manifest_dest = "plugin.json"
+validate = ["agy", "plugin", "validate", "{stage}"]
+install = ["agy", "plugin", "install", "{stage}"]
+require = ["templates/almanac/README.md", "skills"]

@@ -1,0 +1,25 @@
+# Repo tooling for the almanac skills.
+#
+# Nothing here ships. The plugin payload is metadata, skills, and templates, so this
+# project exists for contributors and CI. `package = false` keeps uv from building it,
+# and pytest's `pythonpath` is what makes `tools/` importable from `tests/`.
+#
+# `uv sync` is the only setup step, and `just venv` runs it.
+
+[project]
+name = "almanac-tools"
+version = "0.0.0"
+description = "Repo tooling for the almanac skills. Not published, not shipped."
+requires-python = ">=3.11"
+dependencies = ["click>=8.4.2"]
+
+[tool.uv]
+package = false
+
+[dependency-groups]
+dev = ["pytest>=8", "pyyaml>=6", "pre-commit>=4"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["."]
+addopts = "-q --strict-markers"

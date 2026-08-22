@@ -13,47 +13,30 @@ repos:
       hooks:
           - id: prettier
 
+    # These run through `uv run`, which resolves the environment declared in
+    # pyproject.toml. `just` is not on the CI image that runs pre-commit, so the hooks
+    # call `uv` directly.
+    #
+    # The manifest hook covers every harness in `harnesses.toml`.
     - repo: local
       hooks:
           - id: plugin-manifests
-            name: Claude plugin and marketplace manifests agree
-            entry: scripts/check-manifests.sh
+            name: every harness manifest agrees
+            entry: uv run python -m tools check-manifests
             language: system
             pass_filenames: false
-            files: ^(?:VERSION|\.claude-plugin/.*\.json)$
-
-          - id: codex-plugin-manifest
-            name: Codex plugin manifest agrees
-            entry: scripts/check-codex-manifest.sh
-            language: system
-            pass_filenames: false
-            files: ^(?:VERSION|\.codex-plugin/.*)$
-
-          - id: agy-plugin-manifest
-            name: Antigravity plugin manifest agrees
-            entry: scripts/check-agy-manifest.sh
-            language: system
-            pass_filenames: false
-            files: ^(?:VERSION|\.agy-plugin/.*)$
-
-          - id: cursor-plugin-manifest
-            name: Cursor plugin and marketplace manifests agree
-            entry: scripts/check-cursor-manifest.sh
-            language: system
-            pass_filenames: false
-            files: ^(?:VERSION|\.cursor-plugin/.*\.json)$
-
-          - id: structural-tests
-            name: structural test suite
-            entry: pytest
-            language: python
-            additional_dependencies: [pytest, pyyaml]
-            pass_filenames: false
-            always_run: true
+            files: ^(?:VERSION|harnesses\.toml|\.[^/]+-plugin/.*\.json)$
 
           - id: template-drift
             name: almanac README matches the shipped template
-            entry: python3 scripts/check-template-drift.py
+            entry: uv run python -m tools drift
+            language: system
+            pass_filenames: false
+            always_run: true
+
+          - id: structural-tests
+            name: structural test suite
+            entry: uv run pytest
             language: system
             pass_filenames: false
             always_run: true

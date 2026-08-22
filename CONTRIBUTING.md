@@ -176,42 +176,58 @@ skills exist to prevent. Zero entries is a perfectly good state.
 
 ## Checks and packaging
 
-Packaging for specific harnesses lives in dedicated modules (`mod claude`, `mod cursor`,
-`mod agy`, `mod codex`), while vendor-neutral checks remain at the repository root.
+Every harness this repo packages for is declared as a row in
+[`harnesses.toml`](harnesses.toml): its manifests, its payload allowlist, its validator,
+and what must and must not appear in the archive it produces. The recipes and the checks
+read that table, so a harness is named there and nowhere else.
+
+The checks live in [`tools/`](tools/) and run through `uv run` against the environment
+`just venv` syncs. `uv` and `npx` are the only prerequisites.
 
 ```bash
-just check          # style + validate + drift + test + per-harness manifests
-just test           # the structural suite alone
-just tidy           # prettier --write .
+just setup              # sync the venv and install the git hooks
+just venv               # sync the venv alone
 
-just claude bundle  # stage -> validate -> dist/almanac-plugin-<version>.zip
-just cursor bundle  # stage -> structural checks -> dist/almanac-cursor-plugin-<version>.zip
-just agy bundle     # stage -> validate -> dist/almanac-agy-<version>.zip
+just check              # static checks: style + validate + manifests + drift
+just test               # the structural suite
+just preflight          # check + test
+just tidy               # prettier --write .
+
+just bundle claude      # stage -> validate -> dist/almanac-plugin-<version>.zip
+just bundle cursor      # stage -> stage checks -> dist/almanac-cursor-plugin-<version>.zip
+just bundle agy         # stage -> validate -> dist/almanac-agy-<version>.zip
+just install agy        # bundle, then install through that harness's own CLI
+
+just clean              # drop build output and caches
+just clobber            # clean, and remove the virtual environment
 ```
+
+`just` on its own runs `setup` then `preflight`, which is the full pass.
 
 - `just style` — `prettier --check .` (also a pre-commit hook, so it runs on commit and
   in CI). Note `proseWrap: always` at 88 columns: prettier reflows Markdown prose.
 - `just validate` — `skills-ref validate` per skill directory, matching the
   `validate-skill` workflow.
-- `just claude manifests` — asserts Claude's plugin and marketplace manifests agree and
-  both carry the shared version. A mismatch breaks installation for whoever installs the
-  release.
-- `just cursor manifests` — asserts Cursor's plugin and marketplace manifests agree,
-  carry the shared version, and that the skills and commands paths exist.
-- `just codex manifests` — asserts Codex's manifest carries the shared version and its
-  skills path exists.
-- `just agy manifests` — asserts Antigravity's manifest carries the shared version and
-  an MIT license.
+- `just manifests` — every harness at once: each manifest carries the shared `VERSION`
+  and an MIT license, each marketplace lists exactly this plugin at `./` and says the
+  same name and description as its plugin manifest, and every declared path exists. A
+  mismatch breaks installation for whoever installs the release, and only for them.
+  `just manifests cursor` narrows it to one harness.
 - `just drift` — the template check described above.
-- `just test` — the structural suite in `tests/`. Runs via
-  `uv run --with pytest --with pyyaml`, so dependencies are ephemeral in the same spirit
-  as `npx --yes`: nothing to install, no lockfile.
+- `just test` — the structural suite in `tests/`, via `uv run pytest`.
+- `just preflight` — `check` and `test` together. This is what `just release` gates on.
 
-Everything except `style` and `validate` is also a pre-commit hook. The script-backed
-hooks call `scripts/*` rather than `just`, since the CI image that runs pre-commit has
-no `just`; the suite runs there through pre-commit's own `language: python` environment,
-which installs pytest and PyYAML itself and needs no `uv`. A check that is not a
-pre-commit hook is not enforced in CI.
+Dependencies are declared in `pyproject.toml` under `[dependency-groups]` and pinned in
+`uv.lock`, which is tracked. Recipes that touch Python depend on `venv`, so `uv` syncs
+the environment before anything runs.
+
+The manifest check, the drift check, and the suite are also pre-commit hooks. They
+invoke `uv run` directly, because the CI image that runs pre-commit has no `just`. A
+check that is not a pre-commit hook is not enforced in CI, which is why `style` and
+`validate` have their own hook and workflow.
+
+The checks are also a CLI in their own right: `uv run python -m tools --help` lists
+them, and each command carries its own help.
 
 ### The structural suite
 
@@ -225,7 +241,13 @@ exists because most of the defects this project has shipped and caught were stru
 | `test_verify_lines.py`      | every `verify` names a runnable check **and** an expected observation                                                                                |
 | `test_discovery_rule.py`    | the resolution rule, executed against trees built to trip it, plus prose/code agreement                                                              |
 | `test_skill_hygiene.py`     | naming, frontmatter shape, description form, exclusion-list agreement, prose ratchet                                                                 |
-| `test_repo_checks.py`       | the standalone scripts, the revision stamp, per-platform manifest agreement                                                                          |
+| `test_repo_checks.py`       | the revision stamp, and agreement _between_ harnesses rather than within one                                                                         |
+| `test_manifests.py`         | every manifest rule, each against the broken manifest it exists to reject                                                                            |
+| `test_bundle.py`            | staging, the payload allowlist, and what the finished archive does and does not contain                                                              |
+| `test_harnesses.py`         | the table matches the harnesses actually present on disk                                                                                             |
+| `test_drift.py`             | the template check, against a deliberately drifting pair                                                                                             |
+| `test_release.py`           | the shared version reaches every manifest, and bump keywords resolve                                                                                 |
+| `test_cli.py`               | `python3 -m tools` exits zero when the repo is clean and non-zero when it is not                                                                     |
 
 Two conventions worth keeping:
 
