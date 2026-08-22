@@ -53,7 +53,7 @@ One fact per file. Filename is a kebab-case slug stating the claim, not the topi
 more than it looks: the filenames are the index (see below), so a slug that states a
 claim is readable knowledge on its own.
 
-```markdown
+```text
 ---
 title: Out-of-order migrations are silently skipped on deploy
 recorded: 2026-08-15
@@ -108,7 +108,10 @@ you're stuck — the entries worth most are silent failures you would never thin
 search for.
 
 Grep it before assuming something is undocumented — filenames state claims, so
-`grep -rl <keyword> <almanac-dir>/` (or `rg -l`) is usually enough.
+`grep -rl --exclude=README.md <keyword> <almanac-dir>/` (or `rg -l --glob '!README.md'`)
+is usually enough. Exclude this file deliberately: it is the contract, not a claim, and
+its worked example is keyword-dense enough to match almost any probe while the almanac
+is young.
 
 Read the entry, and if it carries a `verify` line and you're about to act on something
 expensive, run it.

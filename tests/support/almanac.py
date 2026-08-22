@@ -35,7 +35,7 @@ DOCS_WITH_EXAMPLES = (
 )
 
 FRONTMATTER_RE = re.compile(r"\A---\n(.*?)\n---\n", re.DOTALL)
-FENCED_MARKDOWN_RE = re.compile(r"```markdown\n(.*?)```", re.DOTALL)
+FENCED_BLOCK_RE = re.compile(r"```([a-z]*)\n(.*?)```", re.DOTALL)
 BACKTICKED_RE = re.compile(r"`([^`]+)`")
 
 
@@ -90,16 +90,26 @@ def entry_paths() -> list[Path]:
     return sorted(p for p in LIVE_ALMANAC.glob("*.md") if p.name != ALMANAC_README)
 
 
-def example_frontmatter() -> list[tuple[Path, str]]:
-    """Every fenced ```markdown block that opens with entry frontmatter."""
+def example_blocks() -> list[tuple[Path, str, str]]:
+    """Every fenced block that opens with entry frontmatter, as (doc, language, body).
+
+    Language-agnostic on purpose. The fence language is a formatting decision — the
+    example is tagged `text` so no formatter parses and rewrites it — and which examples
+    the contract tests cover must not move when that decision changes.
+    """
     examples = []
     for doc in DOCS_WITH_EXAMPLES:
         if not doc.is_file():
             continue
-        for block in FENCED_MARKDOWN_RE.findall(doc.read_text()):
+        for language, block in FENCED_BLOCK_RE.findall(doc.read_text()):
             if FRONTMATTER_RE.match(block):
-                examples.append((doc, block))
+                examples.append((doc, language, block))
     return examples
+
+
+def example_frontmatter() -> list[tuple[Path, str]]:
+    """Every fenced block that opens with entry frontmatter, as (doc, body)."""
+    return [(doc, block) for doc, _, block in example_blocks()]
 
 
 def platform_manifests() -> list[Path]:
