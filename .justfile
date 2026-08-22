@@ -1,25 +1,27 @@
 # justfile for the almanac skills.
 #
 # Recipes here are harness-neutral. Anything specific to packaging for a
-# particular harness lives in its own module — `just claude ...`, `just agy ...`,
-# and a sibling module per harness as they are added.
+# particular harness lives in its own module — `just claude ...`, `just cursor ...`,
+# `just agy ...`, and a sibling module per harness as they are added.
 
 mod agy '.agy-plugin/.justfile'
 mod claude '.claude-plugin/.justfile'
 mod codex '.codex-plugin/.justfile'
+mod cursor '.cursor-plugin/.justfile'
 
 # Single source of truth for the version, shared by every harness manifest.
 version_file := "VERSION"
 claude_plugin := ".claude-plugin/plugin.json"
 codex_plugin := ".codex-plugin/plugin.json"
 agy_plugin := ".agy-plugin/plugin.json"
+cursor_plugin := ".cursor-plugin/plugin.json"
 
 # auto-format all files
 tidy:
     npx prettier --write .
 
 # run all checks
-check: style validate drift test claude::manifests codex::manifests agy::manifests
+check: style validate drift test claude::manifests codex::manifests agy::manifests cursor::manifests
 
 # check style
 style:
@@ -74,13 +76,13 @@ release bump="patch": release-guard check
         *) version="{{ bump }}" ;;
     esac
     echo "releasing $current -> $version"
-    for manifest in {{ claude_plugin }} {{ codex_plugin }} {{ agy_plugin }}; do
+    for manifest in {{ claude_plugin }} {{ codex_plugin }} {{ agy_plugin }} {{ cursor_plugin }}; do
         jq --arg v "$version" '.version = $v' "$manifest" > tmp.$$.json
         mv tmp.$$.json "$manifest"
     done
     printf '%s\n' "$version" > {{ version_file }}
-    npx prettier --write {{ claude_plugin }} {{ codex_plugin }} {{ agy_plugin }}
-    git add {{ version_file }} {{ claude_plugin }} {{ codex_plugin }} {{ agy_plugin }}
+    npx prettier --write {{ claude_plugin }} {{ codex_plugin }} {{ agy_plugin }} {{ cursor_plugin }}
+    git add {{ version_file }} {{ claude_plugin }} {{ codex_plugin }} {{ agy_plugin }} {{ cursor_plugin }}
     git commit -m "chore(release): $version"
     git tag -a "$version" -m "$version"
     git push && git push --tags

@@ -82,7 +82,28 @@ def _resolution_paths(skill):
     return None
 
 
+# A skill that resolves the almanac always globs for it. That glob is a far more stable
+# anchor than the sentence introducing the exclusions, so it is what decides which skills
+# *must* parse — rather than letting the parser decide its own coverage.
+RESOLUTION_GLOB = "**/almanac/README.md"
+RESOLVING = [s for s in SKILLS if RESOLUTION_GLOB in s.body]
 RESOLVERS = [s for s in SKILLS if _resolution_paths(s) is not None]
+
+
+def test_every_resolving_skill_exposes_its_exclusion_list():
+    """Guard the guard.
+
+    `_resolution_paths` finds the list by looking for a particular sentence. Reword that
+    sentence and the skill drops out of the drift check below with nothing failing — so
+    a genuine drift in the reworded skill would go unnoticed. Anchor coverage to the
+    glob instead, and fail when the two disagree.
+    """
+    assert RESOLVING, f"no skill contains {RESOLUTION_GLOB!r} — has resolution moved?"
+    unparsed = sorted(s.name for s in RESOLVING if _resolution_paths(s) is None)
+    assert not unparsed, (
+        f"these skills resolve the almanac but their exclusion list could not be "
+        f"parsed, so they are silently exempt from the drift check: {unparsed}"
+    )
 
 
 def test_every_skill_that_resolves_the_almanac_names_the_same_exclusions():
@@ -90,10 +111,13 @@ def test_every_skill_that_resolves_the_almanac_names_the_same_exclusions():
 
     Only the path list is load-bearing — the consequence clause after it is legitimately
     per-skill, since recording into the wrong almanac and auditing the wrong one fail
-    differently. Three skills resolve the almanac, so this list has already needed
-    extending twice; a hand-edit that misses one is silent.
+    differently. Four skills resolve the almanac now, so this list has already needed
+    extending; a hand-edit that misses one is silent.
     """
-    assert len(RESOLVERS) >= 2, "expected at least two skills to resolve the almanac"
+    assert len(RESOLVERS) == len(RESOLVING), (
+        f"parsed {len(RESOLVERS)} exclusion lists but {len(RESOLVING)} skills resolve "
+        "the almanac"
+    )
     by_skill = {s.name: _resolution_paths(s) for s in RESOLVERS}
     distinct = {frozenset(v) for v in by_skill.values()}
     assert len(distinct) == 1, (
