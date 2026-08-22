@@ -85,6 +85,12 @@ repo-local, so they live in the almanac's `README.md`** — read its destination
 for where each category goes in _this_ repo. Do not guess a destination, and do not file
 into a directory you have not confirmed exists.
 
+Questions 1 and 2 share a discriminator, and it is the fastest one to reach for: **can
+this be false without anyone changing their mind?** Reality can refute a fact. Intent
+can only be diverged from, and a rule only broken. So a fact that matters only as the
+rationale for a rule written down elsewhere stays with the rule. Neither question turns
+on _who told you_.
+
 Question 1 is **design vs. discovery**: how a thing was meant to work is architecture;
 what turned out to be true when someone ran it is an almanac entry.
 
@@ -109,7 +115,9 @@ tool. Only your own machine's state is out; split it the way question 5 splits.
 
 1. **Durable** — still true in six months. How the system _behaves_ qualifies; what we
    are _currently doing_ does not.
-2. **Discovered** — learned empirically, by running it. Not read off a design doc.
+2. **Discovered** — someone found it out by running into it, rather than deciding it.
+   Not whoever found it out in _this_ session: a confirmed fact from the operator
+   counts. Anything true because someone chose it does not.
 3. **Costly to rediscover** — non-obvious, expensive, or silent. If a competent agent
    works it out in two minutes, leave it out. Failures that look like success are the
    highest-value entries there are.
@@ -184,8 +192,10 @@ human can.
   truth.** True for you is not true for the repository; it goes in memory.
 - "I noted the caveat in the entry" — a caveat is not a category decision.
 - "The user gave me this, so I don't need to check it" — check it.
+- "The operator told me, so it isn't discovered" — provenance is not the test. Confirm
+  it and record it; who said it disqualifies only a preference or a rule.
 - "No time to verify; I'll record it and confirm later" — later does not come.
 - "A verify line would be nice but I can't think of one" — if the claim cannot be
-  re-checked cheaply, reconsider whether it is a fact or an impression.
+  re-checked cheaply, reconsider whether it is a fact, an impression, or a rule.
 - "The README has no row for this, so the almanac is the closest fit" — a missing
   destination is a gap in the README, not a licence to record. Say so and stop.

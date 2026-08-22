@@ -20,8 +20,10 @@ An entry must pass all three tests:
 
 1. **Durable** — will it still be true in six months? Facts about how the system
    _behaves_ qualify. Facts about what we're _currently doing_ do not.
-2. **Discovered** — was it learned empirically? Design intent is written down elsewhere;
-   the almanac records what turned out to be true when someone ran it.
+2. **Discovered** — did someone find this out by running into it, rather than decide it?
+   Provenance in _this_ session does not matter: a fact the operator hands you was
+   discovered too, and counts once you have confirmed it. What does not count is
+   anything true because someone chose it.
 3. **Costly to rediscover** — is it non-obvious, expensive, or silent? If a competent
    agent would work it out in two minutes, leave it out. Failures that look like success
    are the highest-value entries we can write.
@@ -57,6 +59,13 @@ The design-doc boundary is the one that blurs, so apply it as **design vs. disco
 an architecture note explains how a mechanism was _meant_ to work. An almanac entry
 records what was observed when it ran — that a particular mock silently fails to
 intercept, say. Same subject, different epistemics.
+
+The general form of that boundary, and the fastest test when a row above is in doubt:
+**can this be false without anyone changing their mind?** Reality can refute a fact.
+Intent can only be diverged from, a rule only broken, a preference only dropped. It
+follows that a fact which matters only as the rationale for a rule written down
+elsewhere stays with the rule — the almanac is for facts you would act on even if no
+rule existed.
 
 ## Entry format
 
