@@ -116,6 +116,14 @@ Require these fields back per entry, and reject a result that omits any of them:
 | `evidence`       | verbatim output                                                 |
 | `proposedAction` | what a maintainer should do, concretely                         |
 
+**These rules and this table were once a schema, validated mechanically.** An earlier
+version of this skill enforced them at the subagent boundary, where a worker returning
+`holds` with no evidence was rejected rather than trusted. That was dropped because it
+ran on one harness, and an audit only some agents can run reintroduces the gap the
+almanac exists to close. Instruction is not the same guarantee. So if your harness can
+enforce a schema on what a subagent returns, do that — this prose is the floor, not the
+ceiling.
+
 **Account for every file you dispatched.** Diff the paths that came back against the
 paths you sent, and treat any gap as an explicit result of the audit — see Step 3.
 Nothing does this accounting for you.
