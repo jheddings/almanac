@@ -102,6 +102,15 @@ Copy the shared resolution steps verbatim from an existing skill rather than rew
 them. `init` changes only the no-match outcome: no survivor means it may propose a new
 almanac, while `record` and `audit` stop.
 
+The **exclusion path list** is the part that must not drift, and
+`test_every_skill_that_resolves_the_almanac_names_the_same_exclusions` enforces it
+mechanically. The consequence clause that follows the list is legitimately per-skill —
+recording into the wrong almanac and auditing the wrong one fail differently — so the
+test compares paths, not prose. Three skills resolve the almanac, so this list has
+already needed extending twice; a hand-edit that misses one is otherwise silent.
+`tests/test_discovery_rule.py` also asserts the shipped prose names every path the
+executable copy of the rule excludes, so the two cannot diverge.
+
 ### Read the repo's README before writing
 
 Both skills instruct the agent to read the almanac's own `README.md` before acting. That
@@ -171,7 +180,8 @@ Packaging for specific harnesses lives in dedicated modules (`mod claude`, `mod 
 `mod agy`, `mod codex`), while vendor-neutral checks remain at the repository root.
 
 ```bash
-just check          # style + validate + drift + per-harness manifests
+just check          # style + validate + drift + test + per-harness manifests
+just test           # the structural suite alone
 just tidy           # prettier --write .
 
 just claude bundle  # stage -> validate -> dist/almanac-plugin-<version>.zip
@@ -193,10 +203,43 @@ just agy bundle     # stage -> validate -> dist/almanac-agy-<version>.zip
 - `just agy manifests` — asserts Antigravity's manifest carries the shared version and
   an MIT license.
 - `just drift` — the template check described above.
+- `just test` — the structural suite in `tests/`. Runs via
+  `uv run --with pytest --with pyyaml`, so dependencies are ephemeral in the same spirit
+  as `npx --yes`: nothing to install, no lockfile.
 
-The manifest and drift checks also run from pre-commit, calling `scripts/*` rather than
-`just`, since the CI image that runs pre-commit has no `just`. A check that is not a
+Everything except `style` and `validate` is also a pre-commit hook. The script-backed
+hooks call `scripts/*` rather than `just`, since the CI image that runs pre-commit has
+no `just`; the suite runs there through pre-commit's own `language: python` environment,
+which installs pytest and PyYAML itself and needs no `uv`. A check that is not a
 pre-commit hook is not enforced in CI.
+
+### The structural suite
+
+`tests/` holds deterministic checks — no model, no cost, safe to run on every push. It
+exists because most of the defects this project has shipped and caught were structural:
+
+| Check                       | Enforces                                                                                                                                             |
+| --------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `test_entry_frontmatter.py` | required fields, and **only** the allowed fields — this is what makes "no frontmatter beyond those specified" a failing build rather than a sentence |
+| `test_doc_examples.py`      | the docs' example entries satisfy the same contract, and no value silently loses characters to YAML                                                  |
+| `test_verify_lines.py`      | every `verify` names a runnable check **and** an expected observation                                                                                |
+| `test_discovery_rule.py`    | the resolution rule, executed against trees built to trip it, plus prose/code agreement                                                              |
+| `test_skill_hygiene.py`     | naming, frontmatter shape, description form, exclusion-list agreement, prose ratchet                                                                 |
+| `test_repo_checks.py`       | the standalone scripts, the revision stamp, per-platform manifest agreement                                                                          |
+
+Two conventions worth keeping:
+
+**Every checker carries its own known-bad cases.** A validator that accepts everything
+passes forever — the same defect `record` warns about in a `verify` line that merely
+locates its subject. So `lint_verify` is tested against the exact anti-pattern the
+template once shipped, and `check_entry_frontmatter` against a `confidence:` field. If
+you add a check, add the input that must fail it.
+
+**The prose ratchet is a scoreboard, not a gate.** `tests/baselines.json` freezes each
+skill's word count. `record` and `audit` run well over CONTRIBUTING's "well under 500
+words", and compressing them is deferred; the ratchet stops that debt growing without
+pretending it is paid. Lowering a ceiling is routine. Raising one is a decision that
+belongs in the PR description.
 
 ## Testing skills
 
