@@ -105,6 +105,20 @@ Commit messages are the exception: wrap those at about 72 columns, since they ar
 in terminals that do not reflow — and since squashing puts the commit messages, not the
 PR body, on `main`.
 
+### Comments and docstrings
+
+Write comments that describe how the code works now. State the mechanism, the constraint
+it satisfies, or the failure it prevents, as a present-tense fact about the code in
+front of the reader.
+
+Leave out comparisons to an earlier implementation, justifications framed as history,
+and references to other repositories. A reader six months from now has only this code; a
+comment about what the code is not, or about how some other project does it, is
+something they have to decode before they can use it. Rationale that is genuinely about
+a tradeoff belongs in the pull request or a design doc under
+[`docs/design/`](docs/design/), where it is dated and can be cleared out once it stops
+mattering.
+
 ### Worktrees
 
 Use a dedicated git worktree for development to keep the main working directory clean.
@@ -123,12 +137,11 @@ git worktree remove .worktrees/<name>
 
 ## Checks
 
-`just setup` syncs the virtual environment and installs the git hooks; run it once when
-you start. After that, `just check` runs everything: `prettier --check .`,
-`skills-ref validate` per skill, the manifest and template-drift checks, and the
-structural test suite in [`tests/`](tests/). `just test` runs the suite alone;
-`just tidy` formats. Every recipe that touches Python syncs the environment first, so
-there is no separate install step to forget.
+`just setup` syncs the virtual environment and installs the git hooks. `just check` runs
+the static checks — `prettier --check .`, `skills-ref validate` per skill, and the
+manifest and template-drift checks. `just test` runs the structural suite in
+[`tests/`](tests/), and `just preflight` runs both. `just tidy` formats. Recipes that
+touch Python sync the environment first.
 
 Prettier uses `proseWrap: always` at 88 columns, so it reflows Markdown prose — expect
 it to rewrap paragraphs you edit.

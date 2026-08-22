@@ -1,9 +1,8 @@
 """Staging and archiving, once, for every harness.
 
-Three harnesses used to carry their own copy of these seven steps in embedded shell.
-The copies drifted in the ways copies do — one verified its archive with a pipeline
-that fails intermittently under `pipefail` (see docs/almanac/). One implementation,
-exercised against real trees, is the point.
+Every harness stages and archives through the same code, so these run against each
+harness the table declares. The trees are real: staging is exercised against a fixture
+repo, and the archive assertions read the finished zip.
 """
 
 from __future__ import annotations

@@ -13,12 +13,11 @@ repos:
       hooks:
           - id: prettier
 
-    # These call `uv run` rather than `just`, since the CI image that runs pre-commit
-    # has no `just` — but they use the same environment `just venv` syncs, so there is
-    # one dependency declaration (pyproject.toml) rather than a second copy here.
+    # These run through `uv run`, which resolves the environment declared in
+    # pyproject.toml. `just` is not on the CI image that runs pre-commit, so the hooks
+    # call `uv` directly.
     #
-    # One hook covers every harness in `harnesses.toml`; a new harness is a row there,
-    # not another entry here.
+    # The manifest hook covers every harness in `harnesses.toml`.
     - repo: local
       hooks:
           - id: plugin-manifests

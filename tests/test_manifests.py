@@ -1,8 +1,7 @@
 """The manifest invariants, and the inputs that must fail them.
 
-These replace four near-identical bash scripts. The scripts asserted the same things,
-but only against the real manifests — a check that only ever sees valid input passes
-forever. Every rule below carries the broken manifest it exists to reject.
+A check that only ever sees valid input passes forever, so every rule below is given
+the broken manifest it exists to reject alongside the good one it accepts.
 """
 
 from __future__ import annotations

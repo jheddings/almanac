@@ -1,11 +1,8 @@
 """Repo-wide checks that span harnesses.
 
-The per-harness manifest rules live in `test_manifests.py`, against `tools.manifests`.
-What is left here is what only makes sense across the whole set — agreement between
-harnesses, and the revision stamp that makes an adopter's stale copy diagnosable.
-
-This module used to run `scripts/*` as subprocesses and assert on exit codes. The
-checks are importable functions now, so the shell is no longer an intermediate layer.
+Per-harness manifest rules live in `test_manifests.py`. What is here holds across the
+whole set: agreement between harnesses, and the revision stamp that makes an adopter's
+stale copy diagnosable.
 """
 
 from __future__ import annotations

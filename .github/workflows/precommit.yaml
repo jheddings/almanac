@@ -14,8 +14,8 @@ jobs:
         steps:
             - uses: actions/checkout@v6.0.2
             - uses: actions/setup-python@v6.2.0
-            # The local hooks run through `uv run`, the same way `just` does, so the
-            # suite and the checks resolve one environment from pyproject.toml.
+            # The local hooks invoke `uv run`, which resolves the environment
+            # declared in pyproject.toml.
             - uses: astral-sh/setup-uv@v7
               with:
                   enable-cache: true

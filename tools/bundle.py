@@ -1,13 +1,12 @@
 """Stage a harness payload, validate it, and archive it.
 
-The payload is an allowlist rather than a set of zip exclusions, deliberately: the repo
-root doubles as the plugin root, so a denylist means every new repo-only directory
-ships until somebody notices.
+The repo root doubles as the plugin root, so each harness names the paths it ships as
+an allowlist. A directory added to the repo stays out of every archive until a payload
+names it.
 
-Archives are built and inspected with `zipfile`. The shell version shelled out to `zip`
-and then read the listing back through `unzip -l | grep -q`, which fails intermittently
-under `set -o pipefail` when grep exits first and unzip takes SIGPIPE — the failure
-recorded in docs/almanac/. `namelist()` has no pipeline to race.
+Archives are written and read back with `zipfile`, so the contents of a finished archive
+are checked against the file itself rather than against the staging directory it came
+from.
 """
 
 from __future__ import annotations
@@ -19,8 +18,8 @@ from pathlib import Path
 
 from tools.harnesses import REPO_ROOT, Harness, version
 
-# Never shipped, for any harness. docs/almanac/ is this repo's own live almanac; an
-# adopter gets the template and writes their own entries.
+# Excluded from every archive. docs/almanac/ holds this repo's own entries; an adopter
+# gets the template and writes their own.
 FORBIDDEN = ("docs",)
 
 
@@ -49,8 +48,8 @@ def stage(harness: Harness, root: Path, into: Path) -> Path:
         else:
             shutil.copy2(source, destination)
 
-    # Most harnesses keep the manifest at its repo path, which the payload already
-    # copied. Antigravity wants it at the archive root instead.
+    # A payload that already names the manifest has copied it. When the declared
+    # destination differs from the repo path, copy it there as well.
     manifest = into / spec.manifest_dest
     if not manifest.exists():
         manifest.parent.mkdir(parents=True, exist_ok=True)
@@ -75,7 +74,7 @@ def check_stage(staged: Path, harness: Harness) -> list[str]:
 
 
 def archive(staged: Path, out: Path) -> Path:
-    """Zip the stage, replacing any existing archive rather than appending to it."""
+    """Write the stage to `out`, overwriting any archive already there."""
     out.parent.mkdir(parents=True, exist_ok=True)
     if out.exists():
         out.unlink()
@@ -106,9 +105,8 @@ def verify(out: Path, harness: Harness) -> list[str]:
 def validate(staged: Path, harness: Harness) -> None:
     """Run the harness's own validator, when it ships one.
 
-    Every such validator reads a directory. Handing one an archive fails in a way that
-    reads like a corrupt file — `claude plugin validate` parses the zip as JSON and
-    reports a parse error on the PK signature. See docs/almanac/.
+    These validators read a directory, so they run against the stage. Handing one an
+    archive fails as a JSON parse error on the zip's PK signature. See docs/almanac/.
     """
     if not harness.bundle.validate:
         return
@@ -119,13 +117,18 @@ def validate(staged: Path, harness: Harness) -> None:
 def install_command(harness: Harness, staged: Path) -> list[str]:
     """The harness's own install command, pointed at a staged directory.
 
-    Only some harnesses ship a CLI that installs from a local tree; asking for one that
-    does not is a mistake worth naming rather than a silent no-op.
+    Only some harnesses ship a CLI that installs from a local tree. Asking for one that
+    does not raises, so the caller hears about it.
     """
     spec = harness.bundle
     if spec is None or not spec.install:
         raise BundleError(f"{harness.name} declares no install command")
     return [part.format(stage=str(staged)) for part in spec.install]
+
+
+def install(harness: Harness, staged: Path) -> None:
+    """Hand a staged directory to the harness's own install command."""
+    subprocess.run(install_command(harness, staged), check=True)
 
 
 def build(harness: Harness, *, root: Path = REPO_ROOT, dist: Path | None = None) -> Path:

@@ -1,8 +1,8 @@
 """The harness table, and its agreement with the filesystem.
 
-The table is the single place a harness is declared. That only holds if it cannot
-silently fall out of step with the repo, so the first checks here are the ones that
-catch a harness present on disk but missing from the table, and vice versa.
+The table is the single place a harness is declared, which holds only while it matches
+the repo. These catch a harness present on disk with no row, and a row naming a harness
+that is not there.
 """
 
 from __future__ import annotations

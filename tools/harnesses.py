@@ -1,7 +1,7 @@
 """The harness table, loaded and validated.
 
-One row per harness, so adding one is data rather than a new script, a new justfile
-module, a new pre-commit hook, and four more places that list the same names.
+Each harness is one row. The checks and the packaging read this table, so a harness is
+named here and nowhere else.
 """
 
 from __future__ import annotations
@@ -68,12 +68,19 @@ def load() -> dict[str, Harness]:
     return {name: _harness(name, row) for name, row in rows.items()}
 
 
+class UnknownHarness(Exception):
+    pass
+
+
 def get(name: str) -> Harness:
+    """The named harness, or an error naming the ones that exist."""
     try:
         return load()[name]
     except KeyError:
         known = ", ".join(sorted(load()))
-        raise SystemExit(f"unknown harness {name!r} — the table declares: {known}")
+        raise UnknownHarness(
+            f"unknown harness {name!r} — the table declares: {known}"
+        ) from None
 
 
 def version() -> str:

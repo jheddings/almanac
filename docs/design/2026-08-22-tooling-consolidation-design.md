@@ -113,10 +113,10 @@ spirit as `npx --yes`. That posture was right when `tests/` was self-contained. 
 fitting once `tools/` must be importable by `tests/`.
 
 Adopt a `pyproject.toml` with a dev dependency group and a committed `uv.lock`, and run
-everything Python through `uv run` against the environment `just venv` syncs. This is
-the shape the other Python projects in this tree already use: a `venv` recipe that runs
-`uv sync`, a `setup` recipe that adds `pre-commit install`, and every recipe that
-touches Python depending on `venv` so there is no separate install step to forget.
+everything Python through `uv run` against the environment `just venv` syncs. This is a
+`venv` recipe that runs `uv sync`, a `setup` recipe that adds `pre-commit install`, and
+every recipe that touches Python depending on `venv`, so the environment is current
+before anything runs.
 
 The alternative — keeping `tools/` stdlib-only so `python3 -m tools` runs anywhere — was
 tried first and rejected. It works, but it leaves two invocation paths (bare `python3`
@@ -154,7 +154,7 @@ A side effect worth having: the pre-commit hooks currently call `scripts/*` rath
 ```
 harnesses.toml              # one row per harness
 pyproject.toml              # dev dependency group; makes tools/ importable
-uv.lock                     # committed, as in the other Python projects here
+uv.lock                     # tracked, pinning the dev environment
 tools/
   __main__.py               # check-manifests [harness] | bundle <harness> | drift
   harnesses.py              # load and validate the table

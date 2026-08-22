@@ -1,18 +1,17 @@
 # justfile for the almanac skills.
 #
-# Every harness is declared in `harnesses.toml`, and the recipes below fan out from that
-# table rather than naming harnesses here. Adding a harness is a row in the table, not a
-# new module, a new script, and four more places that list the same names.
+# Harnesses are declared in `harnesses.toml`. The recipes read that table, so a harness
+# is named in one place and the recipes below stay the same as harnesses are added.
 #
-# Everything Python runs through `uv run` against the environment `just venv` syncs, so
-# there is one environment and one way in. `uv` and `npx` are the only prerequisites.
+# Everything Python runs through `uv run` against the environment `venv` syncs. Recipes
+# that need it depend on `venv`, so the environment is current before anything runs.
 
 basedir := justfile_directory()
 
-# sync the virtual environment and install hooks
-default: setup check
+# sync the environment, install hooks, and run the full preflight
+default: setup preflight
 
-# setup the local development environment
+# set up the local development environment
 setup: venv
     uv run pre-commit install --install-hooks --overwrite
 
@@ -24,10 +23,17 @@ venv:
 tidy: venv
     npx prettier --write .
 
-# run all checks
-check: style validate manifests drift test
+# run all static checks
+check: style validate manifests drift
 
-# check style
+# run unit tests
+test: venv
+    uv run pytest
+
+# full static checks and unit tests
+preflight: check test
+
+# check formatting
 style:
     npx prettier --check .
 
@@ -39,19 +45,15 @@ validate:
 manifests harness="": venv
     uv run python -m tools check-manifests {{ harness }}
 
-# confirm this repo's almanac README is still an instance of the shipped template
+# confirm this repo's almanac README is an instance of the shipped template
 drift: venv
     uv run python -m tools drift
-
-# run the structural test suite
-test: venv
-    uv run pytest
 
 # stage a harness payload, validate it, and archive it for distribution
 bundle harness: venv
     uv run python -m tools bundle {{ harness }}
 
-# build and install a harness plugin locally, via that harness's own CLI
+# build a harness archive and install it through that harness's own CLI
 install harness: venv
     uv run python -m tools install {{ harness }}
 
@@ -79,12 +81,12 @@ release-guard:
     test -z "$(git status --porcelain -uno)" || (echo "error: working tree is dirty"; exit 1)
 
 # bump the version across every harness manifest, commit, tag, and push
-release bump="patch": release-guard check
+release bump="patch": release-guard preflight
     #!/usr/bin/env bash
     set -euo pipefail
     version=$(uv run python -m tools set-version "{{ bump }}")
     echo "releasing $version"
-    # Only the manifests: prettier infers no parser for VERSION or a .toml file.
+    # Prettier infers a parser from the extension, so it takes the manifests only.
     npx prettier --write $(uv run python -m tools manifest-paths)
     git add -u
     git commit -m "chore(release): $version"

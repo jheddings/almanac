@@ -1,14 +1,19 @@
-# Every harness this repo packages for, as data.
+# Every harness this repo packages for.
 #
-# Adding a harness used to mean touching seven places, five of which were the same
-# list written out five times. It is now this table plus whatever genuinely differs.
+# The checks and the packaging read this table, so a harness is named here and nowhere
+# else. Each row carries only what differs between harnesses.
 #
-# `manifest` and `marketplace` are repo-relative. `payload` is an allowlist, never a
-# set of exclusions: the repo root doubles as the plugin root, so a denylist ships
-# every new repo-only directory until somebody notices.
+# `manifest` and `marketplace` are repo-relative paths.
 #
-# `manifest_dest` is where the manifest lands inside the archive. Most harnesses keep
-# it at its repo path; Antigravity wants it at the archive root.
+# `payload` lists what the archive ships. It is an allowlist: the repo root doubles as
+# the plugin root, so a directory added to the repo stays out of every archive until a
+# payload names it.
+#
+# `manifest_dest` is where the manifest sits inside the archive, which is the repo path
+# for some harnesses and the archive root for others.
+#
+# `validate` and `install` are command templates; `{stage}` expands to the staging
+# directory. `require` lists paths the archive would be useless without.
 
 [claude]
 manifest = ".claude-plugin/plugin.json"
@@ -40,7 +45,7 @@ payload = [
     "LICENSE",
 ]
 manifest_dest = ".cursor-plugin/plugin.json"
-# Cursor ships no archive validator, so the stage checks stand in for one.
+# Cursor ships no archive validator, so `require` names what a usable archive holds.
 require = [
     "templates/almanac/README.md",
     ".cursor-plugin/commands/init.md",

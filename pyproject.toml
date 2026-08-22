@@ -1,19 +1,17 @@
 # Repo tooling for the almanac skills.
 #
-# Nothing here ships. The plugin payload is metadata, skills, and templates — all
-# markdown and JSON — so this project exists only for contributors and CI. It is
-# deliberately not a distributable package: `package = false` keeps uv from trying
-# to build it, and pytest's `pythonpath` is what makes `tools/` importable.
+# Nothing here ships. The plugin payload is metadata, skills, and templates, so this
+# project exists for contributors and CI. `package = false` keeps uv from building it,
+# and pytest's `pythonpath` is what makes `tools/` importable from `tests/`.
 #
-# `uv sync` (via `just venv`) is the only setup step. Every recipe that touches
-# Python depends on it and runs through `uv run`, so there is one environment and
-# one way in.
+# `uv sync` is the only setup step, and `just venv` runs it.
 
 [project]
 name = "almanac-tools"
 version = "0.0.0"
 description = "Repo tooling for the almanac skills. Not published, not shipped."
 requires-python = ">=3.11"
+dependencies = ["click>=8.4.2"]
 
 [tool.uv]
 package = false

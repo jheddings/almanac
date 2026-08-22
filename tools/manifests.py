@@ -1,12 +1,12 @@
 """Cross-file invariants for the harness manifests.
 
-`claude plugin validate` and its siblings check each manifest on its own and pass even
-when two of them disagree. A name mismatch between a plugin and its marketplace breaks
-installation, and it does so only for whoever installs the published release — so it
-has to be caught here.
+A harness validator checks one manifest on its own and passes when two of them
+disagree. A name mismatch between a plugin manifest and its marketplace entry breaks
+installation, and only for whoever installs the published release, so these rules cover
+the agreements a single-file validator cannot see.
 
-Every rule is a function over loaded JSON rather than a script over the repo, which is
-what lets the suite feed each one the broken manifest it exists to reject.
+Each rule takes loaded JSON and returns the problems it found, so the suite can hand any
+rule a manifest built to break it.
 """
 
 from __future__ import annotations

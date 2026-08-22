@@ -1,8 +1,8 @@
 """Writing the shared version across every manifest.
 
-`VERSION` is the single source of truth and the release writes it into N manifests.
-Three write sites for one fact is how a version silently diverges, so the write is one
-function over the table rather than a jq loop over a hardcoded list.
+`VERSION` is the single source of truth, and a release copies it into one manifest per
+harness. A manifest left behind reports a version that is not the one being shipped, and
+nothing at install time contradicts it.
 """
 
 from __future__ import annotations

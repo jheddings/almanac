@@ -178,27 +178,31 @@ skills exist to prevent. Zero entries is a perfectly good state.
 
 Every harness this repo packages for is declared as a row in
 [`harnesses.toml`](harnesses.toml): its manifests, its payload allowlist, its validator,
-and what must and must not appear in the archive it produces. The recipes and checks fan
-out from that table, so adding a harness is a row rather than a new justfile module, a
-new check script, a new pre-commit hook, and four more places listing the same names.
+and what must and must not appear in the archive it produces. The recipes and the checks
+read that table, so a harness is named there and nowhere else.
 
-The checks themselves live in [`tools/`](tools/). Everything Python runs through
-`uv run` against the environment `just venv` syncs, so there is one environment and one
-way in — `uv` and `npx` are the only prerequisites.
+The checks live in [`tools/`](tools/) and run through `uv run` against the environment
+`just venv` syncs. `uv` and `npx` are the only prerequisites.
 
 ```bash
-just setup              # sync the venv and install git hooks — run this first
+just setup              # sync the venv and install the git hooks
 just venv               # sync the venv alone
 
-just check              # style + validate + manifests + drift + test
-just test               # the structural suite alone
+just check              # static checks: style + validate + manifests + drift
+just test               # the structural suite
+just preflight          # check + test
 just tidy               # prettier --write .
 
 just bundle claude      # stage -> validate -> dist/almanac-plugin-<version>.zip
 just bundle cursor      # stage -> stage checks -> dist/almanac-cursor-plugin-<version>.zip
 just bundle agy         # stage -> validate -> dist/almanac-agy-<version>.zip
-just install agy        # bundle, then install locally via that harness's own CLI
+just install agy        # bundle, then install through that harness's own CLI
+
+just clean              # drop build output and caches
+just clobber            # clean, and remove the virtual environment
 ```
+
+`just` on its own runs `setup` then `preflight`, which is the full pass.
 
 - `just style` — `prettier --check .` (also a pre-commit hook, so it runs on commit and
   in CI). Note `proseWrap: always` at 88 columns: prettier reflows Markdown prose.
@@ -211,17 +215,19 @@ just install agy        # bundle, then install locally via that harness's own CL
   `just manifests cursor` narrows it to one harness.
 - `just drift` — the template check described above.
 - `just test` — the structural suite in `tests/`, via `uv run pytest`.
+- `just preflight` — `check` and `test` together. This is what `just release` gates on.
 
-Dependencies are declared once, in `pyproject.toml` under `[dependency-groups]`, and
-pinned in the committed `uv.lock`. Every recipe that touches Python depends on `venv`,
-so `uv` syncs the environment before anything runs and there is no separate install step
-to forget.
+Dependencies are declared in `pyproject.toml` under `[dependency-groups]` and pinned in
+`uv.lock`, which is tracked. Recipes that touch Python depend on `venv`, so `uv` syncs
+the environment before anything runs.
 
-Everything except `style` and `validate` is also a pre-commit hook. The hooks call
-`uv run` rather than `just`, since the CI image that runs pre-commit has no `just` — but
-they resolve the same environment the recipes do, so the dependency list is not
-duplicated into `additional_dependencies`. A check that is not a pre-commit hook is not
-enforced in CI.
+The manifest check, the drift check, and the suite are also pre-commit hooks. They
+invoke `uv run` directly, because the CI image that runs pre-commit has no `just`. A
+check that is not a pre-commit hook is not enforced in CI, which is why `style` and
+`validate` have their own hook and workflow.
+
+The checks are also a CLI in their own right: `uv run python -m tools --help` lists
+them, and each command carries its own help.
 
 ### The structural suite
 
