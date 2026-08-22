@@ -5,7 +5,9 @@ way, recorded so nobody learns them twice. Packaged for Claude Code, Codex, Anti
 and Cursor; the skills themselves assume no particular harness.
 
 An almanac entry is a silent failure mode, a tool that lies, a constraint that isn't
-visible from the code. Not documentation, not a plan: a claim a future agent will act on
+visible from the code. Its subject is as often the CI, the build tooling, or the agent
+harness as the code itself — what matters is that the fact holds for anyone working in
+that repository. Not documentation, not a plan: a claim a future agent will act on
 without re-deriving it. One fact per file, filename states the claim, and the directory
 listing is the index.
 
@@ -183,6 +185,11 @@ and no `status`, because an entry you aren't confident about should not exist.
   stack-neutral and load from a checkout today; see [Manual setup](#manual-setup).
   Purpose-built packaging for other harnesses, such as Gemini, waits until something
   needs it.
+- **Cross-repository entries.** An almanac is shared across agents and harnesses, but
+  only within one repository: a fact about a CI runner learned in one repo is learned
+  again in the next. Pooling entries is a real gap and not an oversight — `verify` means
+  "run this against this tree", and review means "it rides in a PR diff", and both are
+  repository-shaped. Nothing here pretends to solve it yet.
 
 ## Development
 
