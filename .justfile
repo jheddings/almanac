@@ -66,7 +66,15 @@ clean:
 
 # remove everything, including the virtual environment
 clobber: clean
-    uv run pre-commit uninstall || true
+    #!/usr/bin/env bash
+    set -euo pipefail
+    # Hooks live in the shared common git dir, so uninstalling from a linked worktree
+    # would disarm them for the main checkout too. See docs/almanac/.
+    if [ "$(git rev-parse --git-dir)" = "$(git rev-parse --git-common-dir)" ]; then
+        uv run pre-commit uninstall || true
+    else
+        echo "skipping pre-commit uninstall: hooks are shared, and this is a worktree"
+    fi
     rm -rf "{{ basedir }}/.venv"
 
 # refuse to release unless on main with a clean working tree
