@@ -79,7 +79,11 @@ canonical revision and report one of these outcomes:
   Upgrading means splicing this repository's `almanac:local` block into the newer
   template, which is a separate reviewed change and not one to make here;
 - local higher — the installed plugin is older than the repository's contract;
-- missing or malformed — the local contract is unversioned.
+- missing or malformed — the local contract is unversioned, which is the usual state of
+  an almanac that predates this plugin. Adopting the template means copying the
+  canonical text, moving the repository's existing destinations into the `almanac:local`
+  block, and reviewing the rest of the diff. Same separate reviewed change; say so
+  rather than leaving the verdict as a label.
 
 Propose only clearly missing installation essentials. Do not replace its local block or
 silently merge a newer template into it; repository-local conventions and template
