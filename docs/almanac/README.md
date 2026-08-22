@@ -53,7 +53,7 @@ One fact per file. Filename is a kebab-case slug stating the claim, not the topi
 more than it looks: the filenames are the index (see below), so a slug that states a
 claim is readable knowledge on its own.
 
-```markdown
+```text
 ---
 title: Out-of-order migrations are silently skipped on deploy
 recorded: 2026-08-15
