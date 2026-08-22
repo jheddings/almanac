@@ -1,12 +1,13 @@
 ---
 name: record
 description: >-
-    Use when you have just finished being surprised by this codebase — a debugging
-    session that ended in "oh, that's why," a green build or passing suite that
-    concealed a real failure, a tool that behaved differently than its documentation
-    claims, or the discovery that an existing almanac entry is wrong. Also use on an
-    explicit request to "record this in the almanac", "add an almanac entry", "write
-    down this gotcha", or "make sure we don't learn this again".
+    Use when you have just finished being surprised by this repository — its code, its
+    CI, its tooling, or the agent harness you are running under — a debugging session
+    that ended in "oh, that's why," a green build or passing suite that concealed a real
+    failure, a tool that behaved differently than its documentation claims, or the
+    discovery that an existing almanac entry is wrong. Also use on an explicit request
+    to "record this in the almanac", "add an almanac entry", "write down this gotcha",
+    or "make sure we don't learn this again".
 ---
 
 # Record an Almanac Entry
@@ -84,6 +85,12 @@ repo-local, so they live in the almanac's `README.md`** — read its destination
 for where each category goes in _this_ repo. Do not guess a destination, and do not file
 into a directory you have not confirmed exists.
 
+Questions 1 and 2 share a discriminator, and it is the fastest one to reach for: **can
+this be false without anyone changing their mind?** Reality can refute a fact. Intent
+can only be diverged from, and a rule only broken. So a fact that matters only as the
+rationale for a rule written down elsewhere stays with the rule. Neither question turns
+on _who told you_.
+
 Question 1 is **design vs. discovery**: how a thing was meant to work is architecture;
 what turned out to be true when someone ran it is an almanac entry.
 
@@ -94,18 +101,23 @@ and its consequence, not your routine — then apply question 6 to what is left.
 
 Question 6 is **scope**, and the three tests below cannot catch it: they ask whether a
 fact is durable, discovered, and costly, never _who it is true for_. A proxy on your
-laptop, a path in your shell, a credential CI does not have — all three tests pass and
-the entry is still false for every other contributor. Ask: **would this hold for CI and
-for everyone else who clones this repo?** If no, it is environment-scoped and it goes to
-memory however well it passes the rest. Split it the way question 5 splits: a tool that
-reports a misleading error is a fact about the tool; the local cause that triggered it
-is yours.
+laptop, a path in your shell, a credential CI does not have — all three pass and the
+entry is still false for every other contributor. Ask: **would this hold for CI and for
+everyone else who clones this repo?** If no, it goes to memory however well it passes
+the rest.
+
+Scope is about _who_, not which layer surfaced the fact: how a CI runner, a package
+manager, or an agent harness behaves _here_ is true for everyone who meets it here, and
+it belongs — those entries travel furthest, since the next agent likely runs a different
+tool. Only your own machine's state is out; split it the way question 5 splits.
 
 ### Does it pass all three?
 
 1. **Durable** — still true in six months. How the system _behaves_ qualifies; what we
    are _currently doing_ does not.
-2. **Discovered** — learned empirically, by running it. Not read off a design doc.
+2. **Discovered** — someone found it out by running into it, rather than deciding it.
+   Not whoever found it out in _this_ session: a confirmed fact from the operator
+   counts. Anything true because someone chose it does not.
 3. **Costly to rediscover** — non-obvious, expensive, or silent. If a competent agent
    works it out in two minutes, leave it out. Failures that look like success are the
    highest-value entries there are.
@@ -180,8 +192,10 @@ human can.
   truth.** True for you is not true for the repository; it goes in memory.
 - "I noted the caveat in the entry" — a caveat is not a category decision.
 - "The user gave me this, so I don't need to check it" — check it.
+- "The operator told me, so it isn't discovered" — provenance is not the test. Confirm
+  it and record it; who said it disqualifies only a preference or a rule.
 - "No time to verify; I'll record it and confirm later" — later does not come.
 - "A verify line would be nice but I can't think of one" — if the claim cannot be
-  re-checked cheaply, reconsider whether it is a fact or an impression.
+  re-checked cheaply, reconsider whether it is a fact, an impression, or a rule.
 - "The README has no row for this, so the almanac is the closest fit" — a missing
   destination is a gap in the README, not a licence to record. Say so and stop.

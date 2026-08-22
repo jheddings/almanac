@@ -30,7 +30,7 @@ code. It is authoritative for this repo, and
 **Consult it when:**
 
 - You start work in an area you don't already know. Run `ls docs/almanac/` once — the
-  filenames state the claims, so the listing alone tells you what this codebase has
+  filenames state the claims, so the listing alone tells you what this repository has
   already learned. Do this _before_ you have a symptom: the entries worth most are
   silent failures you would never think to search for.
 - Something isn't behaving as expected. Grep it _before_ you start investigating, not
