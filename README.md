@@ -37,6 +37,11 @@ behind a confirmation gate.
 /plugin install almanac@almanac
 ```
 
+If the skills are not available to the agent immediately after installing, start a new
+session. `claude plugin details almanac` inventories what the install actually
+registered, so a plugin listing all three skills there but unavailable in the running
+session is session state rather than a failed install.
+
 ### Cursor
 
 Install from this repository as a Cursor Plugin (IDE or Agent CLI), for example:
