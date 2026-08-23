@@ -78,7 +78,7 @@ Ask each question. Any _yes_ disqualifies the entry:
 3. Is it the **status of in-flight work**?
 4. Is it a **spec or an implementation plan**?
 5. Is it **your own working preference or habit**?
-6. Is it true **only of your machine or environment**, not of this repository?
+6. Is it true **only of your own machine's state**, not of this almanac's subject?
 
 The questions are the method, so they live here. **The answers are irreducibly
 repo-local, so they live in the almanac's `README.md`** — read its destinations table
@@ -102,9 +102,14 @@ and its consequence, not your routine — then apply question 6 to what is left.
 Question 6 is **scope**, and the three tests below cannot catch it: they ask whether a
 fact is durable, discovered, and costly, never _who it is true for_. A proxy on your
 laptop, a path in your shell, a credential CI does not have — all three pass and the
-entry is still false for every other contributor. Ask: **would this hold for CI and for
-everyone else who clones this repo?** If no, it goes to memory however well it passes
-the rest.
+entry is still false for everyone else. Ask: **would this hold for everyone else working
+on this almanac's subject?** If no, it goes to memory however well it passes the rest.
+
+The subject is this repository, unless the almanac's `README.md` declares another one —
+a workspace holding several checkouts, say, where what agents keep rediscovering is the
+environment those checkouts share. Read the README before you apply this question; you
+already have to. For a repository the question reads _would this hold for CI and for
+everyone who clones it?_
 
 Scope is about _who_, not which layer surfaced the fact: how a CI runner, a package
 manager, or an agent harness behaves _here_ is true for everyone who meets it here, and
@@ -189,7 +194,7 @@ human can.
 - "It's arguably a preference, but the underlying fact is real" — record the fact, drop
   the routine, or file it in memory.
 - "It's only true on my setup, but the fact itself is real" — **that is scope, not
-  truth.** True for you is not true for the repository; it goes in memory.
+  truth.** True for you is not true for the subject; it goes in memory.
 - "I noted the caveat in the entry" — a caveat is not a category decision.
 - "The user gave me this, so I don't need to check it" — check it.
 - "The operator told me, so it isn't discovered" — provenance is not the test. Confirm

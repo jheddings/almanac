@@ -140,6 +140,20 @@ The cost, plainly: agents on tools that read `README.md` but cannot load skills 
 local rules and not the method. The template is written so that file stands alone as a
 usable contract for them.
 
+**The subject is declared, and defaults to the repository.** Scope — _would this hold
+for everyone else?_ — needs an _everyone else_, and for the common case that is CI plus
+whoever clones the repo. It is not the only case: a workspace holding several
+independent checkouts has agents rediscovering the same environment over and over, and
+an almanac whose subject is that workspace is answering a real question. So the
+almanac's `README.md` declares its subject inside the local block, and `record`'s scope
+test reads against whatever is declared. The default is unchanged, and a fact true only
+of one person's machine is still out.
+
+The cost, plainly: scope admission is method, and method is the skill's to own. This is
+the one piece of it the shared contract delegates, and the delegation has to be narrow
+and explicit — otherwise a repo with an unusual shape quietly redefines a test it does
+not control, which is the drift the precedence rule exists to prevent.
+
 **No skill depends on a gated tool.** `audit` verifies entries by fanning them out to
 ordinary subagents, or sequentially in the main thread when none are available —
 parallelism is an optimization, never a runtime dependency. An earlier draft bundled a
@@ -191,9 +205,9 @@ and no `status`, because an entry you aren't confident about should not exist.
   Purpose-built packaging for other harnesses, such as Gemini, waits until something
   needs it.
 - **Cross-repository entries.** An almanac is shared across agents and harnesses, but
-  only within one repository: a fact about a CI runner learned in one repo is learned
-  again in the next. Pooling entries is a real gap and not an oversight — `verify` means
-  "run this against this tree", and review means "it rides in a PR diff", and both are
+  only within one subject: a fact about a CI runner learned in one repo is learned again
+  in the next. Pooling entries is a real gap and not an oversight — `verify` means "run
+  this against this tree", and review means "it rides in a PR diff", and both are
   repository-shaped. Nothing here pretends to solve it yet.
 
 ## Development

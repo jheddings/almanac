@@ -82,3 +82,23 @@ def test_declared_skills_paths_exist():
             f"{_relative(manifest)} declares skills at {declared!r}, which is not a "
             "directory"
         )
+
+
+def test_the_contract_and_the_scope_test_agree_on_the_subject():
+    """Scope's *whom* is the one piece of method the contract delegates.
+
+    Two files have to name the same concept for the delegation to work: the template
+    tells an adopter to declare a subject, and `record`'s question 6 reads against it.
+    If either stops saying so, the skill asks a question nothing answers, and the old
+    failure returns — a repo with an unusual shape redefining a test it does not own.
+    """
+    template = almanac.TEMPLATE_ALMANAC.read_text()
+    assert "**subject**" in template, (
+        "the canonical contract no longer names the almanac's subject"
+    )
+
+    record = next(s for s in almanac.skills() if s.name == "record")
+    assert "this almanac's subject" in record.body, (
+        "record's scope test no longer reads against the declared subject"
+    )
+

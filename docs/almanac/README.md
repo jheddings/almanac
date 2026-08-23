@@ -1,4 +1,4 @@
-<!-- almanac-template: 2 -->
+<!-- almanac-template: 3 -->
 
 # Almanac
 
@@ -30,6 +30,13 @@ An entry must pass all three tests:
 
 If you can't state the fact in one sentence, it's probably a design doc, not an entry.
 
+**Subject.** The three tests ask whether a fact is durable, discovered, and costly —
+never _who_ it is true for. That last question is scope, and it reads against this
+almanac's **subject**: this repository, unless the local block below declares otherwise.
+Ask _would this hold for everyone else working on this subject?_ — for a repository,
+that means CI and everyone who clones it. Either way, a fact true only of one person's
+machine goes to your agent's private memory, however well it passes the three tests.
+
 ## What doesn't belong here
 
 <!-- almanac:local -->
@@ -44,6 +51,11 @@ If you can't state the fact in one sentence, it's probably a design doc, not an 
 
 This repo is small enough that design intent, specs, and plans share one directory
 rather than three.
+
+Entries wrap at **88 columns** — `.prettierrc.json`, applied by the pre-commit hook, so
+the convention is enforced rather than remembered. Prettier reflows frontmatter values
+too, folding a long `verify` line onto indented continuation lines; that round-trips to
+the same string, so leave it as prettier leaves it. Fenced blocks are untouched.
 
 <!-- /almanac:local -->
 
@@ -134,9 +146,9 @@ the entry is a suspect, not an authority — see below.
 
 ## Method vs. local convention
 
-This file is the **local** contract: the entry format, the destinations table above, the
-wrap width, when a correction ships, how parallel sessions avoid contention. Those are
-this repository's calls.
+This file is the **local** contract: the almanac's subject, the entry format, the
+destinations table above, the wrap width, when a correction ships, how parallel sessions
+avoid contention. Those are this repository's calls.
 
 The **method** — the admission tests, how to decide whether a fact belongs, how to write
 a `verify` line that fails when its claim fails, how to re-check entries that may have
