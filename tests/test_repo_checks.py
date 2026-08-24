@@ -91,14 +91,26 @@ def test_the_contract_and_the_scope_test_agree_on_the_subject():
     tells an adopter to declare a subject, and `record`'s question 6 reads against it.
     If either stops saying so, the skill asks a question nothing answers, and the old
     failure returns — a repo with an unusual shape redefining a test it does not own.
+
+    Match on the concept rather than the exact bytes: prettier reflows this prose and
+    emphasis moves around, so a literal `"**subject**"` would fail on a rewrap and pass
+    on a rewrite that dropped the delegation.
     """
-    template = almanac.TEMPLATE_ALMANAC.read_text()
-    assert "**subject**" in template, (
+    template = _prose(almanac.TEMPLATE_ALMANAC.read_text())
+    assert "almanac's subject" in template, (
         "the canonical contract no longer names the almanac's subject"
     )
+    assert "unless the local block" in template, (
+        "the contract names a subject but no longer says the local block declares it, "
+        "so an adopter has no way to set one"
+    )
 
-    record = next(s for s in almanac.skills() if s.name == "record")
-    assert "this almanac's subject" in record.body, (
+    record = _prose(next(s for s in almanac.skills() if s.name == "record").body)
+    assert "almanac's subject" in record, (
         "record's scope test no longer reads against the declared subject"
     )
 
+
+def _prose(text):
+    """Collapse emphasis and line breaks so a phrase survives a prettier rewrap."""
+    return re.sub(r"\s+", " ", text.replace("*", "").replace("_", ""))

@@ -152,14 +152,14 @@ corrected fact you actually established).
 ## Write a verify line that fails when the claim fails
 
 `verify` is what stops an entry from quietly going stale. A verify line that merely
-**locates the subject** does not clear the bar — it passes forever, including after the
-behavior changes.
+**locates the thing it describes** does not clear the bar — it passes forever, including
+after the behavior changes.
 
 Say the claim is "the deploy skips migrations because `--include-all` is absent."
 
-- **Bad:** `grep -n "db push" .github/workflows/deploy.yaml` — locates the subject. It
-  finds that line whether or not the flag is on it, so it passes forever, including
-  after someone adds the flag and the entry becomes false.
+- **Bad:** `grep -n "db push" .github/workflows/deploy.yaml` — locates the thing it
+  describes. It finds that line whether or not the flag is on it, so it passes forever,
+  including after someone adds the flag and the entry becomes false.
 - **Good:** `grep -rn -- "--include-all" .github/workflows/` returns nothing. The
   observation _is_ the claim, so the day someone adds the flag, this stops holding.
 
