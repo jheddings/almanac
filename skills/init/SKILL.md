@@ -34,9 +34,10 @@ stop at the first step that resolves:
 **These steps search this tree, and never look up.** A workspace or parent repository
 enclosing this checkout may keep its own almanac; that is a separate almanac with a
 separate subject, and this tree's is the one that resolves. So a checkout sitting under
-a directory that already keeps an almanac is still uninitialized. Name the outer one and
-what it covers in the proposal, so the operator can decide whether this tree needs its
-own.
+a directory that already keeps an almanac is still uninitialized. Look for one anyway:
+walk the parents once, checking each for `almanac/README.md`. That is a read, not a
+resolution — name what you find and what its subject is in the proposal, so the operator
+can decide whether this tree needs its own.
 
 If a live almanac exists somewhere other than `docs/almanac/`, stop and ask whether the
 operator wants to keep or migrate it. Never create a competing almanac.

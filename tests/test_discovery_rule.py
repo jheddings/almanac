@@ -24,6 +24,10 @@ from tests.support.almanac import (
 
 STAMP = "<!-- almanac-template: 1 -->\n\n# Almanac\n"
 
+# Every skill that resolves the almanac globs for it; that glob is a far more stable
+# anchor than any sentence around it, so it is what decides which skills must comply.
+RESOLUTION_GLOB = "**/almanac/README.md"
+
 
 def make_almanac(root, relative):
     directory = root / relative
@@ -141,10 +145,14 @@ def test_the_upward_bound_is_stated_in_the_skills():
     Without it, a checkout under a workspace almanac reads as uninitialized to `init`
     and as already-adopted to whoever runs `record` from the parent — the same tree,
     two answers, neither wrong on its own terms.
+
+    Coverage is anchored on the resolution glob rather than the sentence introducing
+    the exclusions, for the reason `test_skill_hygiene` gives: key off the prose and a
+    reworded skill drops out of its own check with nothing failing.
     """
-    for skill in almanac.skills():
-        if "discard matches under" not in skill.body:
-            continue
+    resolving = [s for s in almanac.skills() if RESOLUTION_GLOB in s.body]
+    assert resolving, f"no skill contains {RESOLUTION_GLOB!r} — has resolution moved?"
+    for skill in resolving:
         assert "never look up" in skill.body, (
             f"{skill.name}: resolves the almanac but does not say resolution stops at "
             "this tree's root"
