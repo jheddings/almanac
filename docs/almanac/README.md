@@ -1,4 +1,4 @@
-<!-- almanac-template: 2 -->
+<!-- almanac-template: 3 -->
 
 # Almanac
 
@@ -6,10 +6,10 @@ Discovered facts about working in this repository, recorded by agents for agents
 
 An almanac entry is something we **learned the hard way** and don't want to learn again:
 a silent failure mode, a tool that lies, a constraint that isn't visible from the code.
-The subject is as often the CI, the build tooling, or the agent harness as the code
-itself — what matters is that the fact holds for anyone working here, not which layer
-surfaced it. It is not documentation, and it is not a plan. Entries are terse, atomic,
-and durable.
+What an entry is about is as often the CI, the build tooling, or the agent harness as
+the code itself — what matters is that the fact holds for anyone working here, not which
+layer surfaced it. It is not documentation, and it is not a plan. Entries are terse,
+atomic, and durable.
 
 Humans are welcome here, but the audience is the next agent — likely one with no memory
 of this session, possibly running under a different tool.
@@ -30,6 +30,13 @@ An entry must pass all three tests:
 
 If you can't state the fact in one sentence, it's probably a design doc, not an entry.
 
+**Subject.** The three tests ask whether a fact is durable, discovered, and costly —
+never _who_ it is true for. That last question is scope, and it reads against this
+almanac's **subject**: this repository, unless the local block below declares otherwise.
+Ask _would this hold for everyone else working on this subject?_ — for a repository,
+that means CI and everyone who clones it. Either way, a fact true only of one person's
+machine goes to your agent's private memory, however well it passes the three tests.
+
 ## What doesn't belong here
 
 <!-- almanac:local -->
@@ -45,12 +52,17 @@ If you can't state the fact in one sentence, it's probably a design doc, not an 
 This repo is small enough that design intent, specs, and plans share one directory
 rather than three.
 
+Entries wrap at **88 columns** — `.prettierrc.json`, applied by the pre-commit hook, so
+the convention is enforced rather than remembered. Prettier reflows frontmatter values
+too, folding a long `verify` line onto indented continuation lines; that round-trips to
+the same string, so leave it as prettier leaves it. Fenced blocks are untouched.
+
 <!-- /almanac:local -->
 
 The design-doc boundary is the one that blurs, so apply it as **design vs. discovery**:
 an architecture note explains how a mechanism was _meant_ to work. An almanac entry
 records what was observed when it ran — that a particular mock silently fails to
-intercept, say. Same subject, different epistemics.
+intercept, say. Same topic, different epistemics.
 
 The general form of that boundary, and the fastest test when a row above is in doubt:
 **can this be false without anyone changing their mind?** Reality can refute a fact.
@@ -90,9 +102,10 @@ of the circumstances.
 `verify` is strongly encouraged: a command or check that re-tests the claim cheaply,
 **plus the observation that would confirm it** — "returns nothing", "exits 1", "prints
 `warn`". A bare command tells the next agent what to run and not what would count as a
-refutation, and a check that merely locates the subject passes forever, including after
-the behavior changes. This is the only real defense against an entry that quietly went
-stale, because it lets a future agent re-check instead of trusting blindly.
+refutation, and a check that merely locates the thing it describes passes forever,
+including after the behavior changes. This is the only real defense against an entry
+that quietly went stale, because it lets a future agent re-check instead of trusting
+blindly.
 
 **Quote any value containing `#` or `:`.** Unquoted, `source: PR #1129` parses as `PR` —
 YAML reads the rest as a comment, and nothing warns you. `verify` lines almost always
@@ -134,9 +147,9 @@ the entry is a suspect, not an authority — see below.
 
 ## Method vs. local convention
 
-This file is the **local** contract: the entry format, the destinations table above, the
-wrap width, when a correction ships, how parallel sessions avoid contention. Those are
-this repository's calls.
+This file is the **local** contract: the almanac's subject, the entry format, the
+destinations table above, the wrap width, when a correction ships, how parallel sessions
+avoid contention. Those are this repository's calls.
 
 The **method** — the admission tests, how to decide whether a fact belongs, how to write
 a `verify` line that fails when its claim fails, how to re-check entries that may have

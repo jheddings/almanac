@@ -5,11 +5,11 @@ way, recorded so nobody learns them twice. Packaged for Claude Code, Codex, Anti
 and Cursor; the skills themselves assume no particular harness.
 
 An almanac entry is a silent failure mode, a tool that lies, a constraint that isn't
-visible from the code. Its subject is as often the CI, the build tooling, or the agent
-harness as the code itself — what matters is that the fact holds for anyone working in
-that repository. Not documentation, not a plan: a claim a future agent will act on
-without re-deriving it. One fact per file, filename states the claim, and the directory
-listing is the index.
+visible from the code. What an entry is about is as often the CI, the build tooling, or
+the agent harness as the code itself — what matters is that the fact holds for anyone
+working in that repository. Not documentation, not a plan: a claim a future agent will
+act on without re-deriving it. One fact per file, filename states the claim, and the
+directory listing is the index.
 
 This plugin initializes the repository-level pieces and carries the two procedures that
 keep such a directory honest. Consulting the almanac is deliberately **not** a skill —
@@ -140,6 +140,20 @@ The cost, plainly: agents on tools that read `README.md` but cannot load skills 
 local rules and not the method. The template is written so that file stands alone as a
 usable contract for them.
 
+**The subject is declared, and defaults to the repository.** Scope — _would this hold
+for everyone else?_ — needs an _everyone else_, and for the common case that is CI plus
+whoever clones the repo. It is not the only case: a workspace holding several
+independent checkouts has agents rediscovering the same environment over and over, and
+an almanac whose subject is that workspace is answering a real question. So the
+almanac's `README.md` declares its subject inside the local block, and `record`'s scope
+test reads against whatever is declared. The default is unchanged, and a fact true only
+of one person's machine is still out.
+
+The cost, plainly: scope admission is method, and method is the skill's to own. This is
+the one piece of it the shared contract delegates, and the delegation has to be narrow
+and explicit — otherwise a repo with an unusual shape quietly redefines a test it does
+not control, which is the drift the precedence rule exists to prevent.
+
 **No skill depends on a gated tool.** `audit` verifies entries by fanning them out to
 ordinary subagents, or sequentially in the main thread when none are available —
 parallelism is an optimization, never a runtime dependency. An earlier draft bundled a
@@ -161,6 +175,13 @@ because whatever led it to write something wrong would equally lead it to approv
 so every entry, every correction, and every deletion rides in a PR diff and gets
 reviewed like code. `audit`'s analysis is read-only for the same reason; it proposes,
 and a human approves.
+
+The one target where that has nothing to attach to is a subject under no version
+control, where there is no diff to ride in. The safeguard does not lapse there; it moves
+to the writer, who states in their report what they wrote and why, so the operator can
+still check it. `almanac:init` says so when it proposes such an almanac. A review a
+human has to remember to ask for is weaker than one the tooling forces, and that is the
+price of admitting a subject git does not cover.
 
 **`verified` is only ever set by something that actually re-ran the check.** The entry
 format has an optional `verified:` date meaning exactly one thing: someone ran the
@@ -191,10 +212,11 @@ and no `status`, because an entry you aren't confident about should not exist.
   Purpose-built packaging for other harnesses, such as Gemini, waits until something
   needs it.
 - **Cross-repository entries.** An almanac is shared across agents and harnesses, but
-  only within one repository: a fact about a CI runner learned in one repo is learned
-  again in the next. Pooling entries is a real gap and not an oversight — `verify` means
-  "run this against this tree", and review means "it rides in a PR diff", and both are
-  repository-shaped. Nothing here pretends to solve it yet.
+  only within one subject, and for almost every almanac that subject is one repository:
+  a fact about a CI runner learned in one repo is learned again in the next. Pooling
+  entries is a real gap and not an oversight — `verify` means "run this against this
+  tree", and review means "it rides in a PR diff", and both are repository-shaped.
+  Nothing here pretends to solve it yet.
 
 ## Development
 

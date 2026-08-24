@@ -15,8 +15,12 @@ content.
 
 ## Inspect the repository
 
-Find the repository root and read the applicable agent instructions. Resolve any
-existing almanac in order — stop at the first step that resolves:
+Find the repository root and read the applicable agent instructions. **There may not be
+one.** A workspace holding several independent checkouts is a legitimate target and is
+not itself a repository, so a failing `git rev-parse --show-toplevel` is a fact about
+the target, not a reason to stop: take the directory the operator named as the root, and
+carry the consequences into the proposal below. Resolve any existing almanac in order —
+stop at the first step that resolves:
 
 1. **`docs/almanac/README.md`.** The conventional location. If it exists, that is the
    almanac; do not look further.
@@ -74,6 +78,18 @@ Infer a destination only from files, directories, or services that actually exis
 a category whose destination cannot be established; never invent `docs/arch/`,
 `CONTRIBUTING.md`, or an issue tracker. Explain any omitted category so the operator can
 supply an answer before approving the file.
+
+Two further things go in that block. **The subject**, whenever the target is not a
+single repository — say what it is, because the contract's scope test reads against it
+and otherwise defaults to this repository. And **the wrap width** entries will use: the
+contract claims that convention as local and supplies no value, so leaving it unset
+hands every writer a different guess. Infer it from a formatter already configured here
+— `.prettierrc*`, `.editorconfig` — and name the source; ask if nothing establishes it.
+
+Where the target has no version control, the contract's review model has nothing to
+attach to: "entries ride in the PR diff" is the safeguard, and there is no diff. Say so
+in the proposal. The safeguard does not become optional — it becomes the writer's to
+discharge in their report, while the operator can still check it.
 
 A **section** of a file is a valid destination, and usually a better one than a bare
 filename — `CLAUDE.md § Architecture` sends an agent somewhere specific. Two categories
