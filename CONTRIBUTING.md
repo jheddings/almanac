@@ -102,6 +102,13 @@ Copy the shared resolution steps verbatim from an existing skill rather than rew
 them. `init` changes only the no-match outcome: no survivor means it may propose a new
 almanac, while `record` and `audit` stop.
 
+Resolution is bounded **above** as well as below. The exclusions keep a skill out of
+trees nested inside this one; the rule also stops at this tree's root, because a
+workspace or parent repository may keep its own almanac with its own subject. Walking up
+would let a skill record into a contract it never read, and leaves the same tree looking
+uninitialized to one skill and adopted to another. `tests/test_discovery_rule.py` covers
+both directions.
+
 The **exclusion path list** is the part that must not drift, and
 `test_every_skill_that_resolves_the_almanac_names_the_same_exclusions` enforces it
 mechanically. The consequence clause that follows the list is legitimately per-skill —

@@ -24,6 +24,10 @@ from tests.support.almanac import (
 
 STAMP = "<!-- almanac-template: 1 -->\n\n# Almanac\n"
 
+# Every skill that resolves the almanac globs for it; that glob is a far more stable
+# anchor than any sentence around it, so it is what decides which skills must comply.
+RESOLUTION_GLOB = "**/almanac/README.md"
+
 
 def make_almanac(root, relative):
     directory = root / relative
@@ -77,6 +81,26 @@ def test_a_worktree_copy_of_this_repo_does_not_win(tmp_path):
     assert resolve_almanac(tmp_path) == tmp_path / "docs" / "almanac"
 
 
+def test_an_enclosing_almanac_is_out_of_reach(tmp_path):
+    """Resolution is bounded above as well as below.
+
+    A workspace almanac one level up is a different almanac with a different subject.
+    Resolving to it would mean recording into a contract this skill never read.
+    """
+    make_almanac(tmp_path, "docs/almanac")
+    checkout = tmp_path / "project"
+    (checkout / "src").mkdir(parents=True)
+    with pytest.raises(AlmanacNotFound):
+        resolve_almanac(checkout)
+
+
+def test_the_innermost_almanac_wins_over_an_enclosing_one(tmp_path):
+    """Both exist and both are genuine; the one under foot is the one that resolves."""
+    make_almanac(tmp_path, "docs/almanac")
+    inner = make_almanac(tmp_path, "project/docs/almanac")
+    assert resolve_almanac(tmp_path / "project") == inner
+
+
 def test_no_almanac_raises_rather_than_creating_one(tmp_path):
     (tmp_path / "src").mkdir()
     with pytest.raises(AlmanacNotFound):
@@ -113,3 +137,23 @@ def test_exclusion_list_matches_what_the_skills_say():
                 f"{skill.name}: prose omits `{excluded}/`, which the rule under test "
                 "excludes"
             )
+
+
+def test_the_upward_bound_is_stated_in_the_skills():
+    """The exclusions cover trees nested inside this one; nothing covered the reverse.
+
+    Without it, a checkout under a workspace almanac reads as uninitialized to `init`
+    and as already-adopted to whoever runs `record` from the parent — the same tree,
+    two answers, neither wrong on its own terms.
+
+    Coverage is anchored on the resolution glob rather than the sentence introducing
+    the exclusions, for the reason `test_skill_hygiene` gives: key off the prose and a
+    reworded skill drops out of its own check with nothing failing.
+    """
+    resolving = [s for s in almanac.skills() if RESOLUTION_GLOB in s.body]
+    assert resolving, f"no skill contains {RESOLUTION_GLOB!r} — has resolution moved?"
+    for skill in resolving:
+        assert "never look up" in skill.body, (
+            f"{skill.name}: resolves the almanac but does not say resolution stops at "
+            "this tree's root"
+        )

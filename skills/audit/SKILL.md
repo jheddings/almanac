@@ -52,6 +52,12 @@ Locate the almanac first, in order — stop at the first step that resolves:
 3. **Exactly one survivor → that is the almanac.** More than one, ask which. None, this
    repo has no almanac — say so and stop.
 
+**These steps search this tree, and never look up.** A workspace or parent repository
+enclosing this checkout may keep its own almanac; that is a separate almanac with a
+separate subject, and this tree's is the one that resolves. An enclosing almanac is
+outside this audit: its entries are re-verified against the tree they describe, not this
+one.
+
 Hold the resolved **directory** and enumerate from it. Then list every entry file in it,
 **excluding `README.md`** (it is the contract, not a claim):
 

@@ -32,6 +32,11 @@ In order — stop at the first step that resolves:
    repo has no almanac — say so and stop, rather than creating one as a side effect of
    recording.
 
+**These steps search this tree, and never look up.** A workspace or parent repository
+enclosing this checkout may keep its own almanac; that is a separate almanac with a
+separate subject, and this tree's is the one that resolves. Read the outer one when it
+is relevant to what you are doing, and record what this tree taught you here.
+
 Hold the resolved **directory**, not just the README, and write into that directory.
 
 **Read that README before writing anything.** It is the local contract, and it carries
