@@ -9,6 +9,7 @@ from __future__ import annotations
 
 import subprocess
 import zipfile
+from pathlib import Path
 
 import click
 
@@ -137,16 +138,43 @@ def set_version_cmd(bump):
     click.echo(target)
 
 
+def inherited_instructions(run: Path) -> str:
+    """Instruction files above a run that a session started there would also read.
+
+    A run nested inside a repository inherits its CLAUDE.md and AGENTS.md, and this one
+    names a different almanac — so the trial would measure two rule sets at once. The
+    warning is printed rather than enforced, because where runs belong is the
+    operator's call.
+    """
+    found = []
+    for parent in run.resolve().parents:
+        for name in ("CLAUDE.md", "AGENTS.md"):
+            if (parent / name).is_file():
+                found.append(str(parent / name))
+    if not found:
+        return ""
+    listed = "\n".join(f"    {path}" for path in found)
+    return f"  warning: a session here also reads\n{listed}"
+
+
 @click.command("skel-new")
 @click.argument("label")
 @click.option("--stamp", default=None, help="Date stamp; defaults to today.")
-def skel_new_cmd(label, stamp):
+@click.option(
+    "--out",
+    type=click.Path(file_okay=False, path_type=Path),
+    default=None,
+    help="Where to put the run. Keep it outside any repository whose instruction "
+    "files a session would inherit — including this one.",
+)
+def skel_new_cmd(label, stamp, out):
     """Scaffold a harness-test run as a standalone repository."""
     import datetime
 
     stamp = stamp or datetime.date.today().isoformat()
-    run = skel.new_run(skel.FIXTURE, skel.RUNS, label, stamp)
+    run = skel.new_run(skel.FIXTURE, out or skel.RUNS, label, stamp)
     click.echo(f"run ready: {run}")
+    click.echo(inherited_instructions(run) or "  inherits no instruction files above it")
 
 
 @click.command("skel-prompt")

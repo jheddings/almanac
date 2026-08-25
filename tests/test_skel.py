@@ -179,3 +179,21 @@ def test_worktree_check_cannot_conclude_without_a_branch_to_compare():
     finding = skel.check_worktree_names(["bender"], [])
     assert finding.status == "unrecoverable"
     assert "bender" in finding.detail
+
+
+def test_a_run_may_be_placed_outside_the_repository(tmp_path):
+    """A run nested under this repo inherits its instruction files.
+
+    A session started inside `runs/` reads every CLAUDE.md and AGENTS.md above it,
+    including this repository's own — which names a different almanac. The trial would
+    then measure two rule sets at once, so the destination has to be movable.
+    """
+    fixture = tmp_path / "fixture"
+    fixture.mkdir()
+    (fixture / "README.md").write_text("x\n")
+
+    elsewhere = tmp_path / "somewhere-else"
+    run = skel.new_run(fixture, elsewhere, "claude", stamp="2026-08-24")
+
+    assert run.parent == elsewhere
+    assert (run / ".git").is_dir()
