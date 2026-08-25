@@ -1,15 +1,18 @@
 # almanac
 
-Skills for keeping an **almanac** — a directory of facts your agents discovered the hard
-way, recorded so nobody learns them twice. Packaged for Claude Code, Codex, Antigravity,
-and Cursor; the skills themselves assume no particular harness.
+Skills for keeping an **almanac** — a directory holding a repository's operating
+knowledge, recorded so nobody learns it twice. Packaged for Claude Code, Codex,
+Antigravity, and Cursor; the skills themselves assume no particular harness.
 
-An almanac entry is a silent failure mode, a tool that lies, a constraint that isn't
-visible from the code. What an entry is about is as often the CI, the build tooling, or
-the agent harness as the code itself — what matters is that the fact holds for anyone
-working in that repository. Not documentation, not a plan: a claim a future agent will
-act on without re-deriving it. One fact per file, filename states the claim, and the
-directory listing is the index.
+Entries come in two kinds. A **fact** is a silent failure mode, a tool that lies, a
+constraint that isn't visible from the code — something reality can refute, so it
+carries a `verify` line an audit re-runs. A **rule** is something the repository
+requires of everyone who works in it: commit format, branch naming, where work happens.
+Not documentation, not a plan: a claim a future agent acts on without re-deriving it.
+
+One claim per file, the filename states the claim, and **the directory listing is the
+index** — read cold at the start of a session, with bodies loaded only when a title
+bears on what you are about to do.
 
 This plugin initializes the repository-level pieces and carries the two procedures that
 keep such a directory honest. Consulting the almanac is deliberately **not** a skill —
@@ -17,16 +20,17 @@ see [Design positions](#design-positions).
 
 ## Skills
 
-| Skill            | Use it when                                                             |
-| ---------------- | ----------------------------------------------------------------------- |
-| `almanac:init`   | You want to add or repair an almanac in a repository                    |
-| `almanac:record` | You just finished being surprised, and something durable came out of it |
-| `almanac:audit`  | You want to know whether the recorded facts are still true              |
+| Skill            | Use it when                                                            |
+| ---------------- | ---------------------------------------------------------------------- |
+| `almanac:init`   | You want to add or repair an almanac in a repository                   |
+| `almanac:record` | You just finished being surprised, or a convention became binding here |
+| `almanac:audit`  | You want to know whether the recorded facts are still true             |
 
-`record` owns the admission tests, the category gate, and how to write a `verify` line
-that fails when its claim fails. `audit` re-runs every entry's `verify` line and sorts
-the results into `holds` / `falsified` / `unverifiable`, then proposes corrections
-behind a confirmation gate.
+`record` owns the admission tests, the category gate, the fact/rule decision, and how to
+write a `verify` line that fails when its claim fails. `audit` re-runs every _fact's_
+`verify` line and sorts the results into `holds` / `falsified` / `unverifiable`, then
+proposes corrections behind a confirmation gate. Rules come back `unauditable`; see
+below.
 
 ## Installation
 
@@ -197,11 +201,41 @@ because it launders a stale fact as a current one. Restricting the write to the 
 would not strengthen that rule — it would only discard real evidence when someone else
 produced it.
 
-**No index, and no frontmatter beyond the specified fields.** A shared index is a merge
-conflict between concurrent sessions that silently duplicates or drops content;
-filenames state claims, so `ls` and `grep` are the index. Git supplies history and
-modification times, and every extra field rots — in particular there is no `confidence`
-and no `status`, because an entry you aren't confident about should not exist.
+**The almanac carries rules as well as facts.** A convention only helps if it is loaded
+at the moment it applies, and an always-on instruction file pays for every rule on every
+turn whether or not it is relevant. Entries invert that: the filename index is one line
+per claim, always in context, and the body arrives only when the title bears on what is
+happening. So a required rule is an entry — `kind: rule` — and the listing becomes the
+whole index of how to work here rather than half of it, with the other half in a file
+the agent may or may not have read to the bottom.
+
+The cost, plainly, and it is the largest one here: **a rule cannot be audited.** A fact
+has a `verify` line, so `audit` re-runs it and a stale fact is caught mechanically. A
+rule has nothing to re-run — a check that people follow it measures compliance, not
+truth, and reporting that as a verdict would be worse than reporting nothing. So rules
+decay in exactly the way this directory exists to prevent: confidently worded after the
+decision behind them changed, with only a human reading the listing to catch it. The
+schema enforces the split (a `kind: rule` entry may not carry `verify` or `verified`)
+and `audit` names every rule it could not reach, so the gap is visible rather than
+silent — but visible is not covered.
+
+Two smaller costs. Retrieval now rests entirely on the title: an entry whose slug does
+not fire at the right moment is invisible, and that failure is silent too. And a longer
+listing is a weaker listing — the directory works as a cold read because every line is
+worth reading, and rules dilute a signal that facts alone kept dense.
+
+**No index, and no frontmatter beyond `title`, `kind`, `recorded`, `source`, `verify`,
+`verified`, and `tags`.** A shared index is a merge conflict between concurrent sessions
+that silently duplicates or drops content; filenames state claims, so `ls` and `grep`
+are the index. Git supplies history and modification times, and every extra field rots —
+in particular there is no `confidence` and no `status`, because an entry you aren't
+confident about should not exist.
+
+`kind` is the one field admitted since, and it was not free: it exists because facts and
+rules need different maintenance, and a field that distinguishes them is the price of
+keeping both in one directory. It earns its place by being enforced rather than
+descriptive — the schema rejects a rule carrying `verify`, so the two tiers cannot
+quietly blur into one.
 
 ## Not in this release
 

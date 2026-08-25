@@ -1,5 +1,6 @@
 ---
 title: A plugin archive missing .claude-plugin/plugin.json loads with no error
+kind: fact
 recorded: 2026-08-20
 source:
     "Building `just claude bundle`; confirmed against a probe plugin and a negative

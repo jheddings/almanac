@@ -77,10 +77,15 @@ Replace only the contents of the `almanac:local` block with this repository's re
 destinations for:
 
 - designed intent;
-- required rules;
 - specifications or plans;
 - in-flight status;
 - personal preferences.
+
+**Required rules are not on that list.** The contract admits them as `kind: rule`
+entries, so there is no destination to establish. If the repository already keeps its
+conventions in `CONTRIBUTING.md` or an instruction file, say so in the proposal and name
+migrating them as separate follow-up work — never move someone's rules as a side effect
+of setup.
 
 Infer a destination only from files, directories, or services that actually exist. Omit
 a category whose destination cannot be established; never invent `docs/arch/`,
@@ -131,11 +136,14 @@ almanac inert and everything else here decorative.
 
 If `AGENTS.md` exists, match its structure and propose the smallest addition that says:
 
-- `docs/almanac/` records durable facts discovered the hard way;
-- list it when starting unfamiliar work, grep it when behavior is unexpected, and
-  consult it before silent or costly operations;
-- follow `docs/almanac/README.md` when recording a genuine surprise;
-- before finishing a branch, state whether the work taught an almanac-worthy fact.
+- `docs/almanac/` holds this repository's operating knowledge — durable facts and the
+  rules it requires — one claim per file, indexed by filename;
+- list it at the start of a session, carry the titles, and load a body when one bears on
+  what you are about to do;
+- grep it when behavior is unexpected, and consult it before silent or costly
+  operations;
+- follow `docs/almanac/README.md` when recording;
+- before finishing a branch, state whether the work taught an almanac-worthy claim.
 
 Do not paste a second almanac section when those concepts already exist. If `AGENTS.md`
 is absent, propose creating it with a concise section containing those concepts. If a

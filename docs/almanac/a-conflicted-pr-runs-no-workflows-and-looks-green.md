@@ -1,5 +1,6 @@
 ---
 title: A PR with merge conflicts runs no workflows, and its checks read as passing
+kind: fact
 recorded: 2026-08-20
 source:
     "PR #9 sat at zero runs for two pushes; `mergeable` was CONFLICTING, and the run

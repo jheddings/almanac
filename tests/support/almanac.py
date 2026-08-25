@@ -22,8 +22,15 @@ LIVE_ALMANAC = REPO_ROOT / "docs" / "almanac"
 # Frontmatter contract for an almanac entry. The template states this in prose; here it
 # is executable, which is what makes the "no other fields" invariant enforceable rather
 # than merely asserted.
-ENTRY_REQUIRED = {"title", "recorded", "source"}
+ENTRY_REQUIRED = {"title", "kind", "recorded", "source"}
 ENTRY_ALLOWED = ENTRY_REQUIRED | {"verify", "verified", "tags"}
+
+# The two kinds behave differently under maintenance, so the split is enforced rather
+# than trusted: only a fact can be re-checked, so only a fact may carry the fields an
+# audit reads. A `verify` line on a rule would measure compliance and be reported as
+# truth.
+ENTRY_KINDS = {"fact", "rule"}
+FACT_ONLY_FIELDS = {"verify", "verified"}
 
 # Docs that carry example entry frontmatter inside fenced blocks. An example is what
 # adopters copy, so it has to satisfy the same contract the entries do.

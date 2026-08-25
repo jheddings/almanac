@@ -1,5 +1,6 @@
 ---
 title: Piping into `grep -q` under `set -o pipefail` fails intermittently on SIGPIPE
+kind: fact
 recorded: 2026-08-20
 source:
     "Diagnosing an intermittent `just cursor bundle` failure on `feat/cursor-plugin`,

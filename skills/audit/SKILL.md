@@ -10,10 +10,16 @@ description: >-
 
 # Audit the Almanac
 
-The almanac holds facts discovered the hard way, recorded by agents for agents. Every
-entry carries a `verify` line for exactly one reason: so a future agent can re-check the
-claim cheaply instead of trusting it blindly. Nothing ever does. This skill is that
-missing pass.
+The almanac holds a repository's operating knowledge, recorded by agents for agents.
+Every `kind: fact` entry carries a `verify` line for exactly one reason: so a future
+agent can re-check the claim cheaply instead of trusting it blindly. Nothing ever does.
+This skill is that missing pass.
+
+**This audit covers facts and nothing else.** A `kind: rule` entry states what the
+repository requires; reality cannot refute it, so there is no check to run and no
+verdict to reach. Rules still decay — the decision behind one changes and the entry does
+not — but catching that needs a human who can change the decision, not a command. Count
+them, name them, and say plainly that they went unaudited.
 
 **An entry that quietly stopped being true is worse than no entry at all**, because it
 is written to be acted on without re-derivation. Nobody re-checks a confidently-worded
@@ -65,6 +71,10 @@ Hold the resolved **directory** and enumerate from it. Then list every entry fil
 ls <almanac-dir>/*.md | grep -v 'README.md$'
 ```
 
+Read each one's `kind` and split the list. Facts go to Step 2. Rules go straight to the
+report as `unauditable`, with their titles — never silently dropped, or a shrinking
+audit will read as a clean one.
+
 If the operator scoped the request ("audit the migration entries"), filter here — but
 say in your report which subset you audited, so an unaudited entry is never mistaken for
 one that passed.
@@ -73,19 +83,20 @@ If the almanac is empty, say so and stop. An audit of zero entries is not a pass
 
 ## Step 2 — Verify the entries
 
-Fan the entries out to subagents in batches of about three, or run them sequentially in
-the main thread if subagents are unavailable. Parallelism is an optimization; nothing
+Fan the **facts** out to subagents in batches of about three, or run them sequentially
+in the main thread if subagents are unavailable. Parallelism is an optimization; nothing
 here depends on it, or on any tool a particular harness happens to provide.
 
 Give each worker this task, verbatim in substance:
 
-> For each file listed, read the entry. Its frontmatter carries a `title` (the claim)
-> and usually a `verify` line (how to re-check it cheaply); the body states the
-> consequence. Run the `verify` line, or the closest **faithful** read-only equivalent
-> if the command has drifted — a renamed path, a moved file, a flag that changed
-> spelling. "Faithful" means it tests the same load-bearing detail the claim rests on,
-> not merely the neighbourhood that detail lives in. Then compare the actual output
-> against what the claim predicts and assign one verdict:
+> For each file listed, read the entry. Every file you are given is a `kind: fact`
+> entry. Its frontmatter carries a `title` (the claim) and usually a `verify` line (how
+> to re-check it cheaply); the body states the consequence. Run the `verify` line, or
+> the closest **faithful** read-only equivalent if the command has drifted — a renamed
+> path, a moved file, a flag that changed spelling. "Faithful" means it tests the same
+> load-bearing detail the claim rests on, not merely the neighbourhood that detail lives
+> in. Then compare the actual output against what the claim predicts and assign one
+> verdict:
 >
 > - **`holds`** — you ran a check and its output confirms the claim.
 > - **`falsified`** — you ran a check and its output contradicts the claim.
@@ -106,7 +117,9 @@ rather than assuming they carry over:
 3. **A broken `verify` line is `unverifiable`**, not `falsified` — and the proposed
    action is to repair the line, so the entry becomes re-checkable. An entry with no
    `verify` line at all is `unverifiable` unless the worker devises and runs a
-   conclusive read-only check itself.
+   conclusive read-only check itself. If a file turns out to be `kind: rule`, return it
+   unjudged and say so; do not invent a compliance check, which would measure whether
+   people follow the rule and be read as whether the entry is true.
 4. **Quote output verbatim.** Not a summary, not a paraphrase, not an interpretation.
    Trim long output, but what comes back must be literal. If there was no output, say
    "no output" and name the exit status observed.
@@ -139,11 +152,17 @@ in the main thread, behind the gate in Step 4.
 
 ## Step 3 — Read the result critically
 
-| Verdict        | What it means                | What you owe it                        |
-| -------------- | ---------------------------- | -------------------------------------- |
-| `holds`        | Ran a check; output confirms | Bump `verified` — see Step 4.          |
-| `falsified`    | Ran a check; output refutes  | Spot-check it, then correct or delete. |
-| `unverifiable` | No conclusive check ran      | Repair the `verify` line, or flag it.  |
+| Verdict        | What it means                 | What you owe it                        |
+| -------------- | ----------------------------- | -------------------------------------- |
+| `holds`        | Ran a check; output confirms  | Bump `verified` — see Step 4.          |
+| `falsified`    | Ran a check; output refutes   | Spot-check it, then correct or delete. |
+| `unverifiable` | No conclusive check ran       | Repair the `verify` line, or flag it.  |
+| `unauditable`  | A rule; nothing to check ever | Name it for a human. Never edit it.    |
+
+`unauditable` is not a weaker `unverifiable`. An `unverifiable` fact is a check this
+skill could fix; an `unauditable` rule is outside its reach permanently, and no repair
+brings it in. Never propose editing or deleting a rule on the strength of an audit —
+observing that nobody follows one is evidence about people, not about the entry.
 
 Two warnings, both of which are how this step goes wrong:
 
@@ -229,3 +248,5 @@ and note what changed, per the almanac's `README.md`.
   Every one of the four is a way to manufacture a false result; none of them is enforced
   for you.
 - **Auditing a subset and reporting it as "the almanac."** Name what you covered.
+- **Letting the rules disappear from the report.** They are entries an audit cannot
+  reach; an audit that stops mentioning them reads as coverage it never had.

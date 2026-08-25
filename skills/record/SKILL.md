@@ -5,17 +5,27 @@ description: >-
     CI, its tooling, or the agent harness you are running under — a debugging session
     that ended in "oh, that's why," a green build or passing suite that concealed a real
     failure, a tool that behaved differently than its documentation claims, or the
-    discovery that an existing almanac entry is wrong. Also use on an explicit request
-    to "record this in the almanac", "add an almanac entry", "write down this gotcha",
-    or "make sure we don't learn this again".
+    discovery that an existing almanac entry is wrong. Also use when a convention
+    becomes binding here, or when you find one living where an agent will meet it too
+    late to act on. Also use on an explicit request to "record this in the almanac",
+    "add an almanac entry", "write down this gotcha", or "make sure we don't learn this
+    again".
 ---
 
 # Record an Almanac Entry
 
-The almanac holds facts discovered the hard way, recorded by agents for agents. **An
-entry is a claim a future agent will act on without re-deriving it**, so the bar is
-truth, not usefulness — a plausible entry that is subtly wrong costs more than no entry
-at all, because it gets trusted instead of checked.
+The almanac holds a repository's operating knowledge, recorded by agents for agents and
+retrieved by filename. **An entry is a claim a future agent will act on without
+re-deriving it**, so a plausible entry that is subtly wrong costs more than no entry at
+all: it gets trusted instead of checked.
+
+Decide the **kind** before anything else. A **fact** is something reality can refute —
+it carries a `verify` line, and an audit re-runs it. A **rule** is something this
+repository requires — reality cannot refute it, only a decision can change it, and it
+carries no `verify` line and no audit. One question settles it: **can this be false
+without anyone changing their mind?** Yes, `fact`. No, `rule`. Wrong in the `rule`
+direction and a real fact stops being checkable; wrong in the `fact` direction and an
+audit reports compliance as if it were truth.
 
 ## Locate the almanac
 
@@ -62,13 +72,12 @@ README outranked it, one stale local copy would silently override a corrected ru
 This is the step agents skip. Not by ignoring it — by _noticing_ the problem, writing
 the doubt down, and filing the entry anyway.
 
-**Deciding where a fact belongs is your call to make, not a caveat to pass along.** An
+**Deciding where a claim belongs is your call to make, not a caveat to pass along.** An
 entry you are unsure belongs is not an entry with a disclaimer attached; it is a
-decision you still owe. Writing "a reviewer may judge this closer to `CONTRIBUTING`
-territory" into the entry, the PR body, or your final report does **not** discharge that
-decision. The almanac has no gate but you: a reviewer reading a hedged entry inherits
-your uncertainty without your evidence, and the default outcome of an unresolved
-category question is that the entry stays.
+decision you still owe. Writing the doubt into the entry, the PR body, or your final
+report does **not** discharge it. The almanac has no gate but you: a reviewer reading a
+hedged entry inherits your uncertainty without your evidence, and the default outcome of
+an unresolved category question is that the entry stays.
 
 **If you cannot decide it belongs, it does not go in.** Put it where it does belong, or
 say plainly that you are not recording it and why.
@@ -77,63 +86,72 @@ say plainly that you are not recording it and why.
 
 Ask each question. Any _yes_ disqualifies the entry:
 
-1. Is it **designed intent** — how a subsystem is meant to work, rather than what
-   happened when it ran?
-2. Is it a **rule someone is required to follow**?
-3. Is it the **status of in-flight work**?
-4. Is it a **spec or an implementation plan**?
-5. Is it **your own working preference or habit**?
-6. Is it true **only of your own machine's state**, not of this almanac's subject?
+1. Is it **designed intent** — how a subsystem is meant to work, rather than something
+   you would act on at a nameable moment?
+2. Is it the **status of in-flight work**?
+3. Is it a **spec or an implementation plan**?
+4. Is it **your own working preference or habit**?
+5. Is it true **only of your own machine's state**, not of this almanac's subject?
+
+**A rule someone is required to follow is not on this list.** Rules belong in the
+almanac as `kind: rule` entries; that is what makes the directory listing the whole
+index of how to work here rather than half of it.
 
 The questions are the method, so they live here. **The answers are irreducibly
 repo-local, so they live in the almanac's `README.md`** — read its destinations table
 for where each category goes in _this_ repo. Do not guess a destination, and do not file
 into a directory you have not confirmed exists.
 
-Questions 1 and 2 share a discriminator, and it is the fastest one to reach for: **can
-this be false without anyone changing their mind?** Reality can refute a fact. Intent
-can only be diverged from, and a rule only broken. So a fact that matters only as the
-rationale for a rule written down elsewhere stays with the rule. Neither question turns
-on _who told you_.
+Question 1 is **intent vs. requirement**, and it is the one that blurs. An architecture
+note explains how a mechanism was _meant_ to work, and reading it changes nothing you
+are about to type; a rule tells you what to type.
 
-Question 1 is **design vs. discovery**: how a thing was meant to work is architecture;
-what turned out to be true when someone ran it is an almanac entry.
+Question 4 is the one that traps, and admitting rules sharpens it rather than softening
+it: a rule is what this repository requires of _everyone_, while a preference is what
+you happen to do. "Commits here use conventional format" is a rule; "I like to commit
+early and often" is memory. **If nobody would be wrong for doing it differently, it is
+not a rule.** Split a preference sitting on top of a real fact: the behavior you
+observed may be a fine `fact`; "so I do X" is memory. Then apply question 5 to what is
+left.
 
-Question 5 is the one that traps. A preference is not disqualified by being _about_ a
-real, verified, expensive-to-rediscover fact — most preferences are. Split them: the
-behavior you observed may be a fine entry; "so I do X" is memory. Record the behavior
-and its consequence, not your routine — then apply question 6 to what is left.
-
-Question 6 is **scope**, and the three tests below cannot catch it: they ask whether a
-fact is durable, discovered, and costly, never _who it is true for_. A proxy on your
-laptop, a path in your shell, a credential CI does not have — all three pass and the
-entry is still false for everyone else. Ask: **would this hold for everyone else working
-on this almanac's subject?** If no, it goes to memory however well it passes the rest.
+Question 5 is **scope**, and the three tests below cannot catch it: they ask whether an
+entry is durable, actionable, and costly to miss, never _who it is true for_. A proxy on
+your laptop, a path in your shell, a credential CI does not have — all three pass and
+the entry is still false for everyone else. Ask: **would this hold for everyone else
+working on this almanac's subject?** If no, it goes to memory however well it passes the
+rest.
 
 The subject is this repository, unless the almanac's `README.md` declares another one —
-a workspace holding several checkouts, say, where what agents keep rediscovering is the
-environment those checkouts share. Read the README before you apply this question; you
-already have to. For a repository the question reads _would this hold for CI and for
+a workspace holding several checkouts, say. Read the README before you apply this
+question; you already have to. For a repository it reads _would this hold for CI and for
 everyone who clones it?_
 
-Scope is about _who_, not which layer surfaced the fact: how a CI runner, a package
+Scope is about _who_, not which layer surfaced the claim: how a CI runner, a package
 manager, or an agent harness behaves _here_ is true for everyone who meets it here, and
-it belongs — those entries travel furthest, since the next agent likely runs a different
-tool. Only your own machine's state is out; split it the way question 5 splits.
+it belongs. Only your own machine's state is out.
 
 ### Does it pass all three?
 
-1. **Durable** — still true in six months. How the system _behaves_ qualifies; what we
-   are _currently doing_ does not.
-2. **Discovered** — someone found it out by running into it, rather than deciding it.
-   Not whoever found it out in _this_ session: a confirmed fact from the operator
-   counts. Anything true because someone chose it does not.
-3. **Costly to rediscover** — non-obvious, expensive, or silent. If a competent agent
-   works it out in two minutes, leave it out. Failures that look like success are the
-   highest-value entries there are.
+1. **Durable** — still true in six months. How the system _behaves_ and what this
+   repository _requires_ both qualify; what we are _currently doing_ does not.
+2. **Actionable** — a future agent does something differently for knowing it, at a
+   moment you can name. If nothing changes, it is background reading.
+3. **Costly to miss** — non-obvious in the moment, or silent and expensive when missed.
+   If a competent agent works it out in two minutes, or the mistake is caught loudly the
+   first time, leave it out. Failures that look like success are the highest-value
+   entries there are.
 
-All three, or it does not go in. If you cannot state the fact in one sentence, you have
+All three, or it does not go in. If you cannot state the claim in one sentence, you have
 a design doc, not an entry.
+
+### Would the title fire?
+
+Bodies load lazily and the filenames are the whole index, so **an entry whose title does
+not fire at the right moment does not exist.** Name the moment first — the command about
+to run, the decision about to be made — then check that the slug would surface the entry
+to an agent scanning the listing and nothing else. This test replaces provenance: what
+matters is not whether the claim was discovered or decided, but whether it can be
+retrieved by someone who does not yet know they need it.
 
 ### Is it already there?
 
@@ -144,17 +162,22 @@ local rule on duplicates rather than guessing.
 
 ## Verify, don't transcribe
 
-Re-check every claim against the tree as it is **now**, even when the source is your own
-notes from this session, a memory file, or something the user stated as fact. Notes
-record what was true when written, under assumptions that may not have survived. Run the
-command, read the file, reproduce the failure. Under time pressure this is the step to
-keep, not the step to drop — an unverified entry is the artifact this skill exists to
-prevent.
+Re-check every fact against the tree as it is **now**, even when the source is your own
+notes from this session, a memory file, or something the user stated. Notes record what
+was true when written, under assumptions that may not have survived. Run the command,
+read the file, reproduce the failure. Under time pressure this is the step to keep — an
+unverified entry is the artifact this skill exists to prevent. For a rule, the
+equivalent is confirming the decision still stands and finding where it is written.
 
 If verification contradicts the claim, say so and record nothing (or record the
 corrected fact you actually established).
 
 ## Write a verify line that fails when the claim fails
+
+**Facts only.** A rule has nothing to re-run: a check that a rule is being followed
+measures compliance, not truth, and a failure would mean somebody broke the rule rather
+than that the entry is wrong. Putting a command on a rule lets an audit return a verdict
+about the wrong thing. Leave the field off.
 
 `verify` is what stops an entry from quietly going stale. A verify line that merely
 **locates the thing it describes** does not clear the bar — it passes forever, including
@@ -170,19 +193,25 @@ Say the claim is "the deploy skips migrations because `--include-all` is absent.
 
 Two habits make the difference. Test the load-bearing detail, not the neighbourhood it
 lives in. And state the **expected observation** — "returns nothing", "exits 1", "prints
-`warn`" — because a bare command tells the next agent what to run and not what would
-count as a refutation.
+`warn`" — because a bare command tells the next agent what to run, not what would count
+as a refutation.
 
 ## Write it
 
-- **One fact per file.** Filename is a kebab-case slug **stating the claim, not the
-  topic** — `migrations-out-of-order-are-silently-skipped.md`, not `migrations.md`.
+- **One claim per file.** Filename is a kebab-case slug **stating the claim, not the
+  topic** — `migrations-out-of-order-are-silently-skipped.md`, not `migrations.md`;
+  `branch-names-carry-the-commit-type-prefix.md`, not `branching.md`.
+- **Declare the `kind`.** A rule opens its body with **Applies when:** and the moment it
+  fires, then the requirement, then why it exists. A fact states the fact, then its
+  consequence.
 - **Format, required fields, and wrap width: follow the almanac's `README.md`.** Read
   it; do not reconstruct the frontmatter from memory or from another repo's entries. Add
   no fields beyond the ones it names.
-- Write the fact plainly, then its consequence — **what breaks, and whether it breaks
+- Write a fact plainly, then its consequence — **what breaks, and whether it breaks
   loudly**. Silent failures are the point; say so explicitly when a failure reads as
   success.
+- A rule **moved** from another document is a move, not a copy. Delete the original in
+  the same change: two copies diverge, and the stale one wins whichever is read first.
 - Give the corrective action if there is one, and cross-link entries in the same class.
 - Don't hedge about **truth** either: no "seems to", no "I think". Uncertainty belongs
   in the PR discussion, not in a file future agents treat as settled.
@@ -202,8 +231,12 @@ human can.
   truth.** True for you is not true for the subject; it goes in memory.
 - "I noted the caveat in the entry" — a caveat is not a category decision.
 - "The user gave me this, so I don't need to check it" — check it.
-- "The operator told me, so it isn't discovered" — provenance is not the test. Confirm
-  it and record it; who said it disqualifies only a preference or a rule.
+- "The operator told me, so it isn't discovered" — provenance is not a test any more.
+  Confirm it, decide its `kind`, and record it.
+- "Everyone here does it this way, so it's a rule" — if nobody would be wrong for doing
+  it differently, it is a preference. That goes to memory.
+- "I'll give the rule a verify line so the audit covers it too" — that reports
+  compliance as truth. Rules carry no verify line and no audit; that is the cost.
 - "No time to verify; I'll record it and confirm later" — later does not come.
 - "A verify line would be nice but I can't think of one" — if the claim cannot be
   re-checked cheaply, reconsider whether it is a fact, an impression, or a rule.

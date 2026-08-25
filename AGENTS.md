@@ -22,17 +22,23 @@ the template first, port the change, then run `just drift`.
 
 ## The almanac
 
-[`docs/almanac/`](docs/almanac/) records facts discovered the hard way — silent failure
-modes, tools that behave differently than documented, constraints not visible from the
-code. It is authoritative for this repo, and
-[docs/almanac/README.md](docs/almanac/README.md) governs the details.
+[`docs/almanac/`](docs/almanac/) is this repository's operating knowledge: the facts it
+learned the hard way and the rules it holds you to, one claim per file. It is
+authoritative, and [docs/almanac/README.md](docs/almanac/README.md) governs the details.
 
-**Consult it when:**
+**Run `ls docs/almanac/` before anything else, every session.** The filenames state the
+claims, so the listing alone tells you both what this repository knows and what it
+requires of you — commit format, branch naming, where work happens, and the silent
+failures you would never think to search for. Carry the titles; load a body only when
+one bears on what you are about to do.
 
-- You start work in an area you don't already know. Run `ls docs/almanac/` once — the
-  filenames state the claims, so the listing alone tells you what this repository has
-  already learned. Do this _before_ you have a symptom: the entries worth most are
-  silent failures you would never think to search for.
+That listing is the index and there is no other. Conventions this repository requires
+are entries, not sections in this file — so do not look for them here, and do not
+restate one here when you find it there. Two copies of a rule diverge, and the stale one
+wins whichever is read first.
+
+Beyond the startup listing, consult it when:
+
 - Something isn't behaving as expected. Grep it _before_ you start investigating, not
   after you're stuck — it's one command and it may end the investigation.
 - You're about to do something whose failure would be silent or costly to undo:
@@ -40,11 +46,12 @@ code. It is authoritative for this repo, and
 
 One keyword grep is enough — `grep -rl --exclude=README.md <keyword> docs/almanac/`, or
 `rg -l --glob '!README.md'`. Skip `README.md`: it is the contract rather than a claim,
-and its worked example matches almost any probe. If nothing hits, move on.
+and its worked examples match almost any probe. If nothing hits, move on.
 
 **Record an entry when** you finish being surprised — a debugging session that ended in
-"oh, _that's_ why," or a green build that hid a real failure. Write it in the same PR as
-the work that uncovered it, following [docs/almanac/README.md](docs/almanac/README.md).
+"oh, _that's_ why," or a green build that hid a real failure — or when a convention
+becomes binding here and an agent would otherwise meet it too late. Write it in the same
+PR as the work, following [docs/almanac/README.md](docs/almanac/README.md).
 
 Before you finish a branch, ask explicitly: _did this teach us anything an entry should
 carry?_ Answer it out loud, even when the answer is no. Most branches produce no entry —
@@ -56,38 +63,8 @@ and it has to work on tools that read this file but cannot load a skill.
 
 ## Conventions
 
-### Commits
-
-Use [Conventional Commits](https://www.conventionalcommits.org/) format:
-
-```
-<type>(<scope>): <description>
-```
-
-Types: `feat`, `fix`, `chore`, `docs`, `refactor`, `test`, `style`, `perf`
-
-Scope is optional but encouraged — `fix(audit): ...`, `feat(init): ...`. Include the
-issue number where one applies — `feat: add the init skill (#3)`.
-
-### Branches
-
-Use the same type prefixes as commits, followed by a short description of the intended
-change:
-
-```
-<type>/<change-slug>
-```
-
-Examples: `feat/email-notifications`, `fix/sidebar-delete-width`, `chore/update-deps`.
-Optionally include the issue number: `feat/279-email-notifications`.
-
-### Pull requests
-
-- PRs are required to merge to `main`; squash or rebase only, and CI must pass.
-- GitHub composes the squash commit from the **commit messages**, and takes its title
-  from the sole commit when a PR has exactly one and from the PR title otherwise. Both
-  follow the commit convention above.
-- Put issue references in the PR **body**, not the title.
+Commits, branches, pull requests, and worktrees are almanac entries —
+`ls docs/almanac/`. What stays here is what has no nameable moment to fire at.
 
 ### Markdown
 
@@ -101,9 +78,8 @@ never passes through prettier, and GitHub renders its line breaks literally rath
 reflowing them. Hard-wrapping there produces visibly ragged text. Write those paragraphs
 as one continuous line per paragraph and let the browser wrap.
 
-Commit messages are the exception: wrap those at about 72 columns, since they are read
-in terminals that do not reflow — and since squashing puts the commit messages, not the
-PR body, on `main`.
+Commit messages are the exception, and the rule for them is an entry —
+`commit-messages-use-conventional-commit-format`.
 
 ### Comments and docstrings
 
@@ -118,22 +94,6 @@ something they have to decode before they can use it. Rationale that is genuinel
 a tradeoff belongs in the pull request or a design doc under
 [`docs/design/`](docs/design/), where it is dated and can be cleared out once it stops
 mattering.
-
-### Worktrees
-
-Use a dedicated git worktree for development to keep the main working directory clean.
-Worktrees live in `.worktrees/` and are specific to an **agent session**, not to the
-feature or the changes — each session gets a fresh worktree with a unique name. Always
-announce your worktree name when creating or switching to one; feel free to be creative
-or silly with the name.
-
-```bash
-# Create a worktree based on origin/main
-git worktree add .worktrees/<name> -b <branch-name> origin/main
-
-# Clean up after merging
-git worktree remove .worktrees/<name>
-```
 
 ## Checks
 
