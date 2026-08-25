@@ -157,3 +157,18 @@ def test_every_entry_declares_a_kind_the_contract_names():
         assert data.get("kind") in almanac.ENTRY_KINDS, (
             f"{path.name}: kind is {data.get('kind')!r}"
         )
+
+
+@pytest.mark.parametrize(
+    "path", almanac.fixture_entry_paths(), ids=lambda p: p.name if p else "none"
+)
+def test_fixture_entry_frontmatter_conforms(path):
+    """The fixture ships a contract; its own entries must satisfy it."""
+    data = almanac.parse_frontmatter(path.read_text())
+    assert data is not None, f"{path.name}: no frontmatter"
+    assert check_entry_frontmatter(data) == [], f"{path.name}"
+
+
+def test_the_fixture_carries_entries():
+    """Guard the guard: an empty glob would make the check above vacuous."""
+    assert almanac.fixture_entry_paths()
