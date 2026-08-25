@@ -250,3 +250,37 @@ def test_only_the_instrument_counts_as_fixture_tampering():
         ["docs/almanac/commit-messages-use-conventional-commit-format.md"]
     )
     assert edited_rule.status == "fail"
+
+
+def test_the_scaffold_commit_carries_its_own_identity(tmp_path, monkeypatch):
+    """A CI runner has no user.name, and neither does a fresh container.
+
+    The scaffold makes its own commit, so it cannot borrow an identity from whoever
+    happens to be running it. Asserting the author directly is what makes this hold
+    everywhere — a bare-environment simulation still passes on a machine whose git
+    guesses an identity from the system, which is how this reached CI.
+    """
+    monkeypatch.setenv("GIT_CONFIG_GLOBAL", str(tmp_path / "no-such-gitconfig"))
+    monkeypatch.setenv("GIT_CONFIG_SYSTEM", str(tmp_path / "no-such-gitconfig"))
+
+    fixture = tmp_path / "fixture"
+    fixture.mkdir()
+    (fixture / "README.md").write_text("x\n")
+
+    run = skel.new_run(fixture, tmp_path / "runs", "claude", stamp="2026-08-24")
+    author = subprocess.run(
+        ["git", "-C", str(run), "log", "-1", "--format=%an <%ae>"],
+        capture_output=True,
+        text=True,
+        check=True,
+    ).stdout.strip()
+    assert author == "skel <skel@example.com>"
+
+
+def test_a_git_failure_says_what_git_said(tmp_path):
+    """`check=True` alone raises with the exit status and discards the diagnosis."""
+    not_a_repo = tmp_path / "bare"
+    not_a_repo.mkdir()
+    with pytest.raises(skel.SkelError) as failure:
+        skel._git(not_a_repo, "log", "-1")
+    assert "not a git repository" in str(failure.value).lower()

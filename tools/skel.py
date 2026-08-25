@@ -26,6 +26,10 @@ WORKTREE_LOG = "skel-worktrees.log"
 
 INITIAL_COMMIT = "chore: initialize the project skeleton and almanac"
 
+# The scaffold's own commit, made wherever the rig runs — a CI runner or a fresh
+# container has no git identity, and git refuses to commit without one.
+SCAFFOLD_IDENTITY = ("-c", "user.name=skel", "-c", "user.email=skel@example.com")
+
 CONVENTIONAL_TYPES = (
     "feat",
     "fix",
@@ -79,9 +83,20 @@ class Finding:
 
 
 def _git(run: Path, *args: str) -> str:
+    """Run git, and surface what it said when it fails.
+
+    `check=True` alone raises with the exit status and nothing else, so a failure
+    arrives as "exit 128" with the diagnosis discarded — which is the whole of what git
+    wrote to stderr.
+    """
     result = subprocess.run(
-        ["git", "-C", str(run), *args], capture_output=True, text=True, check=True
+        ["git", "-C", str(run), *args], capture_output=True, text=True
     )
+    if result.returncode != 0:
+        detail = result.stderr.strip() or result.stdout.strip() or "no output"
+        raise SkelError(
+            f"git {' '.join(args)} in {run} exited {result.returncode}: {detail}"
+        )
     return result.stdout
 
 
@@ -100,7 +115,7 @@ def new_run(fixture: Path, runs: Path, label: str, stamp: str) -> Path:
     _git(run, "init", "-q", "-b", "main")
     _install_hook(run)
     _git(run, "add", "-A")
-    _git(run, "commit", "-q", "-m", INITIAL_COMMIT)
+    _git(run, *SCAFFOLD_IDENTITY, "commit", "-q", "-m", INITIAL_COMMIT)
     return run
 
 
@@ -261,7 +276,7 @@ def _work_tip(run: Path, base: str) -> str:
     for ref in refs:
         try:
             count = int(_git(run, "rev-list", "--count", f"{base}..{ref}").strip())
-        except (subprocess.CalledProcessError, ValueError):
+        except (SkelError, ValueError):
             continue
         if count > ahead:
             tip, ahead = ref, count
