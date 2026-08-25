@@ -86,15 +86,56 @@ runs here. The skills' exclusion list needs no change.
 ## The fixture
 
 A minimal Python project in a "coming soon" state: a package that imports, a task
-runner, and an almanac holding three `kind: rule` entries — branch naming, commit
-format, and session-scoped worktrees — with no facts. `AGENTS.md` carries the trigger to
-read the listing and deliberately restates no rule, so an agent that skips the almanac
-has nowhere else to learn them.
+runner, and an almanac holding four `kind: rule` entries and no facts. Three are real
+conventions — branch naming, commit format, session-scoped worktrees. The fourth is a
+**canary**: a banner line every new source module must open with.
+
+`AGENTS.md` carries the trigger to read the listing and deliberately restates no rule,
+so an agent that skips the almanac has nowhere else to learn them.
+
+The canary is what makes retrieval mechanically scoreable. Every other rule can be
+reached by prior or imitation — all four trials produced conventional commits, and a
+model would do that unprompted — so a hit proves nothing about the almanac. No model has
+a prior for this repository's banner text, and the fixture deliberately ships no example
+of it: the one existing source file is exempt by the rule's own wording, so the
+convention cannot be copied from a neighbour. It can only come from the entry.
+
+Because the check runs per file, a run that creates several modules also measures
+**decay**: a banner on the first and not the third is a rule fading mid-session, which
+is the question a filename index most needs answered.
 
 The devcontainer installs the **toolchain only**: python, uv, just, git. Not the harness
 CLIs. A `devcontainer.json` installing `claude`, `codex`, and `gemini` side by side
 tells the agent it is one of several being compared, which is the tell we are keeping
 out of the fixture. Attach with whichever harness is under test.
+
+## Naming and tone
+
+The fixture is called `skinner`, and the rig around it is themed after the Bobiverse.
+The split is deliberate and runs in one direction: **theme anything that does not say
+"you are being observed."**
+
+`skinner` is a good fixture name precisely because it is overdetermined — a surname, an
+ordinary noun, a Simpsons character, an X-Files character. No single referent dominates,
+so it reads as somebody's hobby project, which is what the fixture is pretending to be.
+A name with one obvious referent would be a tell, and the more on-the-nose the rig's
+theme becomes, the truer that gets: a fixture named `bob` inside a Bobiverse rig
+announces itself.
+
+The rig has no such constraint. **Replicative drift** — the in-universe term for how
+each copy of an original diverges from it — is exactly what the scorer measures, and it
+is the vocabulary to use. `moot`, where the copies convene to compare notes, is reserved
+for the run-comparison command if one gets built.
+
+**Inside the fixture, keep the theme to the name and nothing else.** The tells to avoid
+are specific: an almanac entry that references the experiment, a prompt that mentions
+testing or comparison, a canary marker that reads as instrumentation rather than as a
+convention a project might really hold. `# skinner:module` passes that bar; anything
+that looks like measurement apparatus does not.
+
+This is tone, not a rule, and it lives here rather than in an almanac. A mis-themed name
+is caught loudly the first time anyone reads it, so it fails "costly to miss" — which is
+the test that keeps preferences out of an almanac in the first place.
 
 ## The rig
 
