@@ -110,10 +110,14 @@ def test_canary_check_reads_the_banner_per_file():
 
 
 def _commit(run, message, path, text):
+    """Commit as the scaffold does — a CI runner has no git identity of its own."""
     (run / path).parent.mkdir(parents=True, exist_ok=True)
     (run / path).write_text(text)
     subprocess.run(["git", "-C", str(run), "add", "-A"], check=True)
-    subprocess.run(["git", "-C", str(run), "commit", "-q", "-m", message], check=True)
+    subprocess.run(
+        ["git", "-C", str(run), *skel.SCAFFOLD_IDENTITY, "commit", "-q", "-m", message],
+        check=True,
+    )
 
 
 def test_score_reads_a_real_run(tmp_path):
