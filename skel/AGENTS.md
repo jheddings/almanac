@@ -5,10 +5,9 @@ top-level instruction file.
 
 ## Project
 
-`skinner` is a Python project in its earliest state — a package that imports and nothing
-more. `uv` manages the application, `just` manages the project: `just setup` syncs the
-environment, `just check` lints and checks formatting, `just test` runs the suite, and
-`just preflight` runs both.
+`skinner` is a Python package. `uv` manages the application, `just` manages the project:
+`just setup` syncs the environment, `just check` lints and checks formatting,
+`just test` runs the suite, and `just preflight` runs both.
 
 ## The almanac
 
