@@ -137,3 +137,45 @@ def test_score_reads_a_real_run(tmp_path):
     assert findings["canary banner"].status == "pass"
     assert findings["fixture edited"].status == "pass"
     assert findings["fixture extended"].status == "pass"
+
+
+def test_branch_names_survive_their_own_deletion(tmp_path):
+    """Two of four trials merged and deleted the branch; live refs are not enough.
+
+    Without the reflog, `check_worktree_names` compares against an empty branch list
+    and a worktree named for its branch passes — the one case the check exists for.
+    """
+    fixture = tmp_path / "fixture"
+    fixture.mkdir()
+    (fixture / "README.md").write_text("x\n")
+    run = skel.new_run(fixture, tmp_path / "runs", "cursor", stamp="2026-08-24")
+
+    subprocess.run(
+        ["git", "-C", str(run), "checkout", "-q", "-b", "feat/cli-version"], check=True
+    )
+    _commit(run, "feat(cli): add it", "src/skinner/cli.py", "# skinner:module\n")
+    subprocess.run(["git", "-C", str(run), "checkout", "-q", "main"], check=True)
+    subprocess.run(
+        ["git", "-C", str(run), "merge", "-q", "--ff-only", "feat/cli-version"],
+        check=True,
+    )
+    subprocess.run(
+        ["git", "-C", str(run), "branch", "-q", "-D", "feat/cli-version"], check=True
+    )
+
+    assert skel.branch_names(run) == ["feat/cli-version"]
+    findings = {f.check: f for f in skel.score(run)}
+    assert findings["branch prefix"].status == "pass"
+
+
+def test_worktree_check_cannot_conclude_without_a_branch_to_compare():
+    """A name with nothing to compare it against is not a pass.
+
+    A branch created inside a worktree and deleted unmerged leaves no ref and no entry
+    in the main reflog. The worktree name survives in the hook log, but whether it
+    merely echoed that branch is no longer knowable, and saying "pass" would invent a
+    result.
+    """
+    finding = skel.check_worktree_names(["bender"], [])
+    assert finding.status == "unrecoverable"
+    assert "bender" in finding.detail

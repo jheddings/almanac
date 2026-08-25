@@ -40,6 +40,11 @@ _TYPES = "|".join(CONVENTIONAL_TYPES)
 BRANCH_RE = re.compile(rf"^({_TYPES})/.+")
 SUBJECT_RE = re.compile(rf"^({_TYPES})(\(([a-z0-9._-]+)\))?: .+")
 
+REFLOG_BRANCH_RES = (
+    re.compile(r"^merge (\S+):"),
+    re.compile(r"^checkout: moving from \S+ to (\S+)$"),
+)
+
 BANNER = "# skinner:module"
 BODY_WIDTH = 72
 
@@ -144,6 +149,12 @@ def check_worktree_names(logged: list[str], branches: list[str]) -> Finding:
             "unrecoverable",
             "hook log empty — cleaned up, cloned, or .git not writable",
         )
+    if not branches:
+        return Finding(
+            "worktree session-scoped",
+            "unrecoverable",
+            f"{', '.join(logged)} — no branch survives to compare the name against",
+        )
     slugs = {b.split("/", 1)[-1] for b in branches}
     echoes = [name for name in logged if name in slugs]
     if echoes:
@@ -200,16 +211,33 @@ def _worktree_names(run: Path) -> list[str]:
     return seen
 
 
+def branch_names(run: Path) -> list[str]:
+    """Every branch the run worked on, including ones it deleted.
+
+    Live refs are not enough: an agent that merges and deletes its branch leaves none,
+    and then a worktree named for that branch has nothing to be compared against. The
+    reflog outlives the ref, so it is what makes the check survive a tidy agent.
+    """
+    found = []
+    for line in _git(run, "branch", "--format=%(refname:short)").splitlines():
+        name = line.strip().lstrip("* ")
+        if name and name != "main" and name not in found:
+            found.append(name)
+
+    for entry in _git(run, "reflog", "--format=%gs").splitlines():
+        for pattern in REFLOG_BRANCH_RES:
+            match = pattern.match(entry.strip())
+            if match and match.group(1) != "main" and match.group(1) not in found:
+                found.append(match.group(1))
+    return found
+
+
 def score(run: Path) -> list[Finding]:
     """Every check, run against one completed harness-test run."""
     base = _base_commit(run)
     revs = f"{base}..HEAD"
 
-    branches = [
-        b.strip().lstrip("* ")
-        for b in _git(run, "branch", "--format=%(refname:short)").splitlines()
-        if b.strip() and b.strip().lstrip("* ") != "main"
-    ]
+    branches = branch_names(run)
     subjects = [s for s in _git(run, "log", "--format=%s", revs).splitlines() if s]
     bodies = _git(run, "log", "--format=%b%x00", revs).split("\x00")
 

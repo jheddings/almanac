@@ -12,7 +12,7 @@ import zipfile
 
 import click
 
-from tools import bundle, drift, harnesses, manifests, release
+from tools import bundle, drift, harnesses, manifests, release, skel
 
 ALL_HARNESSES = sorted(harnesses.load())
 BUNDLING = sorted(name for name, h in harnesses.load().items() if h.bundle)
@@ -39,6 +39,7 @@ class ToolsGroup(click.Group):
         drift.DriftError,
         release.ReleaseError,
         harnesses.UnknownHarness,
+        skel.SkelError,
     )
 
     def invoke(self, ctx):
@@ -136,9 +137,49 @@ def set_version_cmd(bump):
     click.echo(target)
 
 
+@click.command("skel-new")
+@click.argument("label")
+@click.option("--stamp", default=None, help="Date stamp; defaults to today.")
+def skel_new_cmd(label, stamp):
+    """Scaffold a harness-test run as a standalone repository."""
+    import datetime
+
+    stamp = stamp or datetime.date.today().isoformat()
+    run = skel.new_run(skel.FIXTURE, skel.RUNS, label, stamp)
+    click.echo(f"run ready: {run}")
+
+
+@click.command("skel-prompt")
+@click.argument("name", default="01-first-feature")
+def skel_prompt_cmd(name):
+    """Print a prompt for pasting into the harness under test."""
+    path = skel.PROMPTS / f"{name}.md"
+    if not path.is_file():
+        raise click.ClickException(f"{path}: no such prompt")
+    click.echo(path.read_text().strip())
+
+
+@click.command("skel-check")
+@click.argument("label")
+def skel_check_cmd(label):
+    """Score a completed run against the almanac's rules."""
+    matches = sorted(skel.RUNS.glob(f"*{label}*"))
+    if not matches:
+        raise click.ClickException(f"no run matching {label!r} under {skel.RUNS}")
+    run = matches[-1]
+
+    click.echo(f"{run.name}")
+    for finding in skel.score(run):
+        mark = {"pass": "PASS", "fail": "FAIL", "unrecoverable": "----"}[finding.status]
+        click.echo(f"  {mark}  {finding.check}: {finding.detail}")
+
+
 cli.add_command(check_manifests_cmd)
 cli.add_command(drift_cmd)
 cli.add_command(bundle_cmd)
 cli.add_command(install_cmd)
 cli.add_command(manifest_paths_cmd)
 cli.add_command(set_version_cmd)
+cli.add_command(skel_new_cmd)
+cli.add_command(skel_prompt_cmd)
+cli.add_command(skel_check_cmd)

@@ -100,3 +100,22 @@ release bump="patch": release-guard preflight
     git commit -m "chore(release): $version"
     git tag -a "$version" -m "$version"
     git push && git push --tags
+
+# scaffold a harness-test run from the skel fixture
+skel-new label: venv
+    uv run python -m tools skel-new {{ label }}
+
+# print a prompt to paste into the harness under test
+skel-prompt name="01-first-feature": venv
+    uv run python -m tools skel-prompt {{ name }}
+
+# scaffold a run and print the prompt to paste
+skel-run label name="01-first-feature": (skel-new label) (skel-prompt name)
+
+# score a completed harness-test run
+skel-check label: venv
+    uv run python -m tools skel-check {{ label }}
+
+# remove harness-test runs
+skel-clean:
+    rm -rf "{{ basedir }}/runs"
