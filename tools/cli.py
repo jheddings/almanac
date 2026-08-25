@@ -75,16 +75,17 @@ def check_manifests_cmd(harness):
 
 @click.command("drift")
 def drift_cmd():
-    """Check this repo's almanac README against the shipped template."""
+    """Check every almanac README against the shipped template."""
     diff = drift.check()
     if diff:
         click.echo("".join(diff), nl=False)
         raise click.ClickException(
-            f"{drift.INSTANCE} differs from {drift.TEMPLATE} outside the local block. "
-            f"The template is canonical: port the change to it, or move the text inside "
-            f"the {drift.OPEN} block when it is genuinely repo-local."
+            f"an almanac README differs from {drift.TEMPLATE} outside the local "
+            f"block. The template is canonical: port the change to it, or move the "
+            f"text inside the {drift.OPEN} block when it is genuinely repo-local."
         )
-    click.echo(f"{drift.INSTANCE} matches {drift.TEMPLATE} outside the local block")
+    for instance in drift.INSTANCES:
+        click.echo(f"{instance} matches {drift.TEMPLATE} outside the local block")
 
 
 @click.command("bundle")
