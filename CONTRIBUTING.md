@@ -1,10 +1,11 @@
 # Contributing
 
 Thanks for helping improve **almanac**. This is a set of harness-neutral skills carrying
-the procedural half of keeping an almanac — a directory of facts discovered the hard way
-— packaged for Claude Code, Codex, Antigravity (`agy`), and Cursor. The non-procedural
-half deliberately stays in each repo's own instructions; see
-[Design positions](README.md#design-positions) before proposing that a skill absorb it.
+the procedural half of keeping an almanac — a directory holding a repository's operating
+knowledge, one claim per file — packaged for Claude Code, Codex, Antigravity (`agy`),
+and Cursor. The non-procedural half deliberately stays in each repo's own instructions;
+see [Design positions](README.md#design-positions) before proposing that a skill absorb
+it.
 
 ## Design philosophy: do one thing well
 
@@ -35,13 +36,18 @@ here.
 | A **trigger** — when to look at the almanac at all  | the repo's `AGENTS.md`         | must fire without being loaded, and must work on tools without skills |
 | A **procedure** — how to record, how to verify      | a skill in this plugin         | maintained centrally, travels across repos                            |
 | A **local convention** — format, destinations, wrap | the repo's almanac `README.md` | irreducibly repo-specific; a shared answer would be wrong somewhere   |
+| A **repo rule** — commit format, branch names       | a `kind: rule` almanac entry   | fires from the filename index, at the moment it applies               |
+
+The last row is the widened contract, and it moved: rules used to be routed to
+`AGENTS.md`, which is always loaded and therefore always paid for. They are entries now,
+so `AGENTS.md` keeps the trigger and nothing an entry could carry.
 
 The load-bearing case is the destinations table. The skill owns the _questions_ — is
-this designed intent? a required rule? in-flight status? a personal preference? — and
-the repo's README owns the _answers_. A skill that hardcodes `docs/arch/` will send an
-agent in a repo without that directory to file design intent into nowhere, and the usual
-outcome is that the content lands in the almanac instead. If you find yourself writing a
-path into a skill, that's the signal you've crossed the line.
+this designed intent? in-flight status? a personal preference? — and the repo's README
+owns the _answers_. A skill that hardcodes `docs/arch/` will send an agent in a repo
+without that directory to file design intent into nowhere, and the usual outcome is that
+the content lands in the almanac instead. If you find yourself writing a path into a
+skill, that's the signal you've crossed the line.
 
 The same split forbids Cursor `rules/` or hooks that inject consult: consult is a
 trigger, so it stays in each repo's `AGENTS.md`.

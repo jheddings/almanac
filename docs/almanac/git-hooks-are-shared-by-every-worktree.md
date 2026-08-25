@@ -1,5 +1,6 @@
 ---
 title: Installing or removing git hooks from one worktree changes every worktree
+kind: fact
 recorded: 2026-08-22
 source:
     "Verifying `just setup` while working in a session worktree — `pre-commit install`

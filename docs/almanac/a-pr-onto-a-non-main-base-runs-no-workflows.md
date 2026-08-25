@@ -1,5 +1,6 @@
 ---
 title: A PR onto a non-main base runs no workflows, and its checks read as passing
+kind: fact
 recorded: 2026-08-22
 source: "PR #17, stacked on PR #16 — zero runs while `gh pr checks` exited 0"
 verify:

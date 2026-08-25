@@ -38,6 +38,21 @@ def check_entry_frontmatter(data: dict) -> list[str]:
         if field in data and not isinstance(data[field], str):
             problems.append(f"{field} must be a string, got {data[field]!r}")
 
+    kind = data.get("kind")
+    if "kind" in data and kind not in almanac.ENTRY_KINDS:
+        problems.append(
+            f"kind must be one of {sorted(almanac.ENTRY_KINDS)}, got {kind!r}"
+        )
+
+    if kind == "rule":
+        carried = sorted(almanac.FACT_ONLY_FIELDS & data.keys())
+        if carried:
+            problems.append(
+                f"a rule may not carry {carried} — a check that a rule is followed "
+                "measures compliance, not truth, and an audit would report the verdict "
+                "as if it were about the claim"
+            )
+
     if "title" in data and isinstance(data["title"], str) and not data["title"].strip():
         problems.append("title is empty")
 
@@ -77,6 +92,7 @@ def test_entries_are_one_fact_per_file():
 
 GOOD = {
     "title": "Out-of-order migrations are silently skipped on deploy",
+    "kind": "fact",
     "recorded": datetime.date(2026, 8, 15),
     "source": "PR #1129",
     "verify": "`grep -rn -- '--include-all' .github/workflows/` returns nothing",
@@ -97,6 +113,8 @@ def test_checker_accepts_a_conforming_entry():
         ({"confidence": "high"}, "unknown field"),
         ({"status": "draft"}, "unknown field"),
         ({"tags": "migrations"}, "list of strings"),
+        ({"kind": "convention"}, "kind must be one of"),
+        ({"kind": "rule"}, "may not carry"),
     ],
     ids=[
         "non-string title",
@@ -104,6 +122,8 @@ def test_checker_accepts_a_conforming_entry():
         "confidence field",
         "status field",
         "scalar tags",
+        "unknown kind",
+        "rule carrying verify",
     ],
 )
 def test_checker_rejects_violations(mutation, expected_substring):
@@ -116,3 +136,24 @@ def test_checker_rejects_violations(mutation, expected_substring):
 def test_checker_rejects_missing_required_field(field):
     data = {k: v for k, v in GOOD.items() if k != field}
     assert any("missing required field" in p for p in check_entry_frontmatter(data))
+
+
+def test_checker_accepts_a_conforming_rule():
+    """A rule is a whole entry, not a fact with fields missing."""
+    rule = {
+        "title": "Branch names carry the commit type as a prefix",
+        "kind": "rule",
+        "recorded": datetime.date(2026, 8, 15),
+        "source": "CONTRIBUTING.md, migrated 2026-08-15",
+        "tags": ["git", "branches"],
+    }
+    assert check_entry_frontmatter(rule) == []
+
+
+def test_every_entry_declares_a_kind_the_contract_names():
+    """Guard against a kind that parses but nothing downstream handles."""
+    for path in almanac.entry_paths():
+        data = almanac.parse_frontmatter(path.read_text()) or {}
+        assert data.get("kind") in almanac.ENTRY_KINDS, (
+            f"{path.name}: kind is {data.get('kind')!r}"
+        )
