@@ -105,6 +105,11 @@ repo-local, so they live in the almanac's `README.md`** — read its destination
 for where each category goes in _this_ repo. Do not guess a destination, and do not file
 into a directory you have not confirmed exists.
 
+If the category has no row at all, the table is incomplete — a gap in the README rather
+than permission to record here. Ask the operator where that category goes, and hand them
+the text you would have filed. Dropping the claim because the table came up short loses
+it exactly as thoroughly as filing it wrong.
+
 Question 1 is **intent vs. requirement**, and it is the one that blurs. An architecture
 note explains how a mechanism was _meant_ to work, and reading it changes nothing you
 are about to type; a rule tells you what to type.
@@ -246,4 +251,5 @@ human can.
 - "A verify line would be nice but I can't think of one" — if the claim cannot be
   re-checked cheaply, reconsider whether it is a fact, an impression, or a rule.
 - "The README has no row for this, so the almanac is the closest fit" — a missing
-  destination is a gap in the README, not a licence to record. Say so and stop.
+  destination is a gap in the README, not a licence to record. Say so, then ask where it
+  goes; stopping without asking abandons the claim.
