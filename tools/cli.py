@@ -187,25 +187,6 @@ def skel_prompt_cmd(name):
     click.echo(path.read_text().strip())
 
 
-@click.command("skel-check")
-@click.argument("label")
-@click.option(
-    "--from",
-    "runs_dir",
-    type=click.Path(exists=True, file_okay=False, path_type=Path),
-    default=None,
-    help="Directory holding the runs. Defaults to this repo's runs/.",
-)
-def skel_check_cmd(label, runs_dir):
-    """Score a completed run against the almanac's rules."""
-    run = skel.find_run(runs_dir or skel.RUNS, label)
-
-    click.echo(f"{run.name}")
-    for finding in skel.score(run):
-        mark = {"pass": "PASS", "fail": "FAIL", "unrecoverable": "----"}[finding.status]
-        click.echo(f"  {mark}  {finding.check}: {finding.detail}")
-
-
 cli.add_command(check_manifests_cmd)
 cli.add_command(drift_cmd)
 cli.add_command(bundle_cmd)
@@ -214,4 +195,3 @@ cli.add_command(manifest_paths_cmd)
 cli.add_command(set_version_cmd)
 cli.add_command(skel_new_cmd)
 cli.add_command(skel_prompt_cmd)
-cli.add_command(skel_check_cmd)

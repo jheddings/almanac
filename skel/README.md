@@ -6,6 +6,11 @@
 task runner, and the conventions it expects of anyone working in it. Everything else is
 still to be built.
 
+## Planned
+
+- **ASCII slugs** — normalize a name to a URL-safe ASCII slug, so `Крипто Проект`
+  becomes `kripto-proekt`. Planned via [Unidecode](https://pypi.org/project/Unidecode/).
+
 ## Getting started
 
 ```bash

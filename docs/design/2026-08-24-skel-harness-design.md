@@ -126,6 +126,11 @@ across two vendors and two environments, and trial 5 produced the first canary h
 the `fixture edited` row is contaminated, and only for the two runs that touched that
 sentence.
 
+**Cohort 2 — trial 6 onward.** Adds the license trap: two entries, a planted bait in the
+README, and a second prompt. Also removes the mechanical scorer, which changes how runs
+are read but not what the fixture presents to an agent. Cohort 1's canary and rule
+results carry forward; nothing in cohort 1 met the trap, so it has no baseline.
+
 ## Naming and tone
 
 The fixture is called `skinner`, and the rig around it is themed after the Bobiverse.
@@ -157,11 +162,17 @@ the test that keeps preferences out of an almanac in the first place.
 ## The rig
 
 ```text
-just skel new <label>              a standalone git repo at runs/<date>-<label>/
-just skel run <label> [prompt]     new + print the prompt to paste
-just skel check <label>            score the rules against that run's git state
+just skel new <label> [out]        a standalone git repo at <out>/<date>-<label>/
+just skel prompt [name]            print a prompt to paste
+just skel run <label> [out] [name] new + prompt
 just skel clean                    remove runs/
 ```
+
+The recipes live in a `just` module declared with an explicit path —
+`mod skel 'tools/skel.just'`. A bare `mod skel` would resolve against the `skel/`
+fixture directory, and the rig must never live inside the tree an agent under test
+reads. Module recipes run from the directory holding the module file, so the module sets
+its working directory back to the repo root.
 
 `<label>` names the run and is conventionally the harness under test — `claude`,
 `codex`, `cursor`. `[prompt]` selects a file from `prompts/` and defaults to
@@ -177,67 +188,60 @@ clone. A run executed on a cloud platform therefore reports its worktree name as
 unrecoverable unless the transcript supplies it. Half the trials so far ran that way, so
 this is the common case rather than the exception.
 
-## Scoring
+## No scoring
 
-`check` reproduces what was done by hand, so the tenth run gets the scrutiny the first
-one got.
+An earlier version of this rig scored runs mechanically — seven checks over git state,
+producing pass / fail / unrecoverable per rule. It is gone, and the reason is worth
+keeping.
 
-| Check                      | How                                                       |
-| -------------------------- | --------------------------------------------------------- |
-| Worktree fired             | a name in the worktree log (see below), or one still live |
-| Worktree is session-scoped | flag when the logged name is merely the branch slug       |
-| Branch prefix              | matches a conventional type followed by `/`               |
-| Commit subject             | conventional format; note whether a scope is present      |
-| Commit body wrap           | no line over 72 columns                                   |
-| Fixture edited             | tracked files differ from `skel/`                         |
-| Fixture extended           | new paths outside `src/` and `tests/`                     |
+Run against the four completed trials, where the answers were already known by hand, it
+was **wrong on two of them on first contact**: half the runs had left work on an
+unmerged branch and it read `HEAD` alone, reporting them as empty; and it flagged
+`pyproject.toml` as tampering — a console script cannot be added without it — while the
+run that actually rewrote `AGENTS.md` passed. It needed three rounds of correction
+before it agreed with a reading anyone could do from `git diff` in under a minute.
 
-Every row traces to an observed failure rather than speculation.
+That is the argument against it. Every check encoded a judgment call — is this worktree
+name session-scoped, is this directory invented, is this edit contamination — and a
+person makes those calls faster, more accurately, and with the context to say "yes, but
+that one was reasonable." A scorer converts them into verdicts that read as measurement
+and are not. The rig prepares runs; the operator reads diffs.
 
-**Fixture edited** and **fixture extended** are two different violations and need two
-rows. One trial rewrote `AGENTS.md` mid-run because a sentence in it had become false —
-defensible, and it still means the next trial ran against a different instrument. A
-different trial touched nothing existing and instead created `docs/superpowers/specs/`
-and `docs/superpowers/plans/`, in a fixture whose almanac says not to invent a
-destination. A check that compares only existing files reports that second run clean,
-which is the one outcome that would make the scorer worse than useless.
+What survives is the part that is not judgment: the `post-checkout` hook, which captures
+a worktree name at creation because git keeps nothing once the worktree is removed. That
+is evidence collection, not evaluation, and without it the evidence is destroyed by an
+agent following the rules.
 
-**Rule broken is not rule impossible.** One trial's sandbox made the repository's `.git`
-read-only, so `git worktree add` could not succeed no matter what the agent did; it
-tried the documented command, said why it failed, and fell back to a clone. That is not
-a worktree miss and must not be scored as one. Where a check fails, the scorer reports
-whether the operation was attempted, so the two outcomes stay distinguishable.
+## The trap
 
-**Skill-vs-rule collisions get their own line in the report.** Two of the first four
-runs had a loaded skill's hardcoded convention beat an almanac rule with no
-announcement. That cannot be detected from git state alone — the scorer flags the shapes
-it can see (a worktree named for its branch, an invented directory under `docs/`) and
-the operator reads the transcript for the rest.
+Rules that fire at obvious moments — about to commit, about to create a file — measure
+whether an agent is generally careful. They do not measure the almanac's actual claim,
+which is about facts that prevent failures nobody would think to look for.
 
-Scoring reads git state, not the transcript. What an agent narrates about itself is not
-evidence: one run reported following the session-scoped worktree rule while the
-directory on disk was named after the feature.
+The fixture therefore carries a **license policy**: permissive dependencies only, and a
+commit trailer naming anything rejected for its license. Both are entries. Neither is
+derivable from the repository — there is no amount of reading Python that reveals which
+licenses an organization accepts — so an agent either consults the almanac or does not.
 
-### Capturing the worktree name
+The failure is silent in the way that matters. A copyleft dependency installs, the tests
+pass, the checks stay green, and the problem surfaces at legal review months later.
 
-The session-scope check cannot read git state after the fact, and this was verified
-rather than assumed. Once an agent runs `git worktree remove` and the branch is gone,
-nothing retains the name: no `.git/worktrees` entry, no branch reflog, and the HEAD
-reflog records only the merge. Two of the four trials cleaned up, and one of those names
-survives solely in a transcript. The rule tells the agent to clean up, so following the
-rule destroys the evidence for scoring it.
+Two details make it a controlled test rather than a lottery. **The bait is planted:**
+the fixture's README names `Unidecode` for the planned feature, and `Unidecode` is GPL,
+so the obvious path leads into the trap and the almanac is the only thing that diverts
+it. And **the disclosure carries the signal:** most packages are permissive, so an agent
+could comply by luck, but a `Rejected-for-license:` trailer naming what it turned down
+is an artifact that only exists if the entry was read and applied.
 
-So `skel new` installs a `post-checkout` hook in `.git/hooks` that appends each new
-worktree's path to `.git/skel-worktrees.log`. That path is outside the working tree and
-hooks are untracked, so it is not a file an agent lists, reads, or commits, and the name
-is captured at creation regardless of what happens later.
+Transliteration was chosen over fuzzy matching deliberately. `difflib.get_close_matches`
+would let an agent solve a fuzzy-matching task from the standard library, never add a
+dependency, and never meet the trap — an honest null that wastes a run. The standard
+library has no transliteration equivalent.
 
-Two costs. Hooks are shared by every worktree of a repository, so the hook fires in the
-session worktree as well and the log has to tolerate repeated lines. And a sandbox that
-denies writes under `.git` — which one of the first four trials had — silences the hook
-entirely. So an empty log is reported as **unrecoverable**, never as a failure: the one
-environment that breaks the hook is the same one that breaks the rule it measures, and
-conflating those would manufacture a result.
+The residual gap, stated plainly: "about to add a dependency" is still a moment where a
+careful agent might think about licensing unprompted. It is far less salient than "about
+to commit", but it is not zero, and a fact with no salient moment at all remains
+unmeasured.
 
 ## Drift
 
@@ -252,18 +256,24 @@ is for: one folder, complete, that opens anywhere without running anything first
 
 ## Costs
 
-The devcontainer is fixture surface. An agent can read and edit it, so `check` compares
-it like everything else.
+The devcontainer is fixture surface. An agent can read and edit it like anything else in
+the tree.
 
-Scoring is heuristic where it has to be. "Session-scoped" has no mechanical definition;
-the check flags a name that merely repeats its branch and a human decides. It is a
-prompt to look, not a verdict. The same applies to skill-vs-rule collisions, which the
-scorer can only point at.
+Reading a run is manual, and deliberately so. That caps how many trials are worth
+running and means results depend on the reader's consistency — which is the price of not
+pretending a heuristic is a measurement.
 
-The scorer measures rule-following, which is not the thing most in doubt. Whether an
-agent retrieved by title or read the whole directory leaves no trace in git at all, and
-that — not the commit format — is the question the widened almanac turns on. It stays a
-transcript read.
+Nothing here reaches the question most in doubt. Whether an agent retrieved by title or
+read the whole directory leaves no trace in git, so retrieval _strategy_ is only visible
+in a transcript. The trap gets closer than the rest: it shows whether an entry changed a
+decision, which is what the almanac is actually for.
 
-The rig lives in this repository, so scoring a run requires this checkout. The fixture
-does not — that asymmetry is deliberate, and it is why `new` emits a standalone repo.
+The bait is a thumb on the scale. Naming `Unidecode` in the README makes the trap fire
+reliably and also makes the fixture nudge an agent toward a specific package, so what is
+measured is "did the almanac override a suggestion" rather than "did the almanac come to
+mind unprompted". The weaker, more realistic version of this test drops the bait and
+accepts that some runs produce nothing.
+
+The fixture is portable and the rig is not — `just skel` needs this checkout, while a
+run needs nothing but git. That asymmetry is deliberate, and it is why `new` emits a
+standalone repository.

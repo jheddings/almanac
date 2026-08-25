@@ -8,6 +8,8 @@
 
 basedir := justfile_directory()
 
+mod skel 'tools/skel.just'
+
 # sync the environment, install hooks, and run the full preflight
 default: setup preflight
 
@@ -100,22 +102,3 @@ release bump="patch": release-guard preflight
     git commit -m "chore(release): $version"
     git tag -a "$version" -m "$version"
     git push && git push --tags
-
-# scaffold a harness-test run from the skel fixture
-skel-new label out="": venv
-    uv run python -m tools skel-new {{ label }} {{ if out == "" { "" } else { "--out " + out } }}
-
-# print a prompt to paste into the harness under test
-skel-prompt name="01-first-feature": venv
-    uv run python -m tools skel-prompt {{ name }}
-
-# scaffold a run and print the prompt to paste
-skel-run label out="" name="01-first-feature": (skel-new label out) (skel-prompt name)
-
-# score a completed harness-test run
-skel-check label dir="": venv
-    uv run python -m tools skel-check {{ label }} {{ if dir == "" { "" } else { "--from " + dir } }}
-
-# remove harness-test runs
-skel-clean:
-    rm -rf "{{ basedir }}/runs"
