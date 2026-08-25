@@ -105,3 +105,35 @@ def test_canary_check_reads_the_banner_per_file():
     assert "1/2" in mixed.detail
 
     assert skel.check_canary({}).status == "unrecoverable"
+
+
+def _commit(run, message, path, text):
+    (run / path).parent.mkdir(parents=True, exist_ok=True)
+    (run / path).write_text(text)
+    subprocess.run(["git", "-C", str(run), "add", "-A"], check=True)
+    subprocess.run(["git", "-C", str(run), "commit", "-q", "-m", message], check=True)
+
+
+def test_score_reads_a_real_run(tmp_path):
+    fixture = tmp_path / "fixture"
+    (fixture / "src" / "skinner").mkdir(parents=True)
+    (fixture / "src" / "skinner" / "__init__.py").write_text("")
+    (fixture / "AGENTS.md").write_text("trigger\n")
+
+    run = skel.new_run(fixture, tmp_path / "runs", "claude", stamp="2026-08-24")
+    subprocess.run(
+        ["git", "-C", str(run), "checkout", "-q", "-b", "feat/cli"], check=True
+    )
+    _commit(
+        run,
+        "feat(cli): add an entry point",
+        "src/skinner/cli.py",
+        "# skinner:module\n",
+    )
+
+    findings = {f.check: f for f in skel.score(run)}
+    assert findings["branch prefix"].status == "pass"
+    assert findings["commit subject"].status == "pass"
+    assert findings["canary banner"].status == "pass"
+    assert findings["fixture edited"].status == "pass"
+    assert findings["fixture extended"].status == "pass"

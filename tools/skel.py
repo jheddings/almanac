@@ -178,3 +178,59 @@ def check_canary(first_lines: dict[str, str]) -> Finding:
     return Finding(
         "canary banner", "fail", f"{len(carried)}/{total} modules; missing {missing}"
     )
+
+
+def _base_commit(run: Path) -> str:
+    """The fixture's own initial commit — everything after it is the run's work."""
+    return _git(run, "rev-list", "--max-parents=0", "HEAD").strip().splitlines()[0]
+
+
+def _worktree_names(run: Path) -> list[str]:
+    log = Path(_git(run, "rev-parse", "--git-common-dir").strip())
+    if not log.is_absolute():
+        log = run / log
+    log = log / WORKTREE_LOG
+    if not log.is_file():
+        return []
+    seen = []
+    for line in log.read_text().splitlines():
+        name = Path(line.strip()).name
+        if name and name != run.name and name not in seen:
+            seen.append(name)
+    return seen
+
+
+def score(run: Path) -> list[Finding]:
+    """Every check, run against one completed harness-test run."""
+    base = _base_commit(run)
+    revs = f"{base}..HEAD"
+
+    branches = [
+        b.strip().lstrip("* ")
+        for b in _git(run, "branch", "--format=%(refname:short)").splitlines()
+        if b.strip() and b.strip().lstrip("* ") != "main"
+    ]
+    subjects = [s for s in _git(run, "log", "--format=%s", revs).splitlines() if s]
+    bodies = _git(run, "log", "--format=%b%x00", revs).split("\x00")
+
+    status = _git(run, "diff", "--name-status", base, "HEAD").splitlines()
+    changed = [line.split("\t", 1)[1] for line in status if line.startswith("M")]
+    added = [line.split("\t", 1)[1] for line in status if line.startswith("A")]
+
+    first_lines = {}
+    for path in added:
+        if path.startswith("src/") and path.endswith(".py"):
+            if Path(path).name == "__init__.py":
+                continue
+            body = _git(run, "show", f"HEAD:{path}")
+            first_lines[path] = body.splitlines()[0] if body.splitlines() else ""
+
+    return [
+        check_worktree_names(_worktree_names(run), branches),
+        check_branch(branches),
+        check_commit_subjects(subjects),
+        check_commit_bodies([b for b in bodies if b.strip()]),
+        check_canary(first_lines),
+        check_fixture_edited(changed),
+        check_fixture_extended(added),
+    ]
