@@ -99,3 +99,82 @@ def _install_hook(run: Path) -> None:
     hook = hooks / "post-checkout"
     hook.write_text(HOOK.format(log=WORKTREE_LOG))
     hook.chmod(0o755)
+
+
+def check_branch(branches: list[str]) -> Finding:
+    if not branches:
+        return Finding("branch prefix", "unrecoverable", "no branch beyond main")
+    bad = [b for b in branches if not BRANCH_RE.match(b)]
+    if bad:
+        return Finding("branch prefix", "fail", f"no conventional type: {bad}")
+    return Finding("branch prefix", "pass", ", ".join(branches))
+
+
+def check_commit_subjects(subjects: list[str]) -> Finding:
+    if not subjects:
+        return Finding("commit subject", "unrecoverable", "no commits beyond the first")
+    bad = [s for s in subjects if not SUBJECT_RE.match(s)]
+    if bad:
+        return Finding("commit subject", "fail", f"not conventional: {bad}")
+    scoped = sum(1 for s in subjects if SUBJECT_RE.match(s).group(2))
+    shape = (
+        "scoped"
+        if scoped == len(subjects)
+        else f"unscoped ({scoped}/{len(subjects)} scoped)"
+    )
+    return Finding("commit subject", "pass", shape)
+
+
+def check_commit_bodies(bodies: list[str]) -> Finding:
+    lines = [line for body in bodies for line in body.splitlines()]
+    if not lines:
+        return Finding("commit body wrap", "unrecoverable", "no commit bodies")
+    over = [line for line in lines if len(line) > BODY_WIDTH]
+    if over:
+        return Finding(
+            "commit body wrap", "fail", f"{len(over)} line(s) over {BODY_WIDTH}"
+        )
+    return Finding("commit body wrap", "pass", f"max {max(len(l) for l in lines)}")
+
+
+def check_worktree_names(logged: list[str], branches: list[str]) -> Finding:
+    if not logged:
+        return Finding(
+            "worktree session-scoped",
+            "unrecoverable",
+            "hook log empty — cleaned up, cloned, or .git not writable",
+        )
+    slugs = {b.split("/", 1)[-1] for b in branches}
+    echoes = [name for name in logged if name in slugs]
+    if echoes:
+        return Finding(
+            "worktree session-scoped", "fail", f"named for its branch: {echoes}"
+        )
+    return Finding("worktree session-scoped", "pass", ", ".join(logged))
+
+
+def check_fixture_edited(changed: list[str]) -> Finding:
+    touched = [p for p in changed if not p.startswith(SANCTIONED_PREFIXES)]
+    if touched:
+        return Finding("fixture edited", "fail", f"modified: {touched}")
+    return Finding("fixture edited", "pass", "fixture files untouched")
+
+
+def check_fixture_extended(added: list[str]) -> Finding:
+    invented = [p for p in added if not p.startswith(SANCTIONED_PREFIXES)]
+    if invented:
+        return Finding("fixture extended", "fail", f"invented: {invented}")
+    return Finding("fixture extended", "pass", "no invented destinations")
+
+
+def check_canary(first_lines: dict[str, str]) -> Finding:
+    if not first_lines:
+        return Finding("canary banner", "unrecoverable", "no new source modules")
+    carried = [p for p, line in first_lines.items() if line.strip() == BANNER]
+    total = len(first_lines)
+    if len(carried) == total:
+        return Finding("canary banner", "pass", f"{total}/{total} modules")
+    missing = sorted(set(first_lines) - set(carried))
+    return Finding(
+        "canary banner", "fail", f"{len(carried)}/{total} modules; missing {missing}"
+    )
