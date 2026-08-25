@@ -189,12 +189,16 @@ def skel_prompt_cmd(name):
 
 @click.command("skel-check")
 @click.argument("label")
-def skel_check_cmd(label):
+@click.option(
+    "--from",
+    "runs_dir",
+    type=click.Path(exists=True, file_okay=False, path_type=Path),
+    default=None,
+    help="Directory holding the runs. Defaults to this repo's runs/.",
+)
+def skel_check_cmd(label, runs_dir):
     """Score a completed run against the almanac's rules."""
-    matches = sorted(skel.RUNS.glob(f"*{label}*"))
-    if not matches:
-        raise click.ClickException(f"no run matching {label!r} under {skel.RUNS}")
-    run = matches[-1]
+    run = skel.find_run(runs_dir or skel.RUNS, label)
 
     click.echo(f"{run.name}")
     for finding in skel.score(run):

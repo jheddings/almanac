@@ -8,6 +8,8 @@ from __future__ import annotations
 
 import subprocess
 
+import pytest
+
 from tools import skel
 
 
@@ -197,3 +199,54 @@ def test_a_run_may_be_placed_outside_the_repository(tmp_path):
 
     assert run.parent == elsewhere
     assert (run / ".git").is_dir()
+
+
+def test_runs_are_found_by_label_in_a_given_directory(tmp_path):
+    """Scoring has to reach runs wherever they were placed, not only the default."""
+    fixture = tmp_path / "fixture"
+    fixture.mkdir()
+    (fixture / "README.md").write_text("x\n")
+    elsewhere = tmp_path / "elsewhere"
+
+    skel.new_run(fixture, elsewhere, "opus", stamp="2026-08-24")
+    skel.new_run(fixture, elsewhere, "codex", stamp="2026-08-24")
+
+    found = skel.find_run(elsewhere, "codex")
+    assert found.name == "2026-08-24-codex"
+
+    with pytest.raises(skel.SkelError):
+        skel.find_run(elsewhere, "cursor")
+
+
+def test_work_left_on_an_unmerged_branch_is_still_scored(tmp_path):
+    """Two of the first four trials never merged; reading HEAD alone saw nothing."""
+    fixture = tmp_path / "fixture"
+    (fixture / "src" / "skinner").mkdir(parents=True)
+    (fixture / "src" / "skinner" / "__init__.py").write_text("")
+    run = skel.new_run(fixture, tmp_path / "runs", "opus", stamp="2026-08-24")
+
+    subprocess.run(
+        ["git", "-C", str(run), "checkout", "-q", "-b", "feat/cli"], check=True
+    )
+    _commit(run, "feat(cli): add it", "src/skinner/cli.py", "# skinner:module\n")
+    subprocess.run(["git", "-C", str(run), "checkout", "-q", "main"], check=True)
+
+    findings = {f.check: f for f in skel.score(run)}
+    assert findings["commit subject"].status == "pass", findings["commit subject"]
+    assert findings["canary banner"].status == "pass", findings["canary banner"]
+
+
+def test_only_the_instrument_counts_as_fixture_tampering():
+    """Build config is not the instrument; the rules the run is measured against are.
+
+    A console script cannot be added without editing pyproject.toml, so flagging it
+    reports required work as contamination while the run that actually rewrote
+    AGENTS.md passes.
+    """
+    assert skel.check_fixture_edited(["pyproject.toml"]).status == "pass"
+    assert skel.check_fixture_edited(["README.md"]).status == "pass"
+    assert skel.check_fixture_edited(["AGENTS.md"]).status == "fail"
+    edited_rule = skel.check_fixture_edited(
+        ["docs/almanac/commit-messages-use-conventional-commit-format.md"]
+    )
+    assert edited_rule.status == "fail"

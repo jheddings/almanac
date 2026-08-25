@@ -113,8 +113,8 @@ skel-prompt name="01-first-feature": venv
 skel-run label out="" name="01-first-feature": (skel-new label out) (skel-prompt name)
 
 # score a completed harness-test run
-skel-check label: venv
-    uv run python -m tools skel-check {{ label }}
+skel-check label dir="": venv
+    uv run python -m tools skel-check {{ label }} {{ if dir == "" { "" } else { "--from " + dir } }}
 
 # remove harness-test runs
 skel-clean:

@@ -48,9 +48,15 @@ REFLOG_BRANCH_RES = (
 BANNER = "# skinner:module"
 BODY_WIDTH = 72
 
-# What the fixture sanctions an agent to add. Anything else is an invented destination:
-# one trial created docs/superpowers/specs/ in a fixture whose almanac says not to.
+# Where new files may legitimately go. Anything else is an invented destination: one
+# trial created docs/superpowers/specs/ in a fixture whose almanac says not to.
 SANCTIONED_PREFIXES = ("src/", "tests/")
+
+# The instrument: the rules a run is measured against. Editing these changes what the
+# run was tested on. Build config is not on this list — a console script cannot be
+# added without touching pyproject.toml, and flagging that reports required work as
+# contamination while a run that rewrote AGENTS.md passes.
+PROTECTED_PATHS = ("AGENTS.md", "CLAUDE.md", "docs/almanac/")
 
 # Hooks are shared by every worktree, so this fires in the session worktree too and the
 # log tolerates repeated lines. A sandbox that denies writes under .git silences it
@@ -165,10 +171,10 @@ def check_worktree_names(logged: list[str], branches: list[str]) -> Finding:
 
 
 def check_fixture_edited(changed: list[str]) -> Finding:
-    touched = [p for p in changed if not p.startswith(SANCTIONED_PREFIXES)]
+    touched = [p for p in changed if p.startswith(PROTECTED_PATHS)]
     if touched:
-        return Finding("fixture edited", "fail", f"modified: {touched}")
-    return Finding("fixture edited", "pass", "fixture files untouched")
+        return Finding("fixture edited", "fail", f"instrument modified: {touched}")
+    return Finding("fixture edited", "pass", "instrument untouched")
 
 
 def check_fixture_extended(added: list[str]) -> Finding:
@@ -232,16 +238,47 @@ def branch_names(run: Path) -> list[str]:
     return found
 
 
+def find_run(runs: Path, label: str) -> Path:
+    """The most recent run directory under `runs` whose name contains `label`."""
+    matches = sorted(p for p in runs.glob(f"*{label}*") if p.is_dir())
+    if not matches:
+        raise SkelError(f"no run matching {label!r} under {runs}")
+    return matches[-1]
+
+
+def _work_tip(run: Path, base: str) -> str:
+    """The ref carrying this run's work.
+
+    Half the first four trials left their work on a branch they never merged, so
+    reading HEAD alone reported those runs as empty.
+    """
+    tip, ahead = "HEAD", 0
+    refs = ["HEAD"] + [
+        line.strip()
+        for line in _git(run, "branch", "--format=%(refname:short)").splitlines()
+        if line.strip()
+    ]
+    for ref in refs:
+        try:
+            count = int(_git(run, "rev-list", "--count", f"{base}..{ref}").strip())
+        except (subprocess.CalledProcessError, ValueError):
+            continue
+        if count > ahead:
+            tip, ahead = ref, count
+    return tip
+
+
 def score(run: Path) -> list[Finding]:
     """Every check, run against one completed harness-test run."""
     base = _base_commit(run)
-    revs = f"{base}..HEAD"
+    tip = _work_tip(run, base)
+    revs = f"{base}..{tip}"
 
     branches = branch_names(run)
     subjects = [s for s in _git(run, "log", "--format=%s", revs).splitlines() if s]
     bodies = _git(run, "log", "--format=%b%x00", revs).split("\x00")
 
-    status = _git(run, "diff", "--name-status", base, "HEAD").splitlines()
+    status = _git(run, "diff", "--name-status", base, tip).splitlines()
     changed = [line.split("\t", 1)[1] for line in status if line.startswith("M")]
     added = [line.split("\t", 1)[1] for line in status if line.startswith("A")]
 
@@ -250,7 +287,7 @@ def score(run: Path) -> list[Finding]:
         if path.startswith("src/") and path.endswith(".py"):
             if Path(path).name == "__init__.py":
                 continue
-            body = _git(run, "show", f"HEAD:{path}")
+            body = _git(run, "show", f"{tip}:{path}")
             first_lines[path] = body.splitlines()[0] if body.splitlines() else ""
 
     return [
