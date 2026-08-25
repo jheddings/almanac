@@ -51,10 +51,10 @@ Locate the almanac first, in order — stop at the first step that resolves:
 1. **`docs/almanac/README.md`.** The conventional location. If it exists, that is the
    almanac; do not look further.
 2. **Glob `**/almanac/README.md`**, then discard matches under `templates/`,
-   `.worktrees/`, `node_modules/`, `vendor/`, or any other checkout nested inside this
-   one. A bare directory-name match is not evidence of an almanac — **a template, an
-   example, or a sibling worktree's copy is not this repo's almanac**, and auditing one
-   produces verdicts about files nobody relies on while the real entries go unchecked.
+   `node_modules/`, `vendor/`, or any other checkout nested inside this one. A bare
+   directory-name match is not evidence of an almanac — **a template, an example, or a
+   sibling worktree's copy is not this repo's almanac**, and auditing one produces
+   verdicts about files nobody relies on while the real entries go unchecked.
 3. **Exactly one survivor → that is the almanac.** More than one, ask which. None, this
    repo has no almanac — say so and stop.
 
