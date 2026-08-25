@@ -1,15 +1,18 @@
 ---
 name: record
 description: >-
-    Use when you have just finished being surprised by this repository — its code, its
-    CI, its tooling, or the agent harness you are running under — a debugging session
-    that ended in "oh, that's why," a green build or passing suite that concealed a real
-    failure, a tool that behaved differently than its documentation claims, or the
-    discovery that an existing almanac entry is wrong. Also use when a convention
-    becomes binding here, or when you find one living where an agent will meet it too
-    late to act on. Also use on an explicit request to "record this in the almanac",
-    "add an almanac entry", "write down this gotcha", or "make sure we don't learn this
-    again".
+    Use when this repository has just taught you something a future agent must not
+    re-derive. Either of two moments qualifies. You have finished being surprised by it
+    — its code, its CI, its tooling, or the agent harness you are running under — a
+    debugging session that ended in "oh, that's why," a green build or passing suite
+    that concealed a real failure, a tool that behaved differently than its
+    documentation claims, or the discovery that an existing almanac entry is wrong. Or a
+    convention has become binding here — a decision about commits, branches, reviews,
+    worktrees, or where work happens that everyone is now expected to follow, including
+    one you find living where an agent will meet it too late to act on. Also use on an
+    explicit request to "record this in the almanac", "add an almanac entry", "write
+    down this gotcha", "we should write this rule down", or "make sure we don't learn
+    this again".
 ---
 
 # Record an Almanac Entry
@@ -155,10 +158,12 @@ retrieved by someone who does not yet know they need it.
 
 ### Is it already there?
 
-Grep first — filenames state claims, so one keyword pass is enough. If a matching entry
-is **wrong**, fix or delete it in this same change; a confidently-worded stale fact is
-worse than none. If you suspect a duplicate but cannot find it, follow the README's
-local rule on duplicates rather than guessing.
+Grep first — filenames state claims, so one keyword pass is enough. If a matching
+**fact** is wrong, fix or delete it in this same change; a confidently-worded stale fact
+is worse than none. A **rule** you believe is wrong is not yours to correct — only
+whoever can change the decision behind it can, and nobody following it is evidence about
+people. Raise it; do not resolve it. If you suspect a duplicate but cannot find it,
+follow the README's local rule on duplicates rather than guessing.
 
 ## Verify, don't transcribe
 
@@ -210,8 +215,8 @@ as a refutation.
 - Write a fact plainly, then its consequence — **what breaks, and whether it breaks
   loudly**. Silent failures are the point; say so explicitly when a failure reads as
   success.
-- A rule **moved** from another document is a move, not a copy. Delete the original in
-  the same change: two copies diverge, and the stale one wins whichever is read first.
+- A rule **moved** from another document is a move, not a copy: delete the original in
+  the same change, or the two copies diverge and the stale one wins.
 - Give the corrective action if there is one, and cross-link entries in the same class.
 - Don't hedge about **truth** either: no "seems to", no "I think". Uncertainty belongs
   in the PR discussion, not in a file future agents treat as settled.
@@ -231,8 +236,8 @@ human can.
   truth.** True for you is not true for the subject; it goes in memory.
 - "I noted the caveat in the entry" — a caveat is not a category decision.
 - "The user gave me this, so I don't need to check it" — check it.
-- "The operator told me, so it isn't discovered" — provenance is not a test any more.
-  Confirm it, decide its `kind`, and record it.
+- "The operator told me, so it isn't discovered" — provenance is not a test. Confirm it,
+  decide its `kind`, and record it.
 - "Everyone here does it this way, so it's a rule" — if nobody would be wrong for doing
   it differently, it is a preference. That goes to memory.
 - "I'll give the rule a verify line so the audit covers it too" — that reports

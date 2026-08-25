@@ -1,9 +1,10 @@
 {
     "_comment": "Ratchet, not a target. CONTRIBUTING asks for well under 500 words; these are the counts as of the compression debt being taken on. Lower them when a skill shrinks; raising one is a deliberate decision that belongs in the PR description.",
     "_raised": "2026-08-24, feat/widened-almanac: admitting kind: rule entries added method to every skill — the fact/rule decision and the title-fires test in record, the unauditable verdict in audit, one fewer destination to establish in init. Previous ceilings: audit 2054, init 1412, record 1903. If the experiment is reverted, revert these with it; if it is kept, the compression pass now has 700 more words to answer for.",
+    "_raised_again": "2026-08-25, docs/almanac-name-framing: record 2265 -> 2296. The skill told you to fix or delete a wrong entry with no carve-out for rules, which contradicts the contract's 'a rule is corrected only by whoever can change the decision' and would have won, since the skill outranks the README on method. The carve-out is the +31; two unrelated tightenings inside record paid back 9 of it.",
     "skill_word_ceilings": {
         "audit": 2317,
         "init": 1499,
-        "record": 2265
+        "record": 2296
     }
 }

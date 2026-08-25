@@ -9,6 +9,8 @@ constraint that isn't visible from the code — something reality can refute, so
 carries a `verify` line an audit re-runs. A **rule** is something the repository
 requires of everyone who works in it: commit format, branch naming, where work happens.
 Not documentation, not a plan: a claim a future agent acts on without re-deriving it.
+Both are almanac material in the old sense of the word: what was observed here,
+alongside what to do about it.
 
 One claim per file, the filename states the claim, and **the directory listing is the
 index** — read cold at the start of a session, with bodies loaded only when a title
@@ -223,6 +225,20 @@ Two smaller costs. Retrieval now rests entirely on the title: an entry whose slu
 not fire at the right moment is invisible, and that failure is silent too. And a longer
 listing is a weaker listing — the directory works as a cold read because every line is
 worth reading, and rules dilute a signal that facts alone kept dense.
+
+**The name did not stop fitting when the scope widened.** Admitting rules looks like
+drift away from "almanac," and it is the reverse. An almanac was never a book of facts
+alone: it pairs what was observed with the practice that follows from it — the tables
+and when to plant — for one place, one season, and an audience that consults it before
+acting rather than reading it front to back. A directory holding facts and rules,
+indexed by filename and opened at the moment one applies, is that shape rather than a
+departure from it.
+
+The cost, plainly: the word does not _say_ "binding." A reader meeting it cold hears
+weather and trivia, and nothing in the name warns them that half the listing is
+enforceable. So the contract carries that weight instead — `kind` is enforced by schema
+rather than described in prose, a rule states the moment it applies in its opening line,
+and `audit` has to name every rule it could not reach.
 
 **No index, and no frontmatter beyond `title`, `kind`, `recorded`, `source`, `verify`,
 `verified`, and `tags`.** A shared index is a merge conflict between concurrent sessions
