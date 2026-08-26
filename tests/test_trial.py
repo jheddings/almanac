@@ -466,3 +466,41 @@ def test_empty_create_stdout_is_a_failure(tmp_path, claude):
 
     assert "cursor" in str(failure.value)
     assert "session" in str(failure.value).lower()
+
+
+def _create_only(claude, tmp_path, create):
+    return harnesses.Harness(
+        name="cursor",
+        manifest=claude.manifest,
+        trial=harnesses.Trial(
+            create=create,
+            first=("sh", "-c", "true"),
+            resume=("sh", "-c", "true"),
+            transcript=str(tmp_path / "{session}.jsonl"),
+        ),
+    )
+
+
+def test_a_create_command_that_does_not_exist_names_the_harness(tmp_path, claude):
+    """`create` runs before anything else, so a missing CLI is the first thing hit.
+
+    Without a handler it arrives as a bare FileNotFoundError, which says nothing about
+    which harness the operator failed to install.
+    """
+    stub = _create_only(claude, tmp_path, ("definitely-not-a-real-binary",))
+
+    with pytest.raises(trial.TrialError) as failure:
+        trial.run(stub, tmp_path / "out", "2026-08-26")
+
+    assert "cursor" in str(failure.value)
+
+
+def test_a_create_command_that_hangs_names_the_harness(tmp_path, claude, monkeypatch):
+    """A create that never returns is a failed trial, not a traceback."""
+    monkeypatch.setattr(trial, "CREATE_TIMEOUT", 1)
+    stub = _create_only(claude, tmp_path, ("sh", "-c", "sleep 30"))
+
+    with pytest.raises(trial.TrialError) as failure:
+        trial.run(stub, tmp_path / "out", "2026-08-26")
+
+    assert "cursor" in str(failure.value)

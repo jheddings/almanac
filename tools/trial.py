@@ -28,6 +28,9 @@ REVIEW_DIR = "docs/review"
 TRANSCRIPT_NAME = "session.jsonl"
 MANIFEST_NAME = "manifest.json"
 
+# Opening a session is a single round trip, so it gets far less rope than a prompt.
+CREATE_TIMEOUT = 60
+
 # A trial that has stopped making progress should fail rather than hold the terminal
 # open indefinitely. Generous, because a real feature plus a report takes minutes.
 PROMPT_TIMEOUT = 1800
@@ -114,17 +117,28 @@ def _session(harness: Harness, run_dir: Path) -> str:
     When `create` is set, the harness names the session — Cursor's `create-chat`
     prints a UUID — and an empty or failed create is not a prompt failure: nothing
     has been asked yet, so there is nothing to archive.
+
+    Every way this can fail names the harness. `create` is the first command a trial
+    runs, so a CLI that is not installed surfaces here before anything else, and a bare
+    `FileNotFoundError` says nothing about which harness the operator is missing.
     """
     if not harness.trial.create:
         return str(uuid.uuid4())
-    done = subprocess.run(
-        list(harness.trial.create),
-        cwd=run_dir,
-        capture_output=True,
-        text=True,
-        timeout=60,
-        env=skel.clean_env(),
-    )
+    try:
+        done = subprocess.run(
+            list(harness.trial.create),
+            cwd=run_dir,
+            capture_output=True,
+            text=True,
+            timeout=CREATE_TIMEOUT,
+            env=skel.clean_env(),
+        )
+    except subprocess.TimeoutExpired:
+        raise TrialError(
+            f"{harness.name}: create did not return within {CREATE_TIMEOUT}s"
+        ) from None
+    except (OSError, subprocess.SubprocessError) as failure:
+        raise TrialError(f"{harness.name}: create could not run: {failure}") from None
     if done.returncode != 0:
         raise TrialError(f"{harness.name}: create exited {done.returncode}")
     session = done.stdout.strip()
