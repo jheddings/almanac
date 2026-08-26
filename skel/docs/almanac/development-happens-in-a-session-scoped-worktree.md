@@ -18,9 +18,12 @@ name when you create or switch to one; feel free to be creative or silly with it
 # Create a worktree based on main
 git worktree add .worktrees/<name> -b <branch-name> main
 
-# Clean up after merging
+# Remove it when the session ends
 git worktree remove .worktrees/<name>
 ```
+
+The worktree outlives any one branch. Merging a branch is not a reason to remove it —
+start the next branch inside the same worktree.
 
 **Why:** concurrent sessions otherwise contend for one checkout, and a half-finished
 edit in the main tree is invisible to the session that inherits it. Session scope rather

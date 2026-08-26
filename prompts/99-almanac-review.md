@@ -16,3 +16,6 @@ Write it as claims someone can check against this session, not as a narrative:
 Do not summarize the entries back — they are already on disk, and a reader has them.
 Report only what you did, and be specific enough that each claim is wrong if it did not
 happen.
+
+When the report is written, squash it onto `main` as a single commit like the rest of
+the work.

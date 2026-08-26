@@ -6,28 +6,34 @@
 ## Why
 
 The widened almanac bets that an agent will read a directory listing, carry the titles,
-and load a body only when one applies. Four hand-run trials — two local, two on cloud
-platforms — say the retrieval half of that bet mostly holds and the precedence half does
-not.
+and load a body only when one applies. Six trials so far — four hand-run, one
+interactive against the fixture, one unattended — say the compliance half of that bet
+holds and the retrieval half does not.
 
-What the four established:
+What they established:
 
 - **The commit and branch rules fired in every run**, across two vendors and two
   environments, each producing a scoped `feat(cli):` subject where the only commit in
   history was an unscoped `chore:`. Imitation cannot explain that.
-- **Three of four opened with the directory listing** and loaded bodies on demand. The
-  fourth read every entry up front, which reaches the same answer while paying the cost
-  the design exists to avoid. With three entries that is free; the economy is unproven
-  at forty.
+- **Two of six read the whole directory up front** rather than by title, reaching the
+  same answers while paying the cost the design exists to avoid. One said so against
+  itself: "the opposite of the retrieval economy the directory is built on, and it would
+  not scale." At six entries that is free. The economy is unproven at forty, and this is
+  the finding least likely to improve on its own.
 - **The consult-on-surprise trigger fired, once, verbatim.** One run hit a sandbox that
   made `.git` read-only, said so, and grepped the almanac with the exact command the
   contract specifies before continuing. It is the only run where anything went wrong,
   and the recovery path worked.
-- **Two of four had a loaded skill silently override an almanac rule.** One named a
-  worktree after the branch because a worktree skill hardcodes that path shape. Another
-  created `docs/superpowers/specs/` in a repository whose almanac says, in as many
-  words, not to invent a destination. Neither announced the conflict; both otherwise
-  followed the rules closely.
+- **The trap fired, and the record half fired unprompted.** The unattended trial
+  rejected the GPL dependency its own README recommended, rejected a dual-licensed
+  package nobody planted, and named both in a commit trailer. It then found that its
+  trailer had not parsed — a blank line above it made git read it as body text — fixed
+  the commit, and recorded the fact as an entry with a working verify line.
+- **Two of the first four had a loaded skill silently override an almanac rule.** One
+  named a worktree after the branch because a worktree skill hardcodes that path shape.
+  Another created `docs/superpowers/specs/` in a repository whose almanac says, in as
+  many words, not to invent a destination. Neither announced the conflict; both
+  otherwise followed the rules closely.
 
 That last finding is the reason this fixture is worth building. A rule that loses to an
 eagerly-loaded skill loses quietly, and quiet is the failure mode the almanac exists to
@@ -131,6 +137,14 @@ README, and a second prompt. Also removes the mechanical scorer, which changes h
 are read but not what the fixture presents to an agent. Cohort 1's canary and rule
 results carry forward; nothing in cohort 1 met the trap, so it has no baseline.
 
+**Cohort 3 — trial 7 onward.** Each prompt now squashes its work onto `main`, and the
+review is committed like everything else, so git history is the record rather than a
+working tree. Adds `merges-to-main-explain-why-not-what`. The worktree entry's cleanup
+line moved from "after merging" to session end — under per-prompt merges the old wording
+would have had an agent remove its worktree after the first feature and build a second
+for the next, which reads as feature-scoped and is the failure that entry exists to
+catch. The rule was about to manufacture its own violation.
+
 ## Naming and tone
 
 The fixture is called `skinner`, and the rig around it is themed after the Bobiverse.
@@ -187,6 +201,54 @@ Pushing a run to a remote leaves the hook behind, since hooks do not travel with
 clone. A run executed on a cloud platform therefore reports its worktree name as
 unrecoverable unless the transcript supplies it. Half the trials so far ran that way, so
 this is the common case rather than the exception.
+
+## Running a trial
+
+`just skel trial <harness>` scaffolds the fixture into a throwaway directory, feeds
+every prompt to one session in order, captures the harness's own transcript, writes a
+manifest, and zips the result.
+
+The temp directory is load-bearing: nothing above the fixture contributes instruction
+files, which a run inside this repository cannot avoid. One session is the other half —
+a rule firing on the last prompt is evidence the almanac survived the whole session,
+which separate invocations cannot show. That `--resume` genuinely carries context was
+verified rather than assumed: a resumed turn correctly answered a question about what
+the previous turn had done.
+
+How to drive a harness is a row in `harnesses.toml`, so a harness stays named in one
+place. Claude is the only one that can **name** its own session, so its transcript path
+is known rather than discovered; the others must find the newest file and hope nothing
+else was running. The commands go into the table verbatim — including
+`--permission-mode bypassPermissions`, which is what makes a headless run possible — and
+are copied into every archive's manifest, so a reader knows what the agent was permitted
+to do.
+
+**Prompts run in name order, not the order given.** The review is numbered 99 because it
+asks what the almanac changed about the work, which is only answerable once the work has
+happened.
+
+Because every prompt squashes onto `main` and the review is committed, an archive needs
+only two things to be readable: the git history and the transcript. Working trees and
+worktrees are carried along, but nothing depends on them — an earlier trial left its
+report uncommitted inside a session worktree, where it survived only because the archive
+happened to capture untracked files.
+
+Archives exclude `.venv` and cache directories. One trial produced 85MB of virtualenv
+against a 4MB repository, and the agent's commits are in `.git` regardless.
+
+## The review prompt
+
+The last prompt asks the agent to report on its own almanac use. That report is a
+**claim, not a finding**. One trial reported following the worktree rule while the
+directory on disk was named after the feature, so the report is written as statements
+the transcript can refute — which entries, loaded when, changing what — and the
+transcript is archived beside it.
+
+Reflection stays confined to this prompt on purpose. A rule requiring an agent to
+justify every merge would have it consulting more deliberately all session than one
+working naturally, which inflates every measurement here rather than only the
+almanac-specific ones. `merges-to-main-explain-why-not-what` is therefore worded as an
+ordinary engineering convention, with no invitation to introspect on process or sources.
 
 ## No scoring
 
