@@ -27,3 +27,67 @@ def test_table_covers_every_plugin_directory():
     assert declared == on_disk, (
         f"table declares {sorted(declared)}, filesystem has {sorted(on_disk)}"
     )
+
+
+def test_trial_create_is_optional():
+    """Claude names the session as a flag; a missing create must not be an error."""
+    loaded = harnesses._harness(
+        "paper",
+        {
+            "manifest": "harnesses.toml",
+            "trial": {
+                "first": ["echo", "{prompt}"],
+                "resume": ["echo", "{prompt}"],
+                "transcript": "{session}.jsonl",
+            },
+        },
+    )
+    assert loaded.trial is not None
+    assert loaded.trial.create == ()
+
+
+def test_trial_create_is_loaded_when_present():
+    loaded = harnesses._harness(
+        "paper",
+        {
+            "manifest": "harnesses.toml",
+            "trial": {
+                "create": ["agent", "create-chat"],
+                "first": ["echo", "{session}"],
+                "resume": ["echo", "{session}"],
+                "transcript": "{session}.jsonl",
+            },
+        },
+    )
+    assert loaded.trial.create == ("agent", "create-chat")
+
+
+def test_trial_required_fields_stay_required():
+    """create is the new optional; first, resume, and transcript are not."""
+    row = {
+        "manifest": "harnesses.toml",
+        "trial": {
+            "resume": ["echo", "{prompt}"],
+            "transcript": "{session}.jsonl",
+        },
+    }
+    with pytest.raises(KeyError, match="first"):
+        harnesses._harness("paper", row)
+
+
+def test_cursor_declares_a_trial():
+    """Guard the guard: a row that does not parse leaves the recipe unwired."""
+    cursor = harnesses.get("cursor")
+    assert cursor.trial is not None
+    assert cursor.trial.create == ("agent", "create-chat")
+    assert "{session}" in " ".join(cursor.trial.first)
+    assert "{session}" in " ".join(cursor.trial.resume)
+    assert "{session}" in cursor.trial.transcript
+
+
+def test_claude_trial_has_no_create():
+    """Claude still names the session as a flag; the new field must not leak onto it."""
+    claude = harnesses.get("claude")
+    assert claude.trial is not None
+    assert claude.trial.create == ()
+    assert "{session}" in " ".join(claude.trial.first)

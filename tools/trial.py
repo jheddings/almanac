@@ -70,7 +70,13 @@ def _harness_version(harness: Harness) -> str | None:
 
 
 def _names_session(harness: Harness) -> bool:
-    return any("{session}" in part for part in harness.trial.first)
+    """Whether the harness supplied the session id that the transcript glob can use.
+
+    `create` prints the id; `{session}` in `first` passes it as a flag. Without either,
+    collection matches the run's cwd instead.
+    """
+    trial = harness.trial
+    return bool(trial.create) or any("{session}" in part for part in trial.first)
 
 
 def _transcript_metadata(path: Path) -> dict:
@@ -102,6 +108,31 @@ def _find_transcript(
     return max(matches, key=lambda p: p.stat().st_mtime) if matches else None
 
 
+def _session(harness: Harness, run_dir: Path) -> str:
+    """The id `first` and `resume` will attach to.
+
+    When `create` is set, the harness names the session — Cursor's `create-chat`
+    prints a UUID — and an empty or failed create is not a prompt failure: nothing
+    has been asked yet, so there is nothing to archive.
+    """
+    if not harness.trial.create:
+        return str(uuid.uuid4())
+    done = subprocess.run(
+        list(harness.trial.create),
+        cwd=run_dir,
+        capture_output=True,
+        text=True,
+        timeout=60,
+        env=skel.clean_env(),
+    )
+    if done.returncode != 0:
+        raise TrialError(f"{harness.name}: create exited {done.returncode}")
+    session = done.stdout.strip()
+    if not session:
+        raise TrialError(f"{harness.name}: create produced no session id")
+    return session
+
+
 def run(
     harness: Harness,
     out_dir: Path,
@@ -122,12 +153,12 @@ def run(
 
     prompts = tuple(sorted(prompts))
     texts = [prompt_text(name, stamp) for name in prompts]
-    session = str(uuid.uuid4())
     workspace = Path(tempfile.mkdtemp(prefix=f"skel-trial-{harness.name}-"))
 
     try:
         run_dir = skel.new_run(skel.FIXTURE, workspace, harness.name, stamp)
         initial_head = skel._git(run_dir, "rev-parse", "HEAD").strip()
+        session = _session(harness, run_dir)
         results = _drive(harness, run_dir, session, prompts, texts)
         transcript, discovered_session = _collect(harness, run_dir, session)
         manifest_session = session if _names_session(harness) else discovered_session
