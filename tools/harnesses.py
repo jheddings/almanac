@@ -37,6 +37,9 @@ class Trial:
 
     Some harnesses name the session themselves. `create`, when set, is run in the run
     directory first; stripped stdout becomes `{session}` for `first` and `resume`.
+
+    A row that sets `create` has to interpolate `{session}` into `first`, `resume`, and
+    `transcript`, since the id it prints is worth nothing anywhere it does not appear.
     """
 
     first: tuple[str, ...]
@@ -44,6 +47,11 @@ class Trial:
     transcript: str
     create: tuple[str, ...] = ()
     version: tuple[str, ...] = ()
+    # Environment every command in the run inherits, as name/template pairs. `{home}`
+    # expands to a throwaway configuration directory inside the run's workspace, which
+    # is how a harness is kept from reading the skills and plugins installed on the
+    # host.
+    env: tuple[tuple[str, str], ...] = ()
 
 
 @dataclass(frozen=True)
@@ -79,10 +87,14 @@ def _harness(name: str, row: dict) -> Harness:
             transcript=raw_trial["transcript"],
             create=tuple(raw_trial.get("create", ())),
             version=tuple(raw_trial.get("version", ())),
+            env=tuple(sorted(raw_trial.get("env", {}).items())),
         )
         if raw_trial
         else None
     )
+    if trial is not None:
+        _check_trial(name, trial)
+
     marketplace = row.get("marketplace")
     return Harness(
         name=name,
@@ -94,11 +106,37 @@ def _harness(name: str, row: dict) -> Harness:
     )
 
 
+def _check_trial(name: str, trial: Trial) -> None:
+    """A `create` whose id reaches nothing is worse than no `create` at all.
+
+    The harness opens a conversation, the prompts open a different one, and the id
+    goes into the manifest describing neither. Nothing downstream can detect that, so
+    the table refuses to load it.
+    """
+    if not trial.create:
+        return
+    places = {
+        "first": " ".join(trial.first),
+        "resume": " ".join(trial.resume),
+        "transcript": trial.transcript,
+    }
+    missing = sorted(where for where, text in places.items() if "{session}" not in text)
+    if missing:
+        raise InvalidTrial(
+            f"{name}: [trial] sets create, so {{session}} must appear in "
+            f"{', '.join(missing)}"
+        )
+
+
 @cache
 def load() -> dict[str, Harness]:
     """Every declared harness, keyed by name."""
     rows = tomllib.loads(TABLE.read_text())
     return {name: _harness(name, row) for name, row in rows.items()}
+
+
+class InvalidTrial(Exception):
+    pass
 
 
 class UnknownHarness(Exception):

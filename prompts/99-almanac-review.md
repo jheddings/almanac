@@ -19,3 +19,6 @@ happen.
 
 When the report is written, squash it onto `main` as a single commit like the rest of
 the work.
+
+No one is available to answer questions: make the choices the work needs, and note what
+you assumed.

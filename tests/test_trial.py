@@ -274,7 +274,9 @@ def test_a_failing_prompt_stops_the_run_but_still_archives(tmp_path, claude):
         name = next(n for n in bundle.namelist() if n.endswith("manifest.json"))
         manifest = json.loads(bundle.read(name))
 
-    assert manifest["results"] == [{"prompt": "01-first-feature", "exit": 3}]
+    assert [(r["prompt"], r["exit"]) for r in manifest["results"]] == [
+        ("01-first-feature", 3)
+    ]
     assert manifest["transcript"] is None
 
 
@@ -466,3 +468,248 @@ def test_empty_create_stdout_is_a_failure(tmp_path, claude):
 
     assert "cursor" in str(failure.value)
     assert "session" in str(failure.value).lower()
+
+
+def _create_only(claude, tmp_path, create):
+    return harnesses.Harness(
+        name="cursor",
+        manifest=claude.manifest,
+        trial=harnesses.Trial(
+            create=create,
+            first=("sh", "-c", "true"),
+            resume=("sh", "-c", "true"),
+            transcript=str(tmp_path / "{session}.jsonl"),
+        ),
+    )
+
+
+def test_a_create_command_that_does_not_exist_names_the_harness(tmp_path, claude):
+    """`create` runs before anything else, so a missing CLI is the first thing hit.
+
+    Without a handler it arrives as a bare FileNotFoundError, which says nothing about
+    which harness the operator failed to install.
+    """
+    stub = _create_only(claude, tmp_path, ("definitely-not-a-real-binary",))
+
+    with pytest.raises(trial.TrialError) as failure:
+        trial.run(stub, tmp_path / "out", "2026-08-26")
+
+    assert "cursor" in str(failure.value)
+
+
+def test_a_create_command_that_hangs_names_the_harness(tmp_path, claude, monkeypatch):
+    """A create that never returns is a failed trial, not a traceback."""
+    monkeypatch.setattr(trial, "CREATE_TIMEOUT", 1)
+    stub = _create_only(claude, tmp_path, ("sh", "-c", "sleep 30"))
+
+    with pytest.raises(trial.TrialError) as failure:
+        trial.run(stub, tmp_path / "out", "2026-08-26")
+
+    assert "cursor" in str(failure.value)
+
+
+def _manifest_of(archive):
+    with zipfile.ZipFile(archive) as bundle:
+        name = next(n for n in bundle.namelist() if n.endswith("manifest.json"))
+        return json.loads(bundle.read(name))
+
+
+def _failed_archive(stub, out):
+    """The archive from a run that failed validation but still produced evidence."""
+    with pytest.raises(trial.TrialError):
+        trial.run(stub, out, "2026-08-26")
+    return out / "2026-08-26-claude.zip"
+
+
+def _manifest_of_failed(stub, out):
+    return _manifest_of(_failed_archive(stub, out))
+
+
+def test_a_passing_trial_still_says_which_prompt_did_the_work(tmp_path, claude):
+    """Validation asks whether there is something to read, not whether each prompt ran.
+
+    A session where the feature prompts produced nothing and only the review committed
+    satisfies every structural prerequisite — `main` moved, the review is in it, a
+    transcript matched — and passes. That is a real run: one harness spent two of its
+    three prompts waiting on a question nobody could answer. The counts are what make
+    the difference visible without opening the archive.
+    """
+    recorder = tmp_path / "calls.txt"
+    stub = _stub_harness(claude, recorder, makes_commit=False)
+
+    manifest = _manifest_of(trial.run(stub, tmp_path / "out", "2026-08-26"))
+
+    assert manifest["validation"]["passed"] is True
+    assert [r["commits"] for r in manifest["results"]] == [1, 2, 2]
+
+
+def test_work_left_on_an_unmerged_branch_still_counts(tmp_path, claude):
+    """A count taken from HEAD alone reports an unmerged branch as an empty run.
+
+    That is not hypothetical: it is the reading an earlier mechanical scorer got wrong
+    on half the trials it was given.
+    """
+    stub = harnesses.Harness(
+        name="claude",
+        manifest=claude.manifest,
+        trial=harnesses.Trial(
+            first=(
+                "sh",
+                "-c",
+                "git checkout -q -b feat/stranded"
+                " && echo work > src/skinner/cli.py"
+                " && git add -A"
+                " && git -c user.name=t -c user.email=t@e commit -qm 'feat: cli'"
+                " && git checkout -q main",
+            ),
+            resume=("sh", "-c", "true"),
+            transcript=str(tmp_path / "{session}.jsonl"),
+        ),
+    )
+
+    manifest = _manifest_of_failed(stub, tmp_path / "out")
+
+    assert manifest["results"][0]["commits"] == 2, manifest["results"]
+
+
+def test_uncommitted_work_is_visible_as_well(tmp_path, claude):
+    """An earlier trial left its report uncommitted, where a commit count misses it."""
+    stub = harnesses.Harness(
+        name="claude",
+        manifest=claude.manifest,
+        trial=harnesses.Trial(
+            first=("sh", "-c", "echo draft > src/skinner/cli.py"),
+            resume=("sh", "-c", "true"),
+            transcript=str(tmp_path / "{session}.jsonl"),
+        ),
+    )
+
+    manifest = _manifest_of_failed(stub, tmp_path / "out")
+
+    assert manifest["results"][0]["commits"] == 1
+    assert manifest["results"][0]["dirty"] == 1
+
+
+def _homed_harness(claude, tmp_path, script, env, create=()):
+    return harnesses.Harness(
+        name="claude",
+        manifest=claude.manifest,
+        trial=harnesses.Trial(
+            create=create,
+            first=("sh", "-c", script),
+            resume=("sh", "-c", "true"),
+            transcript=str(tmp_path / "{session}.jsonl"),
+            env=env,
+        ),
+    )
+
+
+def _read_from_failed(claude, tmp_path, script, env, name, create=()):
+    stub = _homed_harness(claude, tmp_path, script, env, create)
+    archive = _failed_archive(stub, tmp_path / "out")
+    with zipfile.ZipFile(archive) as bundle:
+        found = next(n for n in bundle.namelist() if n.endswith(name))
+        return bundle.read(found).decode().strip()
+
+
+def test_a_declared_home_reaches_the_harness_and_exists(tmp_path, claude):
+    """A harness cannot write its configuration into a directory that is not there."""
+    seen = _read_from_failed(
+        claude,
+        tmp_path,
+        'test -d "$AGENT_HOME" && echo "$AGENT_HOME" > home.txt',
+        env=(("AGENT_HOME", "{home}"),),
+        name="home.txt",
+    )
+    assert seen, "the harness saw no home"
+
+
+def test_the_hosts_own_configuration_does_not_reach_the_run(
+    tmp_path, claude, monkeypatch
+):
+    """One trial loaded three skills from the host's plugin cache and stalled on one.
+
+    The ambient value is what a trial inherits today, so overriding it is the whole
+    point: a variable that merely got set when absent would change nothing here.
+    """
+    monkeypatch.setenv("AGENT_HOME", "/Users/someone/.agent")
+
+    seen = _read_from_failed(
+        claude,
+        tmp_path,
+        'echo "$AGENT_HOME" > home.txt',
+        env=(("AGENT_HOME", "{home}"),),
+        name="home.txt",
+    )
+    assert seen != "/Users/someone/.agent", "the host's configuration reached the run"
+
+
+def test_create_runs_under_the_same_home_as_the_prompts(tmp_path, claude):
+    """`create` opens the session, so it reads the same skills and plugins as the rest.
+
+    Isolating only the prompts would leave the one command that establishes the
+    conversation reading the host's configuration.
+    """
+    seen = _read_from_failed(
+        claude,
+        tmp_path,
+        "true",
+        env=(("AGENT_HOME", "{home}"),),
+        name="create-home.txt",
+        create=("sh", "-c", 'echo "$AGENT_HOME" > create-home.txt; echo sess-1'),
+    )
+    assert seen.endswith(trial.AGENT_HOME), seen
+
+
+def test_the_manifest_records_the_redirect_without_the_temp_path(tmp_path, claude):
+    """The template says what was isolated; the expansion says only where it ran."""
+    stub = _homed_harness(claude, tmp_path, "true", env=(("AGENT_HOME", "{home}"),))
+
+    manifest = _manifest_of_failed(stub, tmp_path / "out")
+
+    assert manifest["env"] == {"AGENT_HOME": "{home}"}
+
+
+def test_a_redirect_the_harness_ignored_is_visible(tmp_path, claude):
+    """A variable a harness does not read is a silent no-op, and reads as isolation.
+
+    Nothing under the throwaway home means the harness kept its configuration
+    somewhere else, which is the failure this record exists to make loud.
+    """
+    ignored = _homed_harness(
+        claude, tmp_path, "true", env=(("NOT_A_REAL_HOME", "{home}"),)
+    )
+    honoured = _homed_harness(
+        claude,
+        tmp_path,
+        'mkdir -p "$AGENT_HOME/skills" && echo x > "$AGENT_HOME/skills/s.md"',
+        env=(("AGENT_HOME", "{home}"),),
+    )
+
+    blind = _manifest_of_failed(ignored, tmp_path / "out")
+    seeing = _manifest_of_failed(honoured, tmp_path / "out2")
+
+    assert blind["config_home_used"] is False
+    assert seeing["config_home_used"] is True
+
+
+def test_a_harness_declaring_no_env_records_none(tmp_path, claude):
+    recorder = tmp_path / "calls.txt"
+    stub = _stub_harness(claude, recorder)
+
+    manifest = _manifest_of(trial.run(stub, tmp_path / "out", "2026-08-26"))
+
+    assert manifest["env"] == {}
+    assert manifest["config_home_used"] is None
+
+
+@pytest.mark.parametrize("name", trial.DEFAULT_PROMPTS)
+def test_every_prompt_says_the_session_is_unattended(name):
+    """A trial has nobody to answer a clarifying question, and stalls when asked one.
+
+    One harness spent two of three prompts waiting on a scope call that could not
+    arrive, and returned zero each time. The prompts are the only place that fact can
+    reach the agent.
+    """
+    text = trial.prompt_text(name, "2026-08-26")
+    assert "No one is available to answer questions" in text

@@ -91,3 +91,50 @@ def test_claude_trial_has_no_create():
     assert claude.trial is not None
     assert claude.trial.create == ()
     assert "{session}" in " ".join(claude.trial.first)
+
+
+def _row(**trial):
+    base = {
+        "first": ["echo", "{session}"],
+        "resume": ["echo", "{session}"],
+        "transcript": "{session}.jsonl",
+    }
+    return {"manifest": "harnesses.toml", "trial": {**base, **trial}}
+
+
+def test_create_without_a_session_placeholder_is_rejected():
+    """An id nothing interpolates is created, discarded, and then reported as the run's.
+
+    The prompts open their own conversation, the glob finds whatever it finds, and the
+    manifest names a session that describes neither.
+    """
+    for omitted in ("first", "resume"):
+        row = _row(create=["agent", "create-chat"], **{omitted: ["echo", "hello"]})
+        with pytest.raises(harnesses.InvalidTrial, match=omitted):
+            harnesses._harness("paper", row)
+
+    row = _row(create=["agent", "create-chat"], transcript="newest.jsonl")
+    with pytest.raises(harnesses.InvalidTrial, match="transcript"):
+        harnesses._harness("paper", row)
+
+
+def test_a_row_without_create_may_omit_the_placeholder():
+    """Codex names no session and discovers the id from the rollout instead."""
+    loaded = harnesses._harness(
+        "paper",
+        _row(
+            first=["codex", "exec"],
+            resume=["codex", "exec"],
+            transcript="*.jsonl",
+        ),
+    )
+    assert loaded.trial.create == ()
+
+
+def test_the_declared_cursor_row_satisfies_the_rule():
+    """Guard the guard: the rule is only worth having if the real row passes it."""
+    cursor = harnesses.get("cursor")
+    assert cursor.trial.create
+    assert "{session}" in " ".join(cursor.trial.first)
+    assert "{session}" in " ".join(cursor.trial.resume)
+    assert "{session}" in cursor.trial.transcript

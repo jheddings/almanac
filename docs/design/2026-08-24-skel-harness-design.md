@@ -215,12 +215,19 @@ this is the common case rather than the exception.
 every prompt to one session in order, captures the harness's own transcript, writes a
 manifest, and zips the result.
 
-The temp directory is load-bearing: nothing above the fixture contributes instruction
-files, which a run inside this repository cannot avoid. One session is the other half —
-a rule firing on the last prompt is evidence the almanac survived the whole session,
-which separate invocations cannot show. That `--resume` genuinely carries context was
-verified rather than assumed: a resumed turn correctly answered a question about what
-the previous turn had done.
+The temp directory is load-bearing: nothing above the fixture in the tree contributes
+instruction files, which a run inside this repository cannot avoid. It reaches only that
+far. A harness also loads skills, plugins, and instructions from the user's
+configuration directory, which no working directory excludes — one Cursor trial read
+three skills out of the host's plugin cache, and a design gate in one of them stalled
+two prompts of the three on a clarifying question no one was there to answer. The
+harness row therefore names the variable that moves that directory, and the rig points
+it at a throwaway home beside the run, for `create` as well as for the prompts. A
+variable a harness ignores is a silent no-op, so the manifest records whether anything
+was written there. One session is the other half — a rule firing on the last prompt is
+evidence the almanac survived the whole session, which separate invocations cannot show.
+That `--resume` genuinely carries context was verified rather than assumed: a resumed
+turn correctly answered a question about what the previous turn had done.
 
 How to drive a harness is a row in `harnesses.toml`, so a harness stays named in one
 place. Claude can **name** its own session as a flag, so its transcript path is known
@@ -242,12 +249,26 @@ matched the trial workspace. It still archives the run before reporting a failur
 the evidence survives. These checks establish that there is something to read; they do
 not judge whether the agent followed a rule correctly.
 
+They also do not ask which prompt left it there, and a session can satisfy all three on
+the strength of its last prompt alone. One did: two of its three prompts stalled, and
+the review prompt still committed its report, so every prerequisite held. Each result
+therefore carries a commit and dirty-file count taken after that prompt. Commits are
+counted across every ref, since work left on an unmerged branch is exactly what a
+`HEAD`-only count reported as an empty run.
+
 **Prompts run in name order, not the order given.** The review is numbered 99 because it
 asks what the almanac changed about the work, which is only answerable once the work has
 happened.
 
 Because every prompt squashes onto `main` and the review is committed, an archive needs
-only two things to be readable: the git history and the transcript. Working trees and
+only two things to be readable: the git history and the transcript.
+
+How much the second of those carries is the harness's choice, not ours. A Codex rollout
+records each command and its output, so a report's claim about what a command returned
+can be checked. A Cursor transcript records the tool calls and nothing they returned, so
+it shows what was attempted and the git history has to supply the rest. Neither is a
+defect to fix; it is a reason to keep both halves of the evidence, and a reason not to
+write a check that assumes the transcript can refute an outcome. Working trees and
 worktrees are carried along, but nothing depends on them — an earlier trial left its
 report uncommitted inside a session worktree, where it survived only because the archive
 happened to capture untracked files.
@@ -292,6 +313,15 @@ What survives is the part that is not judgment: the `post-checkout` hook, which 
 a worktree name at creation because git keeps nothing once the worktree is removed. That
 is evidence collection, not evaluation, and without it the evidence is destroyed by an
 agent following the rules.
+
+The structural validation and the per-prompt counts belong to the same half. They answer
+whether the agent was able to act, which is a property of the rig, and stop short of
+what it did, which is the operator's reading. The distinction is not academic: two
+harnesses have returned three clean exit statuses each for sessions that produced almost
+nothing — one denied every command it tried, one stalled on a question nobody could
+answer — and the archives said `exit: 0` three times in both cases. A count of zero new
+commits does not say the almanac failed. It says the trial did, and that the run is not
+evidence about the almanac at all.
 
 ## The trap
 
