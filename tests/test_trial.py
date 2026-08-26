@@ -701,3 +701,15 @@ def test_a_harness_declaring_no_env_records_none(tmp_path, claude):
 
     assert manifest["env"] == {}
     assert manifest["config_home_used"] is None
+
+
+@pytest.mark.parametrize("name", trial.DEFAULT_PROMPTS)
+def test_every_prompt_says_the_session_is_unattended(name):
+    """A trial has nobody to answer a clarifying question, and stalls when asked one.
+
+    One harness spent two of three prompts waiting on a scope call that could not
+    arrive, and returned zero each time. The prompts are the only place that fact can
+    reach the agent.
+    """
+    text = trial.prompt_text(name, "2026-08-26")
+    assert "No one is available to answer questions" in text
