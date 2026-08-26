@@ -57,11 +57,25 @@ def test_conventional_location_short_circuits_before_globbing(tmp_path):
 
 
 @pytest.mark.parametrize(
-    "decoy", ["templates/almanac", ".worktrees/badger/almanac", "node_modules/x/almanac", "vendor/y/almanac"]
+    "decoy", ["templates/almanac", "node_modules/x/almanac", "vendor/y/almanac"]
 )
 def test_excluded_paths_are_never_the_answer(tmp_path, decoy):
     make_almanac(tmp_path, "notes/almanac")
     make_almanac(tmp_path, decoy)
+    assert resolve_almanac(tmp_path) == tmp_path / "notes" / "almanac"
+
+
+def test_a_sibling_worktree_is_excluded_as_a_checkout(tmp_path):
+    """A worktree is out of reach for being a checkout, not for its directory name.
+
+    Where a repository keeps its worktrees is that repository's choice, so resolution
+    may not key off any particular path. What every worktree does carry is a `.git`
+    *file* pointing back at the main repository, and that is what excludes it — so the
+    decoy here sits somewhere no exclusion list would name.
+    """
+    make_almanac(tmp_path, "notes/almanac")
+    worktree = make_almanac(tmp_path, "elsewhere/heron/docs/almanac")
+    (worktree.parents[1] / ".git").write_text("gitdir: /repo/.git/worktrees/heron\n")
     assert resolve_almanac(tmp_path) == tmp_path / "notes" / "almanac"
 
 

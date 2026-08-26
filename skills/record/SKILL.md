@@ -37,10 +37,10 @@ In order — stop at the first step that resolves:
 1. **`docs/almanac/README.md`.** The conventional location. If it exists, that is the
    almanac; do not look further.
 2. **Glob `**/almanac/README.md`**, then discard matches under `templates/`,
-   `.worktrees/`, `node_modules/`, `vendor/`, or any other checkout nested inside this
-   one. A bare directory-name match is not evidence of an almanac — **a template, an
-   example, or a sibling worktree's copy is not this repo's almanac**, and treating one
-   as the target means recording a fact where nobody will read it.
+   `node_modules/`, `vendor/`, or any other checkout nested inside this one. A bare
+   directory-name match is not evidence of an almanac — **a template, an example, or a
+   sibling worktree's copy is not this repo's almanac**, and treating one as the target
+   means recording a fact where nobody will read it.
 3. **Exactly one survivor → that is the almanac.** More than one, ask which. None, this
    repo has no almanac — say so and stop, rather than creating one as a side effect of
    recording.
@@ -104,6 +104,11 @@ The questions are the method, so they live here. **The answers are irreducibly
 repo-local, so they live in the almanac's `README.md`** — read its destinations table
 for where each category goes in _this_ repo. Do not guess a destination, and do not file
 into a directory you have not confirmed exists.
+
+If the category has no row at all, the table is incomplete — a gap in the README rather
+than permission to record here. Ask the operator where that category goes, and hand them
+the text you would have filed. Dropping the claim because the table came up short loses
+it exactly as thoroughly as filing it wrong.
 
 Question 1 is **intent vs. requirement**, and it is the one that blurs. An architecture
 note explains how a mechanism was _meant_ to work, and reading it changes nothing you
@@ -246,4 +251,5 @@ human can.
 - "A verify line would be nice but I can't think of one" — if the claim cannot be
   re-checked cheaply, reconsider whether it is a fact, an impression, or a rule.
 - "The README has no row for this, so the almanac is the closest fit" — a missing
-  destination is a gap in the README, not a licence to record. Say so and stop.
+  destination is a gap in the README, not a licence to record. Say so, then ask where it
+  goes; stopping without asking abandons the claim.

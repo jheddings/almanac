@@ -25,9 +25,9 @@ stop at the first step that resolves:
 1. **`docs/almanac/README.md`.** The conventional location. If it exists, that is the
    almanac; do not look further.
 2. **Glob `**/almanac/README.md`**, then discard matches under `templates/`,
-   `.worktrees/`, `node_modules/`, `vendor/`, or any other checkout nested inside this
-   one. A bare directory-name match is not evidence of an almanac — **a template, an
-   example, or a sibling worktree's copy is not this repo's almanac**.
+   `node_modules/`, `vendor/`, or any other checkout nested inside this one. A bare
+   directory-name match is not evidence of an almanac — **a template, an example, or a
+   sibling worktree's copy is not this repo's almanac**.
 3. **Exactly one survivor → that is the almanac.** More than one, ask which. None means
    the repository is not initialized; continue with the proposal below.
 
@@ -87,10 +87,15 @@ conventions in `CONTRIBUTING.md` or an instruction file, say so in the proposal 
 migrating them as separate follow-up work — never move someone's rules as a side effect
 of setup.
 
-Infer a destination only from files, directories, or services that actually exist. Omit
-a category whose destination cannot be established; never invent `docs/arch/`,
-`CONTRIBUTING.md`, or an issue tracker. Explain any omitted category so the operator can
-supply an answer before approving the file.
+Infer a destination only from files, directories, or services that actually exist, and
+never invent one — no `docs/arch/`, no `CONTRIBUTING.md`, no issue tracker this
+repository does not already use. Reuse is not invention: a destination established for
+one row is available to another.
+
+Ask the operator for any destination you cannot ground, and omit the row only if they
+have no answer. Say what the omission costs when you propose it: `record` reads a
+missing row as a hard stop, so an unanswered category becomes one a later agent can
+neither record nor file anywhere.
 
 Two further things go in that block. **The subject**, whenever the target is not a
 single repository — say what it is, because the contract's scope test reads against it
@@ -138,6 +143,9 @@ If `AGENTS.md` exists, match its structure and propose the smallest addition tha
 
 - `docs/almanac/` holds this repository's operating knowledge — durable facts and the
   rules it requires — one claim per file, indexed by filename;
+- that listing is the index and there is no other: a required convention is an entry
+  rather than a section of the instruction file, and nothing restates one there once it
+  is an entry;
 - list it at the start of a session, carry the titles, and load a body when one bears on
   what you are about to do;
 - grep it when behavior is unexpected, and consult it before silent or costly

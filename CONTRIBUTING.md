@@ -93,9 +93,9 @@ both.
 
 The conventional location is `docs/almanac/`, and it is not guaranteed. Skills resolve
 it in order: prefer `docs/almanac/README.md`, else glob `**/almanac/README.md` and
-discard matches under `templates/`, `.worktrees/`, `node_modules/`, `vendor/`, or any
-nested checkout; then **stop** if nothing survives, rather than creating a directory as
-a side effect of some other job.
+discard matches under `templates/`, `node_modules/`, `vendor/`, or any nested checkout;
+then **stop** if nothing survives, rather than creating a directory as a side effect of
+some other job.
 
 The exclusions are not hypothetical — **this repo trips the naive glob.** From the
 primary repo root, `**/almanac/README.md` matches four paths: the real almanac, the

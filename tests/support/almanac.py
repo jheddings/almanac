@@ -135,7 +135,7 @@ def platform_manifests() -> list[Path]:
 # it can be exercised against real trees. It is a test-only proxy for the prose: if the
 # two disagree, one of them is wrong, and the prose is the one that ships.
 
-RESOLUTION_EXCLUDED = ("templates", ".worktrees", "node_modules", "vendor")
+RESOLUTION_EXCLUDED = ("templates", "node_modules", "vendor")
 
 
 class AlmanacNotFound(Exception):
