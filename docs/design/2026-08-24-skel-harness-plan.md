@@ -4,6 +4,14 @@
 > superpowers:subagent-driven-development (recommended) or superpowers:executing-plans
 > to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
+> **Status: executed, and partly superseded.** The rig was built from this plan, then
+> two things in it were reversed. The mechanical scorer of Tasks 7 and 8 was removed —
+> it was wrong on two of four known cases on first contact and encoded judgment a person
+> makes faster from a diff. And the `skel-*` recipes of Task 10 became a `just` module,
+> so `just skel new` replaces `just skel-new`. Read
+> [the design](2026-08-24-skel-harness-design.md) for what the rig is now; this file
+> records how it was built.
+
 **Goal:** Build `skel/`, a portable fixture for testing whether an agent harness
 retrieves and applies almanac rules, plus a scorer that measures the same things every
 run.
