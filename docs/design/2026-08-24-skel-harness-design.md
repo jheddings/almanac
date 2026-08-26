@@ -223,16 +223,18 @@ verified rather than assumed: a resumed turn correctly answered a question about
 the previous turn had done.
 
 How to drive a harness is a row in `harnesses.toml`, so a harness stays named in one
-place. Claude can **name** its own session, so its transcript path is known rather than
-discovered. Codex assigns the ID: `codex exec resume --last` continues the newest
-session for the run's working directory, while transcript collection takes the newest
-date-partitioned rollout whose `session_meta.cwd` matches the run. That content check
-makes a concurrent Codex session in another workspace ineligible even when its file is
-newer. The manifest records the ID from the matching rollout rather than the rig's
-unrelated internal UUID. The commands go into the table verbatim — including Codex's
-automatic approval reviewer, which requests workspace-write without asking a managed
-account for a prohibited full-access mode — and are copied into every archive's
-manifest, so a reader knows what the agent was permitted to do.
+place. Claude can **name** its own session as a flag, so its transcript path is known
+rather than discovered. Cursor names it the other way: `agent create-chat` prints a
+UUID, which `first` and `resume` attach with `--resume`. Codex assigns the ID:
+`codex exec resume --last` continues the newest session for the run's working directory,
+while transcript collection takes the newest date-partitioned rollout whose
+`session_meta.cwd` matches the run. That content check makes a concurrent Codex session
+in another workspace ineligible even when its file is newer. The manifest records the ID
+from the matching rollout rather than the rig's unrelated internal UUID. The commands go
+into the table verbatim — including Codex's automatic approval reviewer, which requests
+workspace-write without asking a managed account for a prohibited full-access mode — and
+are copied into every archive's manifest, so a reader knows what the agent was permitted
+to do.
 
 Before returning success, the rig checks three structural prerequisites: `main` moved
 beyond the scaffold commit, the requested review exists in `main`, and a transcript

@@ -70,7 +70,13 @@ def _harness_version(harness: Harness) -> str | None:
 
 
 def _names_session(harness: Harness) -> bool:
-    return any("{session}" in part for part in harness.trial.first)
+    """Whether the harness supplied the session id that the transcript glob can use.
+
+    `create` prints the id; `{session}` in `first` passes it as a flag. Without either,
+    collection matches the run's cwd instead.
+    """
+    trial = harness.trial
+    return bool(trial.create) or any("{session}" in part for part in trial.first)
 
 
 def _transcript_metadata(path: Path) -> dict:
