@@ -1,6 +1,6 @@
 # Widening the almanac to carry rules
 
-**Status:** experiment, unmerged. Branch `feat/widened-almanac`, 2026-08-24.
+**Status:** merged as #28. See [Outcome](#outcome).
 
 ## The proposal
 
@@ -44,9 +44,22 @@ A fourth, already observed: every skill grew. The fact/rule decision, the title 
 and the `unauditable` verdict are method that did not exist before, and
 `tests/baselines.json` records the raised ceilings and by how much.
 
+## Outcome
+
+Merged as #28 on 2026-08-24, and the partial migration completed on 2026-08-25: Markdown
+wrapping, prose written outside the repo, and comment style are entries too, so
+`AGENTS.md` now carries the trigger and the mechanical checks and nothing an entry could
+hold. The two-halves comparison this doc set up was not run to a conclusion — the
+argument that ended it was that the strongest case for migrating, prose written outside
+the repository, was sitting in the half left behind: it fires at a nameable moment, and
+getting it wrong is invisible until the text is already posted.
+
+Cost 1 below is unchanged and permanent. Costs 2 and 3 are now live on the whole set
+rather than half of it, and nothing here measures them.
+
 ## Reverting
 
-The change is contained. Revert the branch, and restore the previous ceilings named in
-`tests/baselines.json` under `_raised`. The entries migrated out of `AGENTS.md` are
-verbatim moves; their content is recoverable from this branch's diff whichever way the
-experiment goes.
+Contained when this was written; no longer. Reverting now means reverting #28, #30, and
+#31, restoring the ceilings named in `tests/baselines.json`, and moving seven entries
+back into `AGENTS.md`. The entries migrated out of `AGENTS.md` are verbatim moves; their
+content is recoverable from this branch's diff whichever way the experiment goes.

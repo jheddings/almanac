@@ -61,40 +61,6 @@ The _procedures_ for recording and auditing are this plugin's own skills,
 `almanac:record` and `almanac:audit`. Consulting stays here on purpose: it is a trigger,
 and it has to work on tools that read this file but cannot load a skill.
 
-## Conventions
-
-Commits, branches, pull requests, and worktrees are almanac entries —
-`ls docs/almanac/`. What stays here is what has no nameable moment to fire at.
-
-### Markdown
-
-Repository `.md` files are wrapped by tooling: `.prettierrc.json` sets
-`proseWrap: always` at `printWidth: 88`, enforced by `just check` and the prettier
-pre-commit hook. Do not hand-wrap or hand-align prose in them — run `just tidy` and let
-prettier own the line breaks.
-
-Prose written _outside_ the repo — PR descriptions, issue bodies, review comments —
-never passes through prettier, and GitHub renders its line breaks literally rather than
-reflowing them. Hard-wrapping there produces visibly ragged text. Write those paragraphs
-as one continuous line per paragraph and let the browser wrap.
-
-Commit messages are the exception, and the rule for them is an entry —
-`commit-messages-use-conventional-commit-format`.
-
-### Comments and docstrings
-
-Write comments that describe how the code works now. State the mechanism, the constraint
-it satisfies, or the failure it prevents, as a present-tense fact about the code in
-front of the reader.
-
-Leave out comparisons to an earlier implementation, justifications framed as history,
-and references to other repositories. A reader six months from now has only this code; a
-comment about what the code is not, or about how some other project does it, is
-something they have to decode before they can use it. Rationale that is genuinely about
-a tradeoff belongs in the pull request or a design doc under
-[`docs/design/`](docs/design/), where it is dated and can be cleared out once it stops
-mattering.
-
 ## Checks
 
 `just setup` syncs the virtual environment and installs the git hooks. `just check` runs
@@ -102,9 +68,6 @@ the static checks — `prettier --check .`, `skills-ref validate` per skill, and
 manifest and template-drift checks. `just test` runs the structural suite in
 [`tests/`](tests/), and `just preflight` runs both. `just tidy` formats. Recipes that
 touch Python sync the environment first.
-
-Prettier uses `proseWrap: always` at 88 columns, so it reflows Markdown prose — expect
-it to rewrap paragraphs you edit.
 
 The suite is deterministic and free, so run it before proposing a change to a skill, the
 template, or the almanac. Note the prose ratchet in `tests/baselines.json`: editing a
