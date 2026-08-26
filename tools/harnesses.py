@@ -47,6 +47,11 @@ class Trial:
     transcript: str
     create: tuple[str, ...] = ()
     version: tuple[str, ...] = ()
+    # Environment every command in the run inherits, as name/template pairs. `{home}`
+    # expands to a throwaway configuration directory inside the run's workspace, which
+    # is how a harness is kept from reading the skills and plugins installed on the
+    # host.
+    env: tuple[tuple[str, str], ...] = ()
 
 
 @dataclass(frozen=True)
@@ -82,6 +87,7 @@ def _harness(name: str, row: dict) -> Harness:
             transcript=raw_trial["transcript"],
             create=tuple(raw_trial.get("create", ())),
             version=tuple(raw_trial.get("version", ())),
+            env=tuple(sorted(raw_trial.get("env", {}).items())),
         )
         if raw_trial
         else None

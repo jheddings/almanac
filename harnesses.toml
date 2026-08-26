@@ -57,6 +57,22 @@ resume = [
 transcript = "~/.claude/projects/*/{session}.jsonl"
 version = ["claude", "--version"]
 
+# `{home}` is a throwaway directory inside the run's workspace. Redirecting the
+# configuration directory is what keeps the skills, plugins, and instruction files
+# installed on the host out of a trial — the throwaway *working* directory excludes
+# only what sits above the fixture in the tree.
+#
+# Name a variable the harness actually reads. One it ignores sets nothing, fails
+# nothing, and reads afterwards exactly like isolation that worked; the manifest's
+# `config_home_used` is what catches that, and it is worth checking on the first run
+# after adding a row here.
+#
+# A harness that keeps credentials in the same directory it keeps skills cannot be
+# redirected this way without losing its login. That is a per-harness problem and it
+# is solved in the row, not here.
+[claude.trial.env]
+CLAUDE_CONFIG_DIR = "{home}"
+
 [cursor]
 manifest = ".cursor-plugin/plugin.json"
 marketplace = ".cursor-plugin/marketplace.json"

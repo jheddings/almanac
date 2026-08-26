@@ -514,11 +514,15 @@ def _manifest_of(archive):
         return json.loads(bundle.read(name))
 
 
-def _manifest_of_failed(stub, out):
-    """The manifest from a run that failed validation but still archived."""
+def _failed_archive(stub, out):
+    """The archive from a run that failed validation but still produced evidence."""
     with pytest.raises(trial.TrialError):
         trial.run(stub, out, "2026-08-26")
-    return _manifest_of(out / "2026-08-26-claude.zip")
+    return out / "2026-08-26-claude.zip"
+
+
+def _manifest_of_failed(stub, out):
+    return _manifest_of(_failed_archive(stub, out))
 
 
 def test_a_passing_trial_still_says_which_prompt_did_the_work(tmp_path, claude):
@@ -584,3 +588,116 @@ def test_uncommitted_work_is_visible_as_well(tmp_path, claude):
 
     assert manifest["results"][0]["commits"] == 1
     assert manifest["results"][0]["dirty"] == 1
+
+
+def _homed_harness(claude, tmp_path, script, env, create=()):
+    return harnesses.Harness(
+        name="claude",
+        manifest=claude.manifest,
+        trial=harnesses.Trial(
+            create=create,
+            first=("sh", "-c", script),
+            resume=("sh", "-c", "true"),
+            transcript=str(tmp_path / "{session}.jsonl"),
+            env=env,
+        ),
+    )
+
+
+def _read_from_failed(claude, tmp_path, script, env, name, create=()):
+    stub = _homed_harness(claude, tmp_path, script, env, create)
+    archive = _failed_archive(stub, tmp_path / "out")
+    with zipfile.ZipFile(archive) as bundle:
+        found = next(n for n in bundle.namelist() if n.endswith(name))
+        return bundle.read(found).decode().strip()
+
+
+def test_a_declared_home_reaches_the_harness_and_exists(tmp_path, claude):
+    """A harness cannot write its configuration into a directory that is not there."""
+    seen = _read_from_failed(
+        claude,
+        tmp_path,
+        'test -d "$AGENT_HOME" && echo "$AGENT_HOME" > home.txt',
+        env=(("AGENT_HOME", "{home}"),),
+        name="home.txt",
+    )
+    assert seen, "the harness saw no home"
+
+
+def test_the_hosts_own_configuration_does_not_reach_the_run(
+    tmp_path, claude, monkeypatch
+):
+    """One trial loaded three skills from the host's plugin cache and stalled on one.
+
+    The ambient value is what a trial inherits today, so overriding it is the whole
+    point: a variable that merely got set when absent would change nothing here.
+    """
+    monkeypatch.setenv("AGENT_HOME", "/Users/someone/.agent")
+
+    seen = _read_from_failed(
+        claude,
+        tmp_path,
+        'echo "$AGENT_HOME" > home.txt',
+        env=(("AGENT_HOME", "{home}"),),
+        name="home.txt",
+    )
+    assert seen != "/Users/someone/.agent", "the host's configuration reached the run"
+
+
+def test_create_runs_under_the_same_home_as_the_prompts(tmp_path, claude):
+    """`create` opens the session, so it reads the same skills and plugins as the rest.
+
+    Isolating only the prompts would leave the one command that establishes the
+    conversation reading the host's configuration.
+    """
+    seen = _read_from_failed(
+        claude,
+        tmp_path,
+        "true",
+        env=(("AGENT_HOME", "{home}"),),
+        name="create-home.txt",
+        create=("sh", "-c", 'echo "$AGENT_HOME" > create-home.txt; echo sess-1'),
+    )
+    assert seen.endswith(trial.AGENT_HOME), seen
+
+
+def test_the_manifest_records_the_redirect_without_the_temp_path(tmp_path, claude):
+    """The template says what was isolated; the expansion says only where it ran."""
+    stub = _homed_harness(claude, tmp_path, "true", env=(("AGENT_HOME", "{home}"),))
+
+    manifest = _manifest_of_failed(stub, tmp_path / "out")
+
+    assert manifest["env"] == {"AGENT_HOME": "{home}"}
+
+
+def test_a_redirect_the_harness_ignored_is_visible(tmp_path, claude):
+    """A variable a harness does not read is a silent no-op, and reads as isolation.
+
+    Nothing under the throwaway home means the harness kept its configuration
+    somewhere else, which is the failure this record exists to make loud.
+    """
+    ignored = _homed_harness(
+        claude, tmp_path, "true", env=(("NOT_A_REAL_HOME", "{home}"),)
+    )
+    honoured = _homed_harness(
+        claude,
+        tmp_path,
+        'mkdir -p "$AGENT_HOME/skills" && echo x > "$AGENT_HOME/skills/s.md"',
+        env=(("AGENT_HOME", "{home}"),),
+    )
+
+    blind = _manifest_of_failed(ignored, tmp_path / "out")
+    seeing = _manifest_of_failed(honoured, tmp_path / "out2")
+
+    assert blind["config_home_used"] is False
+    assert seeing["config_home_used"] is True
+
+
+def test_a_harness_declaring_no_env_records_none(tmp_path, claude):
+    recorder = tmp_path / "calls.txt"
+    stub = _stub_harness(claude, recorder)
+
+    manifest = _manifest_of(trial.run(stub, tmp_path / "out", "2026-08-26"))
+
+    assert manifest["env"] == {}
+    assert manifest["config_home_used"] is None
