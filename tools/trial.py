@@ -164,7 +164,9 @@ def _write_manifest(harness, run_dir, session, stamp, prompts, results, transcri
                 "harness": harness.name,
                 "version": _harness_version(harness),
                 "stamp": stamp,
-                "session": session,
+                "session": session
+                if any("{session}" in part for part in harness.trial.first)
+                else None,
                 "prompts": list(prompts),
                 "results": results,
                 "commands": {

@@ -23,12 +23,44 @@ def claude():
     return harnesses.get("claude")
 
 
+@pytest.fixture
+def codex():
+    return harnesses.get("codex")
+
+
 def test_the_declared_harness_can_be_driven(claude):
     """Guard the guard: without a trial block the rest of this suite is vacuous."""
     assert claude.trial is not None
     assert "{session}" in " ".join(claude.trial.first)
     assert "{session}" in " ".join(claude.trial.resume)
     assert "{session}" in claude.trial.transcript
+
+
+def test_codex_can_be_driven_unattended_in_one_session(codex):
+    """Codex cannot name a new session, so cwd-scoped `--last` continues it."""
+    assert codex.trial is not None
+    assert codex.trial.first[:2] == ("codex", "exec")
+    assert codex.trial.resume[:3] == ("codex", "exec", "resume")
+    assert "--last" in codex.trial.resume
+    assert "--dangerously-bypass-approvals-and-sandbox" in codex.trial.first
+    assert "--dangerously-bypass-approvals-and-sandbox" in codex.trial.resume
+    assert codex.trial.version == ("codex", "--version")
+
+
+def test_codex_transcript_glob_reaches_date_partitioned_rollouts(
+    tmp_path, monkeypatch, codex
+):
+    """Codex stores rollouts below year/month/day, deeper than a `**` glob reaches."""
+    rollout = (
+        tmp_path
+        / ".codex/sessions/2026/08/26"
+        / "rollout-2026-08-26T10-00-00-session.jsonl"
+    )
+    rollout.parent.mkdir(parents=True)
+    rollout.write_text("{}\n")
+    monkeypatch.setenv("HOME", str(tmp_path))
+
+    assert trial._find_transcript(codex, "unused") == rollout
 
 
 def test_a_harness_without_a_trial_block_says_so(tmp_path, monkeypatch):
@@ -51,14 +83,15 @@ def test_an_unknown_prompt_is_an_error():
         trial.prompt_text("99-does-not-exist", "2026-08-26")
 
 
-def _stub_harness(claude, recorder):
+def _stub_harness(base, recorder, *, names_session=True):
     """A harness whose commands are `true`, so the plumbing runs without an agent."""
+    marker = " # {session}" if names_session else ""
     return harnesses.Harness(
-        name="claude",
-        manifest=claude.manifest,
+        name=base.name,
+        manifest=base.manifest,
         trial=harnesses.Trial(
-            first=("sh", "-c", f"echo first >> {recorder}"),
-            resume=("sh", "-c", f"echo resume >> {recorder}"),
+            first=("sh", "-c", f"echo first >> {recorder}{marker}"),
+            resume=("sh", "-c", f"echo resume >> {recorder}{marker}"),
             transcript=str(Path(recorder).parent / "{session}.jsonl"),
             version=("sh", "-c", "echo stub-version"),
         ),
@@ -108,6 +141,19 @@ def test_the_manifest_records_what_makes_a_result_interpretable(tmp_path, claude
     # rather than summarised.
     assert manifest["commands"]["first"] == list(stub.trial.first)
     assert manifest["fixture_entries"], "the entry set is part of the result"
+
+
+def test_the_manifest_does_not_invent_a_codex_session_id(tmp_path, codex):
+    """The rig's UUID is not the ID Codex assigns when it opens the session."""
+    recorder = tmp_path / "calls.txt"
+    stub = _stub_harness(codex, recorder, names_session=False)
+
+    archive = trial.run(stub, tmp_path / "out", "2026-08-26")
+    with zipfile.ZipFile(archive) as bundle:
+        name = next(n for n in bundle.namelist() if n.endswith("manifest.json"))
+        manifest = json.loads(bundle.read(name))
+
+    assert manifest["session"] is None
 
 
 def test_a_failing_prompt_stops_the_run_but_still_archives(tmp_path, claude):

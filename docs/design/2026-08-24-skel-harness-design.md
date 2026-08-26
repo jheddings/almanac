@@ -223,12 +223,16 @@ verified rather than assumed: a resumed turn correctly answered a question about
 the previous turn had done.
 
 How to drive a harness is a row in `harnesses.toml`, so a harness stays named in one
-place. Claude is the only one that can **name** its own session, so its transcript path
-is known rather than discovered; the others must find the newest file and hope nothing
-else was running. The commands go into the table verbatim — including
-`--permission-mode bypassPermissions`, which is what makes a headless run possible — and
-are copied into every archive's manifest, so a reader knows what the agent was permitted
-to do.
+place. Claude can **name** its own session, so its transcript path is known rather than
+discovered. Codex assigns the ID: `codex exec resume --last` continues the newest
+session for the run's working directory, while transcript collection takes the newest
+date-partitioned rollout file. Do not run another Codex session while that collection
+is happening; the transcript lookup is global even though resume is not. Its manifest
+leaves `session` null rather than presenting the rig's unrelated internal UUID as the
+one Codex assigned; the assigned ID remains in the archived rollout. The commands go
+into the table verbatim — including each harness's permission bypass, which makes a
+headless run possible — and are copied into every archive's manifest, so a reader knows
+what the agent was permitted to do.
 
 **Prompts run in name order, not the order given.** The review is numbered 99 because it
 asks what the almanac changed about the work, which is only answerable once the work has
