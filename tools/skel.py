@@ -12,6 +12,7 @@ any heuristic worth maintaining.
 
 from __future__ import annotations
 
+import os
 import shutil
 import subprocess
 from pathlib import Path
@@ -42,8 +43,37 @@ git rev-parse --show-toplevel >> "$(git rev-parse --git-common-dir)/{log}" 2>/de
 """
 
 
+# Git variables that say *which* repository to act on, or who is acting. `git -C` does
+# not override them — the environment wins — so a run scaffolded from inside a git hook
+# would be staged and committed into the enclosing repository instead. Anything git
+# needs to run at all (where its helpers live, how it reaches a remote) is kept.
+GIT_ENV_KEEP = frozenset(
+    {
+        "GIT_EXEC_PATH",
+        "GIT_SSH",
+        "GIT_SSH_COMMAND",
+        "GIT_ASKPASS",
+        "GIT_TERMINAL_PROMPT",
+    }
+)
+
+
 class SkelError(Exception):
     pass
+
+
+def clean_env() -> dict[str, str]:
+    """The ambient environment with git's repository and identity variables removed.
+
+    An allowlist rather than a list of the known offenders: `GIT_DIR`, `GIT_INDEX_FILE`,
+    and `GIT_AUTHOR_NAME` are the ones that bite today, and a variable added by a later
+    git could reintroduce exactly this bug without anyone editing this file.
+    """
+    return {
+        key: value
+        for key, value in os.environ.items()
+        if not key.startswith("GIT_") or key in GIT_ENV_KEEP
+    }
 
 
 def _git(run: Path, *args: str) -> str:
@@ -54,7 +84,10 @@ def _git(run: Path, *args: str) -> str:
     wrote to stderr.
     """
     result = subprocess.run(
-        ["git", "-C", str(run), *args], capture_output=True, text=True
+        ["git", "-C", str(run), *args],
+        capture_output=True,
+        text=True,
+        env=clean_env(),
     )
     if result.returncode != 0:
         detail = result.stderr.strip() or result.stdout.strip() or "no output"

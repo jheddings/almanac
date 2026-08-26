@@ -113,6 +113,10 @@ def _drive(harness, run_dir, session, prompts, texts) -> list[dict]:
 
     Output is not captured: a trial takes minutes, and watching it is the only progress
     there is. What the harness did is recorded in the transcript, not in stdout.
+
+    The harness inherits a scrubbed environment for the same reason the scaffold uses
+    one: an agent that commits under a leaked `GIT_DIR` writes its work into whatever
+    repository launched the trial, and the run it was asked to work in stays empty.
     """
     results = []
     for index, (name, text) in enumerate(zip(prompts, texts)):
@@ -120,7 +124,9 @@ def _drive(harness, run_dir, session, prompts, texts) -> list[dict]:
         command = [part.format(session=session, prompt=text) for part in template]
         print(f"\n── prompt {index + 1}/{len(prompts)}: {name}\n", flush=True)
         try:
-            done = subprocess.run(command, cwd=run_dir, timeout=PROMPT_TIMEOUT)
+            done = subprocess.run(
+                command, cwd=run_dir, timeout=PROMPT_TIMEOUT, env=skel.clean_env()
+            )
             status = done.returncode
         except subprocess.TimeoutExpired:
             status = None
