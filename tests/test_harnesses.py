@@ -27,3 +27,49 @@ def test_table_covers_every_plugin_directory():
     assert declared == on_disk, (
         f"table declares {sorted(declared)}, filesystem has {sorted(on_disk)}"
     )
+
+
+def test_trial_create_is_optional():
+    """Claude names the session as a flag; a missing create must not be an error."""
+    loaded = harnesses._harness(
+        "paper",
+        {
+            "manifest": "harnesses.toml",
+            "trial": {
+                "first": ["echo", "{prompt}"],
+                "resume": ["echo", "{prompt}"],
+                "transcript": "{session}.jsonl",
+            },
+        },
+    )
+    assert loaded.trial is not None
+    assert loaded.trial.create == ()
+
+
+def test_trial_create_is_loaded_when_present():
+    loaded = harnesses._harness(
+        "paper",
+        {
+            "manifest": "harnesses.toml",
+            "trial": {
+                "create": ["agent", "create-chat"],
+                "first": ["echo", "{session}"],
+                "resume": ["echo", "{session}"],
+                "transcript": "{session}.jsonl",
+            },
+        },
+    )
+    assert loaded.trial.create == ("agent", "create-chat")
+
+
+def test_trial_required_fields_stay_required():
+    """create is the new optional; first, resume, and transcript are not."""
+    row = {
+        "manifest": "harnesses.toml",
+        "trial": {
+            "resume": ["echo", "{prompt}"],
+            "transcript": "{session}.jsonl",
+        },
+    }
+    with pytest.raises(KeyError, match="first"):
+        harnesses._harness("paper", row)
