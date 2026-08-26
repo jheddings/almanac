@@ -91,18 +91,20 @@ path_keys = ["skills"]
 # Codex assigns a new session's ID itself. `--last` resumes the newest session for the
 # current working directory, which keeps the prompts in one conversation without
 # discovering the ID between commands.
+# `--approve-for-me` selects workspace-write itself; pairing it with `--sandbox` is a
+# command-line error.
 first = [
     "codex",
+    "--approve-for-me",
     "exec",
-    "--dangerously-bypass-approvals-and-sandbox",
     "{prompt}",
 ]
 resume = [
     "codex",
+    "--approve-for-me",
     "exec",
     "resume",
     "--last",
-    "--dangerously-bypass-approvals-and-sandbox",
     "{prompt}",
 ]
 # Rollouts are partitioned by year/month/day. Plain `glob` does not make `**`

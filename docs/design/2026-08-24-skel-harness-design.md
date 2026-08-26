@@ -226,13 +226,19 @@ How to drive a harness is a row in `harnesses.toml`, so a harness stays named in
 place. Claude can **name** its own session, so its transcript path is known rather than
 discovered. Codex assigns the ID: `codex exec resume --last` continues the newest
 session for the run's working directory, while transcript collection takes the newest
-date-partitioned rollout file. Do not run another Codex session while that collection
-is happening; the transcript lookup is global even though resume is not. Its manifest
-leaves `session` null rather than presenting the rig's unrelated internal UUID as the
-one Codex assigned; the assigned ID remains in the archived rollout. The commands go
-into the table verbatim — including each harness's permission bypass, which makes a
-headless run possible — and are copied into every archive's manifest, so a reader knows
-what the agent was permitted to do.
+date-partitioned rollout whose `session_meta.cwd` matches the run. That content check
+makes a concurrent Codex session in another workspace ineligible even when its file is
+newer. The manifest records the ID from the matching rollout rather than the rig's
+unrelated internal UUID. The commands go into the table verbatim — including Codex's
+automatic approval reviewer, which requests workspace-write without asking a managed
+account for a prohibited full-access mode — and are copied into every archive's
+manifest, so a reader knows what the agent was permitted to do.
+
+Before returning success, the rig checks three structural prerequisites: `main` moved
+beyond the scaffold commit, the requested review exists in `main`, and a transcript
+matched the trial workspace. It still archives the run before reporting a failure, so
+the evidence survives. These checks establish that there is something to read; they do
+not judge whether the agent followed a rule correctly.
 
 **Prompts run in name order, not the order given.** The review is numbered 99 because it
 asks what the almanac changed about the work, which is only answerable once the work has
