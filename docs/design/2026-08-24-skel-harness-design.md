@@ -18,8 +18,8 @@ What they established:
 - **Two of six read the whole directory up front** rather than by title, reaching the
   same answers while paying the cost the design exists to avoid. One said so against
   itself: "the opposite of the retrieval economy the directory is built on, and it would
-  not scale." At six entries that is free. The economy is unproven at forty, and this is
-  the finding least likely to improve on its own.
+  not scale." At seven entries that is free. The economy is unproven at forty, and this
+  is the finding least likely to improve on its own.
 - **The consult-on-surprise trigger fired, once, verbatim.** One run hit a sandbox that
   made `.git` read-only, said so, and grepped the almanac with the exact command the
   contract specifies before continuing. It is the only run where anything went wrong,
@@ -44,8 +44,9 @@ commands run from memory; one run silently edited `AGENTS.md`, moving the instru
 between trials, and it was caught only by diffing. A fifth trial run the same way would
 not get the same scrutiny.
 
-So: a fixture that is trivial to stand up on any agent platform, and a scorer that
-measures the same things every time.
+So: a fixture that is trivial to stand up on any agent platform, and a runner that
+presents it the same way every time — leaving what the agent did to be read from the
+diff, by a person. See [No scoring](#no-scoring) for why the reading stays manual.
 
 ## Non-goals
 
@@ -71,14 +72,16 @@ skel/                      the fixture, checked in complete
 ├── .devcontainer/
 ├── AGENTS.md              the trigger; restates no rule
 ├── README.md  pyproject.toml  .justfile  .gitignore
-├── docs/almanac/          contract + three rule entries
+├── docs/almanac/          contract + seven rule entries
 └── src/skinner/  tests/
 
 prompts/                   rig: never inside the fixture
 ├── 01-first-feature.md
-├── 02-long-session.md
-└── 03-urgent.md
-tools/skel.py              rig
+├── 02-planned-feature.md
+└── 99-almanac-review.md
+tools/skel.py              rig: scaffold a run
+tools/trial.py             rig: drive a harness through it, and archive
+tools/skel.just            rig: the `just skel` recipes
 runs/                      gitignored output
 ```
 
@@ -92,17 +95,19 @@ runs here. The skills' exclusion list needs no change.
 ## The fixture
 
 A minimal Python project in a "coming soon" state: a package that imports, a task
-runner, and an almanac holding four `kind: rule` entries and no facts. Three are real
-conventions — branch naming, commit format, session-scoped worktrees. The fourth is a
-**canary**: a banner line every new source module must open with.
+runner, and an almanac holding seven `kind: rule` entries and no facts. Four are
+ordinary conventions — branch naming, commit format, session-scoped worktrees, and what
+a merge commit to `main` explains. One is a **canary**: a banner line every new source
+module must open with. The remaining two carry the license policy, described under
+[The trap](#the-trap).
 
 `AGENTS.md` carries the trigger to read the listing and deliberately restates no rule,
 so an agent that skips the almanac has nowhere else to learn them.
 
-The canary is what makes retrieval mechanically scoreable. Every other rule can be
-reached by prior or imitation — all four trials produced conventional commits, and a
-model would do that unprompted — so a hit proves nothing about the almanac. No model has
-a prior for this repository's banner text, and the fixture deliberately ships no example
+The canary is what makes retrieval legible in the diff. Every other rule can be reached
+by prior or imitation — every trial so far produced conventional commits, and a model
+would do that unprompted — so a hit proves nothing about the almanac. No model has a
+prior for this repository's banner text, and the fixture deliberately ships no example
 of it: the one existing source file is exempt by the rule's own wording, so the
 convention cannot be copied from a neighbour. It can only come from the entry.
 
@@ -159,9 +164,9 @@ theme becomes, the truer that gets: a fixture named `bob` inside a Bobiverse rig
 announces itself.
 
 The rig has no such constraint. **Replicative drift** — the in-universe term for how
-each copy of an original diverges from it — is exactly what the scorer measures, and it
-is the vocabulary to use. `moot`, where the copies convene to compare notes, is reserved
-for the run-comparison command if one gets built.
+each copy of an original diverges from it — is exactly what a trial is looking for, and
+it is the vocabulary to use. `moot`, where the copies convene to compare notes, is
+reserved for the run-comparison command if one gets built.
 
 **Inside the fixture, keep the theme to the name and nothing else.** The tells to avoid
 are specific: an almanac entry that references the experiment, a prompt that mentions
@@ -179,6 +184,7 @@ the test that keeps preferences out of an almanac in the first place.
 just skel new <label> [out]        a standalone git repo at <out>/<date>-<label>/
 just skel prompt [name]            print a prompt to paste
 just skel run <label> [out] [name] new + prompt
+just skel trial <harness> [out]    drive a harness through it unattended
 just skel clean                    remove runs/
 ```
 
@@ -189,13 +195,14 @@ reads. Module recipes run from the directory holding the module file, so the mod
 its working directory back to the repo root.
 
 `<label>` names the run and is conventionally the harness under test — `claude`,
-`codex`, `cursor`. `[prompt]` selects a file from `prompts/` and defaults to
+`codex`, `cursor`. `[name]` selects a file from `prompts/` and defaults to
 `01-first-feature`.
 
 `new` produces a **standalone repository**, not a copy inside this one: `git init`, one
-conventional initial commit, no remote, plus the `post-checkout` hook described under
-Scoring. That is what makes the fixture portable to cloud platforms, which clone a repo
-rather than opening a subfolder — push it anywhere and point an agent at it.
+conventional initial commit, no remote, plus the `post-checkout` hook that records each
+worktree's name at creation, because `git worktree remove` erases it. That is what makes
+the fixture portable to cloud platforms, which clone a repo rather than opening a
+subfolder — push it anywhere and point an agent at it.
 
 Pushing a run to a remote leaves the hook behind, since hooks do not travel with a
 clone. A run executed on a cloud platform therefore reports its worktree name as

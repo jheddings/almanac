@@ -7,6 +7,7 @@ and turns their results into output and an exit code.
 
 from __future__ import annotations
 
+import datetime
 import subprocess
 import zipfile
 from pathlib import Path
@@ -170,8 +171,6 @@ def inherited_instructions(run: Path) -> str:
 )
 def skel_new_cmd(label, stamp, out):
     """Scaffold a harness-test run as a standalone repository."""
-    import datetime
-
     stamp = stamp or datetime.date.today().isoformat()
     run = skel.new_run(skel.FIXTURE, out or skel.RUNS, label, stamp)
     click.echo(f"run ready: {run}")
@@ -201,12 +200,12 @@ def skel_prompt_cmd(name):
     "--prompt",
     "prompts",
     multiple=True,
-    help="Prompt to run, repeatable and ordered. Defaults to the full sequence.",
+    help="Prompt to run, repeatable. Runs in name order whatever order these "
+    "are given in, so the review at 99 always lands last. Defaults to the full "
+    "sequence.",
 )
 def skel_trial_cmd(harness, stamp, out, prompts):
     """Drive a harness through the fixture unattended and archive the evidence."""
-    import datetime
-
     stamp = stamp or datetime.date.today().isoformat()
     entry = harnesses.get(harness)
     archive = trial.run(

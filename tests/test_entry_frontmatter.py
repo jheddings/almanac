@@ -73,16 +73,24 @@ def test_entry_frontmatter_conforms(path):
     assert check_entry_frontmatter(data) == [], f"{path.name}"
 
 
+def check_entry_filename(stem: str) -> list[str]:
+    """Return a list of filename violations. Empty means conforming."""
+    problems = []
+    if stem != stem.lower():
+        problems.append("filename must be lowercase")
+    if " " in stem:
+        problems.append("filename must be kebab-case")
+    if "_" in stem:
+        problems.append("filename must be kebab-case, not snake")
+    if len(stem.split("-")) < 3:
+        problems.append("a slug this short is naming a topic, not stating a claim")
+    return problems
+
+
 def test_entries_are_one_fact_per_file():
     """Filenames state claims, so a topic-shaped name is a smell worth catching."""
     for path in almanac.entry_paths():
-        stem = path.stem
-        assert stem == stem.lower(), f"{path.name}: filename must be lowercase"
-        assert " " not in stem, f"{path.name}: filename must be kebab-case"
-        assert "_" not in stem, f"{path.name}: filename must be kebab-case, not snake"
-        assert len(stem.split("-")) >= 3, (
-            f"{path.name}: a slug this short is naming a topic, not stating a claim"
-        )
+        assert check_entry_filename(path.stem) == [], path.name
 
 
 # ---- The checker itself must be able to fail -------------------------------------
@@ -169,6 +177,18 @@ def test_fixture_entry_frontmatter_conforms(path):
     assert check_entry_frontmatter(data) == [], f"{path.name}"
 
 
+@pytest.mark.parametrize(
+    "path", almanac.fixture_entry_paths(), ids=lambda p: p.name if p else "none"
+)
+def test_fixture_entries_are_one_fact_per_file(path):
+    """The fixture's filenames are the index an agent under test reads first.
+
+    A topic-shaped name there would misrepresent the contract the trial is measuring,
+    so the fixture is held to the same slug rule as this repo's own entries.
+    """
+    assert check_entry_filename(path.stem) == [], path.name
+
+
 def test_the_fixture_carries_entries():
-    """Guard the guard: an empty glob would make the check above vacuous."""
+    """Guard the guard: an empty glob would make the checks above vacuous."""
     assert almanac.fixture_entry_paths()

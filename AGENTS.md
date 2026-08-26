@@ -13,12 +13,14 @@ deliberately are not, and an almanac exists to be readable by whatever agent sho
 next. [README.md](README.md) states the design positions and
 [CONTRIBUTING.md](CONTRIBUTING.md) the conventions; read both before changing a skill.
 
-Two files are easy to confuse.
+Three files are easy to confuse.
 [`templates/almanac/README.md`](templates/almanac/README.md) is the **canonical**
 contract text that adopting repos copy.
-[`docs/almanac/README.md`](docs/almanac/README.md) is _this_ repo's live almanac and an
-instance of that template — identical outside the `<!-- almanac:local -->` block. Edit
-the template first, port the change, then run `just drift`.
+[`docs/almanac/README.md`](docs/almanac/README.md) is _this_ repo's live almanac, and
+[`skel/docs/almanac/README.md`](skel/docs/almanac/README.md) is the harness-test
+fixture's — both are instances of that template, identical to it outside the
+`<!-- almanac:local -->` block. Edit the template first, port the change to **both**
+instances, then run `just drift`, which checks every one of them.
 
 ## The almanac
 

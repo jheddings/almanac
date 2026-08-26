@@ -9,6 +9,7 @@ archive stays interpretable.
 from __future__ import annotations
 
 import json
+import tempfile
 import zipfile
 from pathlib import Path
 
@@ -130,29 +131,61 @@ def test_a_failing_prompt_stops_the_run_but_still_archives(tmp_path, claude):
     assert manifest["transcript"] is None
 
 
-def test_the_workspace_is_cleaned_up(tmp_path, claude):
-    """The run is a throwaway; only the archive survives it."""
+def test_the_workspace_is_cleaned_up(tmp_path, claude, monkeypatch):
+    """The run is a throwaway; only the archive survives it.
+
+    The workspace this run made is captured as it is created, rather than globbing the
+    temp directory for a name-shaped match: that would pass vacuously wherever `TMPDIR`
+    is not `/tmp`, and fail whenever a real trial happened to be running alongside the
+    suite.
+    """
     recorder = tmp_path / "calls.txt"
     stub = _stub_harness(claude, recorder)
+
+    made = []
+    real_mkdtemp = tempfile.mkdtemp
+    monkeypatch.setattr(
+        tempfile, "mkdtemp", lambda **kw: made.append(real_mkdtemp(**kw)) or made[-1]
+    )
 
     archive = trial.run(stub, tmp_path / "out", "2026-08-26")
 
     assert archive.is_file()
-    leftovers = list(Path("/tmp").glob("skel-trial-claude-*"))
-    assert not leftovers, leftovers
+    assert made, "the run did not go through a temporary workspace"
+    assert not [w for w in made if Path(w).exists()], made
 
 
 def test_the_archive_leaves_out_what_is_reproducible(tmp_path, claude):
-    """One trial's virtualenv came to 85MB against a 4MB repository."""
-    recorder = tmp_path / "calls.txt"
-    stub = _stub_harness(claude, recorder)
+    """One trial's virtualenv came to 85MB against a 4MB repository.
 
-    def plant(_run, _out, _stamp, prompts=()):
-        pass
+    The stub plants both excluded directories, because the fixture ships neither: an
+    assertion that they are absent from an archive that could never have held them
+    holds no matter what `ARCHIVE_EXCLUDE` says.
+    """
+    stub = harnesses.Harness(
+        name="claude",
+        manifest=claude.manifest,
+        trial=harnesses.Trial(
+            first=(
+                "sh",
+                "-c",
+                "mkdir -p .venv/lib src/skinner/__pycache__ "
+                "&& echo big > .venv/lib/payload "
+                "&& echo cached > src/skinner/__pycache__/mod.pyc "
+                "&& echo kept > src/skinner/real.py",
+            ),
+            resume=("sh", "-c", "true"),
+            transcript=str(tmp_path / "{session}.jsonl"),
+        ),
+    )
 
     archive = trial.run(stub, tmp_path / "out", "2026-08-26")
     names = zipfile.ZipFile(archive).namelist()
+
     assert not [n for n in names if "/.venv/" in n or "__pycache__" in n], names
+    assert any(n.endswith("src/skinner/real.py") for n in names), (
+        "the stub planted nothing, so the exclusion was never exercised"
+    )
 
 
 def test_the_manifest_counts_entries_not_the_contract(tmp_path, claude):
