@@ -1,15 +1,18 @@
 ---
 name: record
 description: >-
-    Use when you have just finished being surprised by this repository — its code, its
-    CI, its tooling, or the agent harness you are running under — a debugging session
-    that ended in "oh, that's why," a green build or passing suite that concealed a real
-    failure, a tool that behaved differently than its documentation claims, or the
-    discovery that an existing almanac entry is wrong. Also use when a convention
-    becomes binding here, or when you find one living where an agent will meet it too
-    late to act on. Also use on an explicit request to "record this in the almanac",
-    "add an almanac entry", "write down this gotcha", or "make sure we don't learn this
-    again".
+    Use when this repository has just taught you something a future agent must not
+    re-derive. Either of two moments qualifies. You have finished being surprised by it
+    — its code, its CI, its tooling, or the agent harness you are running under — a
+    debugging session that ended in "oh, that's why," a green build or passing suite
+    that concealed a real failure, a tool that behaved differently than its
+    documentation claims, or the discovery that an existing almanac entry is wrong. Or a
+    convention has become binding here — a decision about commits, branches, reviews,
+    worktrees, or where work happens that everyone is now expected to follow, including
+    one you find living where an agent will meet it too late to act on. Also use on an
+    explicit request to "record this in the almanac", "add an almanac entry", "write
+    down this gotcha", "we should write this rule down", or "make sure we don't learn
+    this again".
 ---
 
 # Record an Almanac Entry
@@ -34,10 +37,10 @@ In order — stop at the first step that resolves:
 1. **`docs/almanac/README.md`.** The conventional location. If it exists, that is the
    almanac; do not look further.
 2. **Glob `**/almanac/README.md`**, then discard matches under `templates/`,
-   `.worktrees/`, `node_modules/`, `vendor/`, or any other checkout nested inside this
-   one. A bare directory-name match is not evidence of an almanac — **a template, an
-   example, or a sibling worktree's copy is not this repo's almanac**, and treating one
-   as the target means recording a fact where nobody will read it.
+   `node_modules/`, `vendor/`, or any other checkout nested inside this one. A bare
+   directory-name match is not evidence of an almanac — **a template, an example, or a
+   sibling worktree's copy is not this repo's almanac**, and treating one as the target
+   means recording a fact where nobody will read it.
 3. **Exactly one survivor → that is the almanac.** More than one, ask which. None, this
    repo has no almanac — say so and stop, rather than creating one as a side effect of
    recording.
@@ -102,6 +105,11 @@ repo-local, so they live in the almanac's `README.md`** — read its destination
 for where each category goes in _this_ repo. Do not guess a destination, and do not file
 into a directory you have not confirmed exists.
 
+If the category has no row at all, the table is incomplete — a gap in the README rather
+than permission to record here. Ask the operator where that category goes, and hand them
+the text you would have filed. Dropping the claim because the table came up short loses
+it exactly as thoroughly as filing it wrong.
+
 Question 1 is **intent vs. requirement**, and it is the one that blurs. An architecture
 note explains how a mechanism was _meant_ to work, and reading it changes nothing you
 are about to type; a rule tells you what to type.
@@ -155,10 +163,12 @@ retrieved by someone who does not yet know they need it.
 
 ### Is it already there?
 
-Grep first — filenames state claims, so one keyword pass is enough. If a matching entry
-is **wrong**, fix or delete it in this same change; a confidently-worded stale fact is
-worse than none. If you suspect a duplicate but cannot find it, follow the README's
-local rule on duplicates rather than guessing.
+Grep first — filenames state claims, so one keyword pass is enough. If a matching
+**fact** is wrong, fix or delete it in this same change; a confidently-worded stale fact
+is worse than none. A **rule** you believe is wrong is not yours to correct — only
+whoever can change the decision behind it can, and nobody following it is evidence about
+people. Raise it; do not resolve it. If you suspect a duplicate but cannot find it,
+follow the README's local rule on duplicates rather than guessing.
 
 ## Verify, don't transcribe
 
@@ -210,8 +220,8 @@ as a refutation.
 - Write a fact plainly, then its consequence — **what breaks, and whether it breaks
   loudly**. Silent failures are the point; say so explicitly when a failure reads as
   success.
-- A rule **moved** from another document is a move, not a copy. Delete the original in
-  the same change: two copies diverge, and the stale one wins whichever is read first.
+- A rule **moved** from another document is a move, not a copy: delete the original in
+  the same change, or the two copies diverge and the stale one wins.
 - Give the corrective action if there is one, and cross-link entries in the same class.
 - Don't hedge about **truth** either: no "seems to", no "I think". Uncertainty belongs
   in the PR discussion, not in a file future agents treat as settled.
@@ -231,8 +241,8 @@ human can.
   truth.** True for you is not true for the subject; it goes in memory.
 - "I noted the caveat in the entry" — a caveat is not a category decision.
 - "The user gave me this, so I don't need to check it" — check it.
-- "The operator told me, so it isn't discovered" — provenance is not a test any more.
-  Confirm it, decide its `kind`, and record it.
+- "The operator told me, so it isn't discovered" — provenance is not a test. Confirm it,
+  decide its `kind`, and record it.
 - "Everyone here does it this way, so it's a rule" — if nobody would be wrong for doing
   it differently, it is a preference. That goes to memory.
 - "I'll give the rule a verify line so the audit covers it too" — that reports
@@ -241,4 +251,5 @@ human can.
 - "A verify line would be nice but I can't think of one" — if the claim cannot be
   re-checked cheaply, reconsider whether it is a fact, an impression, or a rule.
 - "The README has no row for this, so the almanac is the closest fit" — a missing
-  destination is a gap in the README, not a licence to record. Say so and stop.
+  destination is a gap in the README, not a licence to record. Say so, then ask where it
+  goes; stopping without asking abandons the claim.

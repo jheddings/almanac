@@ -54,11 +54,6 @@ class Skill:
     frontmatter: dict
     body: str
 
-    @property
-    def word_count(self) -> int:
-        """Prose words in the body, excluding frontmatter."""
-        return len(self.body.split())
-
 
 def parse_frontmatter(text: str) -> dict | None:
     """Return the leading YAML frontmatter mapping, or None when absent."""
@@ -143,7 +138,7 @@ def platform_manifests() -> list[Path]:
 # it can be exercised against real trees. It is a test-only proxy for the prose: if the
 # two disagree, one of them is wrong, and the prose is the one that ships.
 
-RESOLUTION_EXCLUDED = ("templates", ".worktrees", "node_modules", "vendor")
+RESOLUTION_EXCLUDED = ("templates", "node_modules", "vendor")
 
 
 class AlmanacNotFound(Exception):

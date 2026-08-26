@@ -9,6 +9,8 @@ constraint that isn't visible from the code — something reality can refute, so
 carries a `verify` line an audit re-runs. A **rule** is something the repository
 requires of everyone who works in it: commit format, branch naming, where work happens.
 Not documentation, not a plan: a claim a future agent acts on without re-deriving it.
+Both are almanac material in the old sense of the word: what was observed here,
+alongside what to do about it.
 
 One claim per file, the filename states the claim, and **the directory listing is the
 index** — read cold at the start of a session, with bodies loaded only when a title
@@ -137,12 +139,25 @@ they disagree about something the README claims as repo-local — the file forma
 wrap width, destinations — the README wins. This is the reverse of the obvious
 anti-drift instinct, and the reason matters: if each repo's README outranked the shared
 method, one stale local copy would silently override a corrected rule, and drift would
-resolve with the _worse_ copy winning. The two barely overlap by design, so there is
-little to drift.
+resolve with the _worse_ copy winning.
 
-The cost, plainly: agents on tools that read `README.md` but cannot load skills get the
-local rules and not the method. The template is written so that file stands alone as a
-usable contract for them.
+The overlap between them is deliberate and bounded: the template states the three
+admission tests and the scope question, because an agent has to be able to tell whether
+a finding is worth pursuing before it loads anything. The skill carries those tests in
+full, with the reasoning and the failure modes. A difference in wording is expected; a
+difference in substance is a bug.
+
+**A skill-less agent consults, and reports rather than records.** Consulting runs off
+the README alone — read the listing, load an entry, follow a rule — and that is the path
+every agent takes every session. Recording does not: the method is not reconstructable
+from the contract, an agent cannot review its own entry, and a plausible entry that is
+subtly wrong costs more than no entry at all, because it gets trusted instead of
+checked. So the template tells an agent that cannot load the skill to name the finding,
+say plainly that it belongs in the almanac, and stop.
+
+The cost, plainly: those agents surface findings they cannot file, and somebody with the
+plugin has to file them. That is the trade — an unrecorded finding is recoverable from a
+transcript, an invented one is not.
 
 **The subject is declared, and defaults to the repository.** Scope — _would this hold
 for everyone else?_ — needs an _everyone else_, and for the common case that is CI plus
@@ -223,6 +238,20 @@ Two smaller costs. Retrieval now rests entirely on the title: an entry whose slu
 not fire at the right moment is invisible, and that failure is silent too. And a longer
 listing is a weaker listing — the directory works as a cold read because every line is
 worth reading, and rules dilute a signal that facts alone kept dense.
+
+**The name did not stop fitting when the scope widened.** Admitting rules looks like
+drift away from "almanac," and it is the reverse. An almanac was never a book of facts
+alone: it pairs what was observed with the practice that follows from it — the tables
+and when to plant — for one place, one season, and an audience that consults it before
+acting rather than reading it front to back. A directory holding facts and rules,
+indexed by filename and opened at the moment one applies, is that shape rather than a
+departure from it.
+
+The cost, plainly: the word does not _say_ "binding." A reader meeting it cold hears
+weather and trivia, and nothing in the name warns them that half the listing is
+enforceable. So the contract carries that weight instead — `kind` is enforced by schema
+rather than described in prose, a rule states the moment it applies in its opening line,
+and `audit` has to name every rule it could not reach.
 
 **No index, and no frontmatter beyond `title`, `kind`, `recorded`, `source`, `verify`,
 `verified`, and `tags`.** A shared index is a merge conflict between concurrent sessions

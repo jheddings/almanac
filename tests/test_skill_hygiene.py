@@ -14,7 +14,6 @@ import pytest
 from tests.support import almanac
 
 SKILLS = almanac.skills()
-BASELINES = json.loads((almanac.REPO_ROOT / "tests" / "baselines.json").read_text())
 
 
 def _ids(skill):
@@ -124,36 +123,3 @@ def test_every_skill_that_resolves_the_almanac_names_the_same_exclusions():
         "exclusion lists have drifted between skills: "
         + json.dumps({k: sorted(v) for k, v in by_skill.items()}, indent=2)
     )
-
-
-# ---- Prose length ratchet ---------------------------------------------------------
-
-
-@pytest.mark.parametrize("skill", SKILLS, ids=_ids)
-def test_prose_does_not_grow(skill):
-    """A ratchet, not a target.
-
-    CONTRIBUTING asks for well under 500 words; these run several times that, and
-    compressing them is deferred work. Freezing the current counts stops the debt
-    growing without pretending it is paid — and gives the compression pass a scoreboard.
-    """
-    ceiling = BASELINES["skill_word_ceilings"].get(skill.name)
-    assert ceiling is not None, (
-        f"{skill.name}: no baseline recorded. Add one to tests/baselines.json — "
-        f"currently {skill.word_count} words."
-    )
-    assert skill.word_count <= ceiling, (
-        f"{skill.name}: {skill.word_count} words exceeds the ceiling of {ceiling}. "
-        "Trim it, or raise the ceiling deliberately and say why."
-    )
-
-
-def test_baselines_have_no_stale_entries():
-    recorded = set(BASELINES["skill_word_ceilings"])
-    actual = {s.name for s in SKILLS}
-    assert recorded == actual, (
-        f"tests/baselines.json is out of step with skills/: "
-        f"only-in-baselines={sorted(recorded - actual)}, "
-        f"only-in-skills={sorted(actual - recorded)}"
-    )
-

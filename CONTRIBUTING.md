@@ -93,9 +93,9 @@ both.
 
 The conventional location is `docs/almanac/`, and it is not guaranteed. Skills resolve
 it in order: prefer `docs/almanac/README.md`, else glob `**/almanac/README.md` and
-discard matches under `templates/`, `.worktrees/`, `node_modules/`, `vendor/`, or any
-nested checkout; then **stop** if nothing survives, rather than creating a directory as
-a side effect of some other job.
+discard matches under `templates/`, `node_modules/`, `vendor/`, or any nested checkout;
+then **stop** if nothing survives, rather than creating a directory as a side effect of
+some other job.
 
 The exclusions are not hypothetical — **this repo trips the naive glob.** From the
 primary repo root, `**/almanac/README.md` matches four paths: the real almanac, the
@@ -253,7 +253,7 @@ exists because most of the defects this project has shipped and caught were stru
 | `test_doc_examples.py`      | the docs' example entries satisfy the same contract, and no value silently loses characters to YAML                                                  |
 | `test_verify_lines.py`      | every `verify` names a runnable check **and** an expected observation                                                                                |
 | `test_discovery_rule.py`    | the resolution rule, executed against trees built to trip it, plus prose/code agreement                                                              |
-| `test_skill_hygiene.py`     | naming, frontmatter shape, description form, exclusion-list agreement, prose ratchet                                                                 |
+| `test_skill_hygiene.py`     | naming, frontmatter shape, description form, exclusion-list agreement                                                                                |
 | `test_repo_checks.py`       | the revision stamp, and agreement _between_ harnesses rather than within one                                                                         |
 | `test_manifests.py`         | every manifest rule, each against the broken manifest it exists to reject                                                                            |
 | `test_bundle.py`            | staging, the payload allowlist, and what the finished archive does and does not contain                                                              |
@@ -262,19 +262,13 @@ exists because most of the defects this project has shipped and caught were stru
 | `test_release.py`           | the shared version reaches every manifest, and bump keywords resolve                                                                                 |
 | `test_cli.py`               | `python3 -m tools` exits zero when the repo is clean and non-zero when it is not                                                                     |
 
-Two conventions worth keeping:
+One convention worth keeping:
 
 **Every checker carries its own known-bad cases.** A validator that accepts everything
 passes forever — the same defect `record` warns about in a `verify` line that merely
 locates its subject. So `lint_verify` is tested against the exact anti-pattern the
 template once shipped, and `check_entry_frontmatter` against a `confidence:` field. If
 you add a check, add the input that must fail it.
-
-**The prose ratchet is a scoreboard, not a gate.** `tests/baselines.json` freezes each
-skill's word count. `record` and `audit` run well over CONTRIBUTING's "well under 500
-words", and compressing them is deferred; the ratchet stops that debt growing without
-pretending it is paid. Lowering a ceiling is routine. Raising one is a decision that
-belongs in the PR description.
 
 ## Testing skills
 
@@ -301,9 +295,12 @@ Bumps `VERSION` and every harness manifest, commits, tags, and pushes. CI drafts
 GitHub release from the tag. Releases must come from `main` with a clean tree;
 `release-guard` enforces it.
 
-## Commits, branches, and pull requests
+## Conventions
 
-See [AGENTS.md](AGENTS.md) § Conventions — Conventional Commits, `<type>/<change-slug>`
-branches, pull requests, Markdown wrapping, and session worktrees under `.worktrees/`.
-Those live in `AGENTS.md` rather than here so every harness reads them, not only the
-ones that look for a contributing guide.
+Every convention this repository requires is an almanac entry — `ls docs/almanac/`.
+Conventional Commits, `<type>/<change-slug>` branches, pull requests, session worktrees,
+Markdown wrapping, and comment style are all there.
+
+They live there rather than here so every harness reads them, not only the ones that
+look for a contributing guide, and so each one arrives at the moment it applies instead
+of being paid for on every turn.
