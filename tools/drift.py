@@ -17,7 +17,13 @@ from pathlib import Path
 from tools.harnesses import REPO_ROOT
 
 TEMPLATE = REPO_ROOT / "templates" / "almanac" / "README.md"
-INSTANCE = REPO_ROOT / "docs" / "almanac" / "README.md"
+# Every copy of the canonical contract in this tree. The live almanac is this repo's
+# own; the fixture's is what a harness-test run adopts, and an uncovered fixture goes
+# stale against the contract it exists to test.
+INSTANCES = (
+    REPO_ROOT / "docs" / "almanac" / "README.md",
+    REPO_ROOT / "skel" / "docs" / "almanac" / "README.md",
+)
 
 OPEN = "<!-- almanac:local -->"
 CLOSE = "<!-- /almanac:local -->"
@@ -58,4 +64,7 @@ def compare(template: Path, instance: Path) -> list[str]:
 
 
 def check() -> list[str]:
-    return compare(TEMPLATE, INSTANCE)
+    problems = []
+    for instance in INSTANCES:
+        problems += compare(TEMPLATE, instance)
+    return problems

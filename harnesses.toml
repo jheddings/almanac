@@ -27,6 +27,36 @@ manifest_dest = ".claude-plugin/plugin.json"
 validate = ["claude", "plugin", "validate", "{stage}"]
 require = ["templates/almanac/README.md", "skills"]
 
+[claude.trial]
+# `--session-id` names the session up front, so the transcript's path is known rather
+# than discovered. Every other harness makes you find the newest file and hope nothing
+# else was running.
+#
+# `bypassPermissions` is what makes the run unattended: without it a headless session
+# stalls on the first command it needs approval for. A trial runs in a throwaway
+# directory, and the command is copied verbatim into each archive's manifest so a reader
+# knows what the agent was allowed to do.
+first = [
+    "claude",
+    "-p",
+    "--session-id",
+    "{session}",
+    "--permission-mode",
+    "bypassPermissions",
+    "{prompt}",
+]
+resume = [
+    "claude",
+    "-p",
+    "--resume",
+    "{session}",
+    "--permission-mode",
+    "bypassPermissions",
+    "{prompt}",
+]
+transcript = "~/.claude/projects/*/{session}.jsonl"
+version = ["claude", "--version"]
+
 [cursor]
 manifest = ".cursor-plugin/plugin.json"
 marketplace = ".cursor-plugin/marketplace.json"
@@ -52,10 +82,52 @@ require = [
     "skills",
 ]
 
+[cursor.trial]
+# create-chat returns a UUID; first/resume both attach with --resume.
+# --force is unattended file/shell approval; --trust skips the workspace prompt.
+create = ["agent", "create-chat"]
+first = [
+    "agent", "-p", "--resume", "{session}",
+    "--force", "--trust",
+    "{prompt}",
+]
+resume = [
+    "agent", "-p", "--resume", "{session}",
+    "--force", "--trust",
+    "{prompt}",
+]
+transcript = "~/.cursor/projects/*/agent-transcripts/{session}/{session}.jsonl"
+version = ["agent", "--version"]
+
 [codex]
 manifest = ".codex-plugin/plugin.json"
 path_keys = ["skills"]
 # Codex consumes the repo tree directly; there is no archive to build.
+
+[codex.trial]
+# Codex assigns a new session's ID itself. `--last` resumes the newest session for the
+# current working directory, which keeps the prompts in one conversation without
+# discovering the ID between commands.
+# `--approve-for-me` selects workspace-write itself; pairing it with `--sandbox` is a
+# command-line error.
+first = [
+    "codex",
+    "--approve-for-me",
+    "exec",
+    "{prompt}",
+]
+resume = [
+    "codex",
+    "--approve-for-me",
+    "exec",
+    "resume",
+    "--last",
+    "{prompt}",
+]
+# Rollouts are partitioned by year/month/day. Plain `glob` does not make `**`
+# recursive, so every directory level is explicit.
+transcript = "~/.codex/sessions/*/*/*/*.jsonl"
+version = ["codex", "--version"]
 
 [agy]
 manifest = ".agy-plugin/plugin.json"

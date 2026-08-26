@@ -7,12 +7,14 @@ and turns their results into output and an exit code.
 
 from __future__ import annotations
 
+import datetime
 import subprocess
 import zipfile
+from pathlib import Path
 
 import click
 
-from tools import bundle, drift, harnesses, manifests, release
+from tools import bundle, drift, harnesses, manifests, release, skel, trial
 
 ALL_HARNESSES = sorted(harnesses.load())
 BUNDLING = sorted(name for name, h in harnesses.load().items() if h.bundle)
@@ -39,6 +41,8 @@ class ToolsGroup(click.Group):
         drift.DriftError,
         release.ReleaseError,
         harnesses.UnknownHarness,
+        skel.SkelError,
+        trial.TrialError,
     )
 
     def invoke(self, ctx):
@@ -75,16 +79,17 @@ def check_manifests_cmd(harness):
 
 @click.command("drift")
 def drift_cmd():
-    """Check this repo's almanac README against the shipped template."""
+    """Check every almanac README against the shipped template."""
     diff = drift.check()
     if diff:
         click.echo("".join(diff), nl=False)
         raise click.ClickException(
-            f"{drift.INSTANCE} differs from {drift.TEMPLATE} outside the local block. "
-            f"The template is canonical: port the change to it, or move the text inside "
-            f"the {drift.OPEN} block when it is genuinely repo-local."
+            f"an almanac README differs from {drift.TEMPLATE} outside the local "
+            f"block. The template is canonical: port the change to it, or move the "
+            f"text inside the {drift.OPEN} block when it is genuinely repo-local."
         )
-    click.echo(f"{drift.INSTANCE} matches {drift.TEMPLATE} outside the local block")
+    for instance in drift.INSTANCES:
+        click.echo(f"{instance} matches {drift.TEMPLATE} outside the local block")
 
 
 @click.command("bundle")
@@ -135,9 +140,89 @@ def set_version_cmd(bump):
     click.echo(target)
 
 
+def inherited_instructions(run: Path) -> str:
+    """Instruction files above a run that a session started there would also read.
+
+    A run nested inside a repository inherits its CLAUDE.md and AGENTS.md, and this one
+    names a different almanac — so the trial would measure two rule sets at once. The
+    warning is printed rather than enforced, because where runs belong is the
+    operator's call.
+    """
+    found = []
+    for parent in run.resolve().parents:
+        for name in ("CLAUDE.md", "AGENTS.md"):
+            if (parent / name).is_file():
+                found.append(str(parent / name))
+    if not found:
+        return ""
+    listed = "\n".join(f"    {path}" for path in found)
+    return f"  warning: a session here also reads\n{listed}"
+
+
+@click.command("skel-new")
+@click.argument("label")
+@click.option("--stamp", default=None, help="Date stamp; defaults to today.")
+@click.option(
+    "--out",
+    type=click.Path(file_okay=False, path_type=Path),
+    default=None,
+    help="Where to put the run. Keep it outside any repository whose instruction "
+    "files a session would inherit — including this one.",
+)
+def skel_new_cmd(label, stamp, out):
+    """Scaffold a harness-test run as a standalone repository."""
+    stamp = stamp or datetime.date.today().isoformat()
+    run = skel.new_run(skel.FIXTURE, out or skel.RUNS, label, stamp)
+    click.echo(f"run ready: {run}")
+    click.echo(inherited_instructions(run) or "  inherits no instruction files above it")
+
+
+@click.command("skel-prompt")
+@click.argument("name", default="01-first-feature")
+def skel_prompt_cmd(name):
+    """Print a prompt for pasting into the harness under test."""
+    path = skel.PROMPTS / f"{name}.md"
+    if not path.is_file():
+        raise click.ClickException(f"{path}: no such prompt")
+    click.echo(path.read_text().strip())
+
+
+@click.command("skel-trial")
+@click.argument("harness", type=click.Choice(sorted(harnesses.load())))
+@click.option("--stamp", default=None, help="Date stamp; defaults to today.")
+@click.option(
+    "--out",
+    type=click.Path(file_okay=False, path_type=Path),
+    default=None,
+    help="Where the archive lands. Defaults to this repo's runs/.",
+)
+@click.option(
+    "--prompt",
+    "prompts",
+    multiple=True,
+    help="Prompt to run, repeatable. Runs in name order whatever order these "
+    "are given in, so the review at 99 always lands last. Defaults to the full "
+    "sequence.",
+)
+def skel_trial_cmd(harness, stamp, out, prompts):
+    """Drive a harness through the fixture unattended and archive the evidence."""
+    stamp = stamp or datetime.date.today().isoformat()
+    entry = harnesses.get(harness)
+    archive = trial.run(
+        entry,
+        out or skel.RUNS,
+        stamp,
+        tuple(prompts) or trial.DEFAULT_PROMPTS,
+    )
+    click.echo(f"\narchived: {archive}")
+
+
 cli.add_command(check_manifests_cmd)
 cli.add_command(drift_cmd)
 cli.add_command(bundle_cmd)
 cli.add_command(install_cmd)
 cli.add_command(manifest_paths_cmd)
 cli.add_command(set_version_cmd)
+cli.add_command(skel_new_cmd)
+cli.add_command(skel_prompt_cmd)
+cli.add_command(skel_trial_cmd)

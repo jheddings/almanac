@@ -20,3 +20,6 @@ dist/
 
 # uv (uv.lock is tracked)
 .venv/
+
+# Harness-test runs produced by `just skel new` and `just skel trial`.
+runs/

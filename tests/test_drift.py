@@ -46,3 +46,23 @@ def test_a_missing_local_block_is_an_error(tmp_path):
     instance.write_text("# Almanac\n\nNo markers here.\n")
     with pytest.raises(drift.DriftError):
         drift.compare(template, instance)
+
+
+def test_every_declared_instance_is_compared(tmp_path, monkeypatch):
+    """A second instance that drifts must fail the check, not be skipped."""
+    template = tmp_path / "template.md"
+    good = tmp_path / "good.md"
+    bad = tmp_path / "bad.md"
+    template.write_text(document("Shared prose.", "t"))
+    good.write_text(document("Shared prose.", "g"))
+    bad.write_text(document("Shared prose, edited.", "b"))
+
+    monkeypatch.setattr(drift, "TEMPLATE", template)
+    monkeypatch.setattr(drift, "INSTANCES", (good, bad))
+    assert drift.check()
+
+
+def test_the_fixture_almanac_is_a_declared_instance():
+    """Guard the guard: the fixture must actually be in the list."""
+    names = [str(p) for p in drift.INSTANCES]
+    assert any(p.endswith("skel/docs/almanac/README.md") for p in names), names
