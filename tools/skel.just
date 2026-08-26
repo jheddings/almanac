@@ -22,3 +22,7 @@ run label out="" name="01-first-feature": (new label out) (prompt name)
 # remove runs created in the default location
 clean:
     rm -rf runs
+
+# drive a harness through the fixture unattended and archive the evidence
+trial harness out="":
+    uv run python -m tools skel-trial {{ harness }} {{ if out == "" { "" } else { "--out " + out } }}

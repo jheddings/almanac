@@ -27,6 +27,36 @@ manifest_dest = ".claude-plugin/plugin.json"
 validate = ["claude", "plugin", "validate", "{stage}"]
 require = ["templates/almanac/README.md", "skills"]
 
+[claude.trial]
+# `--session-id` names the session up front, so the transcript's path is known rather
+# than discovered. Every other harness makes you find the newest file and hope nothing
+# else was running.
+#
+# `bypassPermissions` is what makes the run unattended: without it a headless session
+# stalls on the first command it needs approval for. A trial runs in a throwaway
+# directory, and the command is copied verbatim into each archive's manifest so a reader
+# knows what the agent was allowed to do.
+first = [
+    "claude",
+    "-p",
+    "--session-id",
+    "{session}",
+    "--permission-mode",
+    "bypassPermissions",
+    "{prompt}",
+]
+resume = [
+    "claude",
+    "-p",
+    "--resume",
+    "{session}",
+    "--permission-mode",
+    "bypassPermissions",
+    "{prompt}",
+]
+transcript = "~/.claude/projects/*/{session}.jsonl"
+version = ["claude", "--version"]
+
 [cursor]
 manifest = ".cursor-plugin/plugin.json"
 marketplace = ".cursor-plugin/marketplace.json"

@@ -13,7 +13,7 @@ from pathlib import Path
 
 import click
 
-from tools import bundle, drift, harnesses, manifests, release, skel
+from tools import bundle, drift, harnesses, manifests, release, skel, trial
 
 ALL_HARNESSES = sorted(harnesses.load())
 BUNDLING = sorted(name for name, h in harnesses.load().items() if h.bundle)
@@ -41,6 +41,7 @@ class ToolsGroup(click.Group):
         release.ReleaseError,
         harnesses.UnknownHarness,
         skel.SkelError,
+        trial.TrialError,
     )
 
     def invoke(self, ctx):
@@ -187,6 +188,36 @@ def skel_prompt_cmd(name):
     click.echo(path.read_text().strip())
 
 
+@click.command("skel-trial")
+@click.argument("harness", type=click.Choice(sorted(harnesses.load())))
+@click.option("--stamp", default=None, help="Date stamp; defaults to today.")
+@click.option(
+    "--out",
+    type=click.Path(file_okay=False, path_type=Path),
+    default=None,
+    help="Where the archive lands. Defaults to this repo's runs/.",
+)
+@click.option(
+    "--prompt",
+    "prompts",
+    multiple=True,
+    help="Prompt to run, repeatable and ordered. Defaults to the full sequence.",
+)
+def skel_trial_cmd(harness, stamp, out, prompts):
+    """Drive a harness through the fixture unattended and archive the evidence."""
+    import datetime
+
+    stamp = stamp or datetime.date.today().isoformat()
+    entry = harnesses.get(harness)
+    archive = trial.run(
+        entry,
+        out or skel.RUNS,
+        stamp,
+        tuple(prompts) or trial.DEFAULT_PROMPTS,
+    )
+    click.echo(f"\narchived: {archive}")
+
+
 cli.add_command(check_manifests_cmd)
 cli.add_command(drift_cmd)
 cli.add_command(bundle_cmd)
@@ -195,3 +226,4 @@ cli.add_command(manifest_paths_cmd)
 cli.add_command(set_version_cmd)
 cli.add_command(skel_new_cmd)
 cli.add_command(skel_prompt_cmd)
+cli.add_command(skel_trial_cmd)

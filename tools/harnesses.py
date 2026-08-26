@@ -28,12 +28,28 @@ class Bundle:
 
 
 @dataclass(frozen=True)
+class Trial:
+    """How to drive this harness through the fixture, unattended.
+
+    `first` opens the session and `resume` continues it, so the prompts arrive as one
+    conversation rather than several — which is what makes a rule firing on the last
+    prompt evidence that it survived the whole session.
+    """
+
+    first: tuple[str, ...]
+    resume: tuple[str, ...]
+    transcript: str
+    version: tuple[str, ...] = ()
+
+
+@dataclass(frozen=True)
 class Harness:
     name: str
     manifest: Path
     marketplace: Path | None = None
     path_keys: tuple[str, ...] = ()
     bundle: Bundle | None = field(default=None)
+    trial: Trial | None = field(default=None)
 
 
 def _harness(name: str, row: dict) -> Harness:
@@ -51,6 +67,17 @@ def _harness(name: str, row: dict) -> Harness:
         if raw
         else None
     )
+    raw_trial = row.get("trial")
+    trial = (
+        Trial(
+            first=tuple(raw_trial["first"]),
+            resume=tuple(raw_trial["resume"]),
+            transcript=raw_trial["transcript"],
+            version=tuple(raw_trial.get("version", ())),
+        )
+        if raw_trial
+        else None
+    )
     marketplace = row.get("marketplace")
     return Harness(
         name=name,
@@ -58,6 +85,7 @@ def _harness(name: str, row: dict) -> Harness:
         marketplace=REPO_ROOT / marketplace if marketplace else None,
         path_keys=tuple(row.get("path_keys", ())),
         bundle=bundle,
+        trial=trial,
     )
 
 
