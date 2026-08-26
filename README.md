@@ -139,12 +139,25 @@ they disagree about something the README claims as repo-local — the file forma
 wrap width, destinations — the README wins. This is the reverse of the obvious
 anti-drift instinct, and the reason matters: if each repo's README outranked the shared
 method, one stale local copy would silently override a corrected rule, and drift would
-resolve with the _worse_ copy winning. The two barely overlap by design, so there is
-little to drift.
+resolve with the _worse_ copy winning.
 
-The cost, plainly: agents on tools that read `README.md` but cannot load skills get the
-local rules and not the method. The template is written so that file stands alone as a
-usable contract for them.
+The overlap between them is deliberate and bounded: the template states the three
+admission tests and the scope question, because an agent has to be able to tell whether
+a finding is worth pursuing before it loads anything. The skill carries those tests in
+full, with the reasoning and the failure modes. A difference in wording is expected; a
+difference in substance is a bug.
+
+**A skill-less agent consults, and reports rather than records.** Consulting runs off
+the README alone — read the listing, load an entry, follow a rule — and that is the path
+every agent takes every session. Recording does not: the method is not reconstructable
+from the contract, an agent cannot review its own entry, and a plausible entry that is
+subtly wrong costs more than no entry at all, because it gets trusted instead of
+checked. So the template tells an agent that cannot load the skill to name the finding,
+say plainly that it belongs in the almanac, and stop.
+
+The cost, plainly: those agents surface findings they cannot file, and somebody with the
+plugin has to file them. That is the trade — an unrecorded finding is recoverable from a
+transcript, an invented one is not.
 
 **The subject is declared, and defaults to the repository.** Scope — _would this hold
 for everyone else?_ — needs an _everyone else_, and for the common case that is CI plus
