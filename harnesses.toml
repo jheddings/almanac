@@ -82,6 +82,23 @@ require = [
     "skills",
 ]
 
+[cursor.trial]
+# create-chat returns a UUID; first/resume both attach with --resume.
+# --force is unattended file/shell approval; --trust skips the workspace prompt.
+create = ["agent", "create-chat"]
+first = [
+    "agent", "-p", "--resume", "{session}",
+    "--force", "--trust",
+    "{prompt}",
+]
+resume = [
+    "agent", "-p", "--resume", "{session}",
+    "--force", "--trust",
+    "{prompt}",
+]
+transcript = "~/.cursor/projects/*/agent-transcripts/{session}/{session}.jsonl"
+version = ["agent", "--version"]
+
 [codex]
 manifest = ".codex-plugin/plugin.json"
 path_keys = ["skills"]

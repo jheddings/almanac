@@ -73,3 +73,21 @@ def test_trial_required_fields_stay_required():
     }
     with pytest.raises(KeyError, match="first"):
         harnesses._harness("paper", row)
+
+
+def test_cursor_declares_a_trial():
+    """Guard the guard: a row that does not parse leaves the recipe unwired."""
+    cursor = harnesses.get("cursor")
+    assert cursor.trial is not None
+    assert cursor.trial.create == ("agent", "create-chat")
+    assert "{session}" in " ".join(cursor.trial.first)
+    assert "{session}" in " ".join(cursor.trial.resume)
+    assert "{session}" in cursor.trial.transcript
+
+
+def test_claude_trial_has_no_create():
+    """Claude still names the session as a flag; the new field must not leak onto it."""
+    claude = harnesses.get("claude")
+    assert claude.trial is not None
+    assert claude.trial.create == ()
+    assert "{session}" in " ".join(claude.trial.first)
