@@ -301,9 +301,12 @@ Bumps `VERSION` and every harness manifest, commits, tags, and pushes. CI drafts
 GitHub release from the tag. Releases must come from `main` with a clean tree;
 `release-guard` enforces it.
 
-## Commits, branches, and pull requests
+## Conventions
 
-See [AGENTS.md](AGENTS.md) § Conventions — Conventional Commits, `<type>/<change-slug>`
-branches, pull requests, Markdown wrapping, and session worktrees under `.worktrees/`.
-Those live in `AGENTS.md` rather than here so every harness reads them, not only the
-ones that look for a contributing guide.
+Every convention this repository requires is an almanac entry — `ls docs/almanac/`.
+Conventional Commits, `<type>/<change-slug>` branches, pull requests, session worktrees,
+Markdown wrapping, and comment style are all there.
+
+They live there rather than here so every harness reads them, not only the ones that
+look for a contributing guide, and so each one arrives at the moment it applies instead
+of being paid for on every turn.
