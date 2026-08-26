@@ -53,11 +53,6 @@ class Skill:
     frontmatter: dict
     body: str
 
-    @property
-    def word_count(self) -> int:
-        """Prose words in the body, excluding frontmatter."""
-        return len(self.body.split())
-
 
 def parse_frontmatter(text: str) -> dict | None:
     """Return the leading YAML frontmatter mapping, or None when absent."""

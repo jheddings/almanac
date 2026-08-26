@@ -70,6 +70,4 @@ manifest and template-drift checks. `just test` runs the structural suite in
 touch Python sync the environment first.
 
 The suite is deterministic and free, so run it before proposing a change to a skill, the
-template, or the almanac. Note the prose ratchet in `tests/baselines.json`: editing a
-skill so it grows past its recorded word count fails the build on purpose. See
-[CONTRIBUTING.md](CONTRIBUTING.md#the-structural-suite).
+template, or the almanac. See [CONTRIBUTING.md](CONTRIBUTING.md#the-structural-suite).
