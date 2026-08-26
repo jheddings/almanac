@@ -7,7 +7,14 @@ whole session rather than only its opening.
 
 The report the agent writes is a claim. The transcript archived beside it is what a
 reader checks that claim against — one trial reported following a rule while the
-directory on disk said otherwise, so the two are kept together deliberately.
+directory on disk said otherwise, so the two are kept together deliberately. What a
+transcript can settle varies by harness: some record every command and its output,
+others only the calls, and the git history is the half that reads the same everywhere.
+
+Validation asks whether the archive holds something to read. The per-prompt counts
+beside it say which prompt left it there — a session can satisfy every structural
+prerequisite on the strength of its last prompt alone, and the exit statuses report
+that as three clean successes.
 """
 
 from __future__ import annotations
@@ -174,6 +181,7 @@ def run(
         initial_head = skel._git(run_dir, "rev-parse", "HEAD").strip()
         session = _session(harness, run_dir)
         results = _drive(harness, run_dir, session, prompts, texts)
+        _report(results)
         transcript, discovered_session = _collect(harness, run_dir, session)
         manifest_session = session if _names_session(harness) else discovered_session
         problems = _validation_problems(
@@ -201,6 +209,55 @@ def run(
         shutil.rmtree(workspace, ignore_errors=True)
 
 
+def _git_output(run_dir: Path, *args: str) -> str | None:
+    """What git said, or None if it could not say anything.
+
+    A trial archives whatever exists, including a run whose repository an agent left
+    unreadable, so a failure here degrades the manifest rather than losing the archive.
+    """
+    try:
+        done = subprocess.run(
+            ["git", "-C", str(run_dir), *args],
+            capture_output=True,
+            text=True,
+            env=skel.clean_env(),
+            timeout=60,
+        )
+    except (OSError, subprocess.SubprocessError):
+        return None
+    return done.stdout if done.returncode == 0 else None
+
+
+def _state(run_dir: Path) -> dict:
+    """How much the run directory holds, counted rather than judged.
+
+    Commits are counted across every ref rather than from `HEAD`: work left on a branch
+    that was never merged is still work, and a count taken from `HEAD` alone reports it
+    as an empty run.
+
+    `dirty` catches the other half — an agent that wrote files and never committed
+    them moves no commit count at all.
+    """
+    commits = _git_output(run_dir, "rev-list", "--count", "--all")
+    dirty = _git_output(run_dir, "status", "--porcelain")
+    return {
+        "commits": int(commits.strip()) if commits else None,
+        "dirty": len(dirty.splitlines()) if dirty is not None else None,
+    }
+
+
+def _report(results: list[dict]) -> None:
+    """Say what the run produced, so the operator sees it without opening the
+    archive.
+    """
+    last = results[-1] if results else {}
+    print(
+        f"\n── prompts {len(results)} · commits {last.get('commits')} "
+        f"· uncommitted {last.get('dirty')}",
+        flush=True,
+    )
+
+
 def _drive(harness, run_dir, session, prompts, texts) -> list[dict]:
     """Feed each prompt to the same session, stopping at the first that fails.
 
@@ -223,7 +280,7 @@ def _drive(harness, run_dir, session, prompts, texts) -> list[dict]:
             status = done.returncode
         except subprocess.TimeoutExpired:
             status = None
-        results.append({"prompt": name, "exit": status})
+        results.append({"prompt": name, "exit": status, **_state(run_dir)})
         if status != 0:
             reason = "timed out" if status is None else f"exited {status}"
             print(f"\n!! {name} {reason} — archiving what exists", flush=True)
