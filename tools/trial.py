@@ -69,9 +69,36 @@ def _harness_version(harness: Harness) -> str | None:
     return done.stdout.strip() or done.stderr.strip() or None
 
 
-def _find_transcript(harness: Harness, session: str) -> Path | None:
+def _names_session(harness: Harness) -> bool:
+    return any("{session}" in part for part in harness.trial.first)
+
+
+def _transcript_metadata(path: Path) -> dict:
+    """The identifying metadata from a persisted Codex rollout, when present."""
+    try:
+        with path.open() as lines:
+            first = json.loads(lines.readline())
+    except (OSError, json.JSONDecodeError):
+        return {}
+    if first.get("type") != "session_meta":
+        return {}
+    payload = first.get("payload")
+    return payload if isinstance(payload, dict) else {}
+
+
+def _find_transcript(
+    harness: Harness, session: str, run_dir: Path
+) -> Path | None:
     pattern = harness.trial.transcript.format(session=session)
     matches = [Path(p) for p in glob.glob(str(Path(pattern).expanduser()))]
+    if not _names_session(harness):
+        run_cwd = run_dir.resolve()
+
+        def belongs_to_run(path):
+            cwd = _transcript_metadata(path).get("cwd")
+            return bool(cwd) and Path(cwd).resolve() == run_cwd
+
+        matches = [path for path in matches if belongs_to_run(path)]
     return max(matches, key=lambda p: p.stat().st_mtime) if matches else None
 
 
@@ -100,10 +127,31 @@ def run(
 
     try:
         run_dir = skel.new_run(skel.FIXTURE, workspace, harness.name, stamp)
+        initial_head = skel._git(run_dir, "rev-parse", "HEAD").strip()
         results = _drive(harness, run_dir, session, prompts, texts)
-        transcript = _collect(harness, run_dir, session)
-        _write_manifest(harness, run_dir, session, stamp, prompts, results, transcript)
-        return _archive(run_dir, out_dir, workspace)
+        transcript, discovered_session = _collect(harness, run_dir, session)
+        manifest_session = session if _names_session(harness) else discovered_session
+        problems = _validation_problems(
+            run_dir, initial_head, stamp, prompts, results, transcript
+        )
+        _write_manifest(
+            harness,
+            run_dir,
+            manifest_session,
+            stamp,
+            prompts,
+            results,
+            transcript,
+            problems,
+        )
+        archive = _archive(run_dir, out_dir, workspace)
+        if problems:
+            detail = "\n".join(f"- {problem}" for problem in problems)
+            raise TrialError(
+                f"trial evidence failed structural validation:\n{detail}\n"
+                f"archived at {archive}"
+            )
+        return archive
     finally:
         shutil.rmtree(workspace, ignore_errors=True)
 
@@ -138,19 +186,51 @@ def _drive(harness, run_dir, session, prompts, texts) -> list[dict]:
     return results
 
 
-def _collect(harness: Harness, run_dir: Path, session: str) -> str | None:
+def _collect(
+    harness: Harness, run_dir: Path, session: str
+) -> tuple[str | None, str | None]:
     """Copy the harness's own transcript in beside the agent's report."""
     review = run_dir / REVIEW_DIR
     review.mkdir(parents=True, exist_ok=True)
 
-    found = _find_transcript(harness, session)
+    found = _find_transcript(harness, session, run_dir)
     if found is None:
-        return None
+        return None, None
     shutil.copy2(found, review / TRANSCRIPT_NAME)
-    return f"{REVIEW_DIR}/{TRANSCRIPT_NAME}"
+    metadata = _transcript_metadata(found)
+    discovered_session = metadata.get("id") or metadata.get("session_id")
+    return f"{REVIEW_DIR}/{TRANSCRIPT_NAME}", discovered_session
 
 
-def _write_manifest(harness, run_dir, session, stamp, prompts, results, transcript):
+def _validation_problems(
+    run_dir, initial_head, stamp, prompts, results, transcript
+) -> list[str]:
+    """Structural omissions that make a trial archive incomplete, not a score."""
+    problems = []
+    for result in results:
+        if result["exit"] != 0:
+            outcome = "timed out" if result["exit"] is None else f"exited {result['exit']}"
+            problems.append(f"{result['prompt']} {outcome}")
+
+    if skel._git(run_dir, "rev-parse", "main").strip() == initial_head:
+        problems.append("main has no new commit beyond the scaffold")
+
+    review_path = f"{REVIEW_DIR}/{stamp}-review.md"
+    if "99-almanac-review" in prompts:
+        committed = skel._git(
+            run_dir, "ls-tree", "--name-only", "main", "--", review_path
+        ).strip()
+        if committed != review_path:
+            problems.append(f"main does not contain the required {review_path}")
+
+    if transcript is None:
+        problems.append("no transcript matched the trial workspace")
+    return problems
+
+
+def _write_manifest(
+    harness, run_dir, session, stamp, prompts, results, transcript, problems
+):
     """What the archive needs to stay interpretable.
 
     A result is a property of the harness, its version, and what the agent was permitted
@@ -167,6 +247,7 @@ def _write_manifest(harness, run_dir, session, stamp, prompts, results, transcri
                 "session": session,
                 "prompts": list(prompts),
                 "results": results,
+                "validation": {"passed": not problems, "problems": problems},
                 "commands": {
                     "first": list(harness.trial.first),
                     "resume": list(harness.trial.resume),

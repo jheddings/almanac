@@ -87,6 +87,31 @@ manifest = ".codex-plugin/plugin.json"
 path_keys = ["skills"]
 # Codex consumes the repo tree directly; there is no archive to build.
 
+[codex.trial]
+# Codex assigns a new session's ID itself. `--last` resumes the newest session for the
+# current working directory, which keeps the prompts in one conversation without
+# discovering the ID between commands.
+# `--approve-for-me` selects workspace-write itself; pairing it with `--sandbox` is a
+# command-line error.
+first = [
+    "codex",
+    "--approve-for-me",
+    "exec",
+    "{prompt}",
+]
+resume = [
+    "codex",
+    "--approve-for-me",
+    "exec",
+    "resume",
+    "--last",
+    "{prompt}",
+]
+# Rollouts are partitioned by year/month/day. Plain `glob` does not make `**`
+# recursive, so every directory level is explicit.
+transcript = "~/.codex/sessions/*/*/*/*.jsonl"
+version = ["codex", "--version"]
+
 [agy]
 manifest = ".agy-plugin/plugin.json"
 
