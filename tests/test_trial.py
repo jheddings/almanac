@@ -370,3 +370,75 @@ def test_the_review_runs_last_however_it_is_asked_for(tmp_path, claude):
         manifest = json.loads(bundle.read(name))
 
     assert manifest["prompts"] == ["01-first-feature", "99-almanac-review"]
+
+
+def test_create_stdout_is_the_session_the_prompts_attach_to(tmp_path, claude):
+    """The harness names the session; the driver must not invent a second id."""
+    recorder = tmp_path / "calls.txt"
+    stub = harnesses.Harness(
+        name="cursor",
+        manifest=claude.manifest,
+        trial=harnesses.Trial(
+            create=("sh", "-c", f"echo create >> {recorder}; printf 'sess-1\\n'"),
+            first=("sh", "-c", f"echo first {{session}} >> {recorder}"),
+            resume=("sh", "-c", f"echo resume {{session}} >> {recorder}"),
+            transcript=str(tmp_path / "{session}.jsonl"),
+        ),
+    )
+
+    archive = trial.run(stub, tmp_path / "out", "2026-08-26")
+
+    assert recorder.read_text().split() == [
+        "create",
+        "first",
+        "sess-1",
+        "resume",
+        "sess-1",
+        "resume",
+        "sess-1",
+    ]
+    with zipfile.ZipFile(archive) as bundle:
+        name = next(n for n in bundle.namelist() if n.endswith("manifest.json"))
+        manifest = json.loads(bundle.read(name))
+    assert manifest["session"] == "sess-1"
+
+
+def test_a_failing_create_names_the_harness_and_does_not_prompt(tmp_path, claude):
+    """Nothing to archive: the session never opened, so no prompt has run."""
+    recorder = tmp_path / "calls.txt"
+    stub = harnesses.Harness(
+        name="cursor",
+        manifest=claude.manifest,
+        trial=harnesses.Trial(
+            create=("sh", "-c", "exit 7"),
+            first=("sh", "-c", f"echo first >> {recorder}"),
+            resume=("sh", "-c", "true"),
+            transcript=str(tmp_path / "{session}.jsonl"),
+        ),
+    )
+
+    with pytest.raises(trial.TrialError) as failure:
+        trial.run(stub, tmp_path / "out", "2026-08-26")
+
+    assert "cursor" in str(failure.value)
+    assert not recorder.exists()
+    assert not list(tmp_path.rglob("*.zip"))
+
+
+def test_empty_create_stdout_is_a_failure(tmp_path, claude):
+    stub = harnesses.Harness(
+        name="cursor",
+        manifest=claude.manifest,
+        trial=harnesses.Trial(
+            create=("sh", "-c", "true"),
+            first=("sh", "-c", "true"),
+            resume=("sh", "-c", "true"),
+            transcript=str(tmp_path / "{session}.jsonl"),
+        ),
+    )
+
+    with pytest.raises(trial.TrialError) as failure:
+        trial.run(stub, tmp_path / "out", "2026-08-26")
+
+    assert "cursor" in str(failure.value)
+    assert "session" in str(failure.value).lower()
