@@ -32,7 +32,10 @@ MANIFEST_NAME = "manifest.json"
 # open indefinitely. Generous, because a real feature plus a report takes minutes.
 PROMPT_TIMEOUT = 1800
 
-DEFAULT_PROMPTS = ("01-first-feature", "02-planned-feature", "03-almanac-review")
+# Numeric prefixes carry the order, and the review is 99 so it always lands last: it
+# asks what the almanac changed about the work, which is only answerable once the work
+# is done.
+DEFAULT_PROMPTS = ("01-first-feature", "02-planned-feature", "99-almanac-review")
 
 # Reproducible from the tree and large enough to dominate an archive — one trial's
 # virtualenv came to 85MB against a 4MB repository. The agent's commits live in .git, so
@@ -78,13 +81,19 @@ def run(
     stamp: str,
     prompts: tuple[str, ...] = DEFAULT_PROMPTS,
 ) -> Path:
-    """Run every prompt through one session, then archive the run and its evidence."""
+    """Run every prompt through one session, then archive the run and its evidence.
+
+    Prompts run in name order rather than the order given, so the numeric prefix is what
+    decides the sequence and the review at 99 cannot be asked before the work it asks
+    about has happened.
+    """
     if harness.trial is None:
         raise TrialError(
             f"{harness.name} declares no [trial] in harnesses.toml, so it cannot be "
             "driven unattended"
         )
 
+    prompts = tuple(sorted(prompts))
     texts = [prompt_text(name, stamp) for name in prompts]
     session = str(uuid.uuid4())
     workspace = Path(tempfile.mkdtemp(prefix=f"skel-trial-{harness.name}-"))

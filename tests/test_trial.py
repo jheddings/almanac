@@ -40,7 +40,7 @@ def test_a_harness_without_a_trial_block_says_so(tmp_path, monkeypatch):
 
 def test_prompts_resolve_their_date(tmp_path):
     """The review prompt names the file it must write, so the date has to be real."""
-    text = trial.prompt_text("03-almanac-review", "2026-08-26")
+    text = trial.prompt_text("99-almanac-review", "2026-08-26")
     assert "docs/review/2026-08-26-review.md" in text
     assert "{date}" not in text
 
@@ -167,3 +167,21 @@ def test_the_manifest_counts_entries_not_the_contract(tmp_path, claude):
 
     assert "README.md" not in manifest["fixture_entries"]
     assert manifest["fixture_entries"]
+
+
+def test_the_review_runs_last_however_it_is_asked_for(tmp_path, claude):
+    """The review asks what the almanac changed, which needs the work to exist first."""
+    recorder = tmp_path / "calls.txt"
+    stub = _stub_harness(claude, recorder)
+
+    archive = trial.run(
+        stub,
+        tmp_path / "out",
+        "2026-08-26",
+        prompts=("99-almanac-review", "01-first-feature"),
+    )
+    with zipfile.ZipFile(archive) as bundle:
+        name = next(n for n in bundle.namelist() if n.endswith("manifest.json"))
+        manifest = json.loads(bundle.read(name))
+
+    assert manifest["prompts"] == ["01-first-feature", "99-almanac-review"]
