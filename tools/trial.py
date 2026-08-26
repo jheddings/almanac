@@ -1,9 +1,13 @@
 """Drive a harness through the fixture unattended, and archive the evidence.
 
-A trial runs in a throwaway directory, so nothing above the fixture contributes
-instruction files of its own. It feeds the prompts to a single session in order, which
-is what makes a rule firing on the last prompt evidence that the almanac survived the
-whole session rather than only its opening.
+A trial runs in a throwaway directory, so nothing above the fixture in the tree
+contributes instruction files of its own. Where a harness row names the variable, its
+configuration directory is redirected as well: skills and plugins installed on the host
+reach a session that no working directory can exclude.
+
+It feeds the prompts to a single session in order, which is what makes a rule firing on
+the last prompt evidence that the almanac survived the whole session rather than only
+its opening.
 
 The report the agent writes is a claim. The transcript archived beside it is what a
 reader checks that claim against — one trial reported following a rule while the
