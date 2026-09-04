@@ -23,7 +23,7 @@ requires-dist = [{ name = "click", specifier = ">=8.4.2" }]
 [package.metadata.requires-dev]
 dev = [
     { name = "pre-commit", specifier = ">=4" },
-    { name = "pytest", specifier = ">=8" },
+    { name = "pytest", specifier = ">=9.1.1" },
     { name = "pyyaml", specifier = ">=6" },
 ]
 
