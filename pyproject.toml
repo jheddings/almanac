@@ -17,7 +17,7 @@ dependencies = ["click>=8.4.2"]
 package = false
 
 [dependency-groups]
-dev = ["pytest>=9.1.1", "pyyaml>=6", "pre-commit>=4.6.2"]
+dev = ["pytest>=9.1.1", "pyyaml>=6.0.3", "pre-commit>=4.6.2"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
