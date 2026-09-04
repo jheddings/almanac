@@ -10,7 +10,7 @@
 name = "almanac-tools"
 version = "0.0.0"
 description = "Repo tooling for the almanac skills. Not published, not shipped."
-requires-python = ">=3.11"
+requires-python = ">=3.14.7"
 dependencies = ["click>=8.4.2"]
 
 [tool.uv]
