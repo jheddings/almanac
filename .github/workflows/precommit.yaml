@@ -12,7 +12,7 @@ jobs:
     precommit_check:
         runs-on: ubuntu-latest
         steps:
-            - uses: actions/checkout@v6.1.0
+            - uses: actions/checkout@v7.0.1
             - uses: actions/setup-python@v6.3.0
             # The local hooks invoke `uv run`, which resolves the environment
             # declared in pyproject.toml.
