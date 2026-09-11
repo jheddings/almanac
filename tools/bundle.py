@@ -18,18 +18,9 @@ from pathlib import Path
 
 from tools.harnesses import REPO_ROOT, Harness, version
 
-# Never named by any payload. docs/almanac/ holds this repo's own entries; an adopter
+# Excluded from every archive. docs/almanac/ holds this repo's own entries; an adopter
 # gets the template and writes their own.
 FORBIDDEN = ("docs",)
-
-# Named by a payload, and stripped from the stage anyway. `skills/` ships wholesale, so
-# a skill that is an instrument for maintaining this repo rather than part of the plugin
-# stays out by name. Shipping one would hand an adopter a critique of a design they did
-# not write.
-LOCAL_ONLY = ("skills/assess",)
-
-# What must not reach an archive, whatever put it there.
-EXCLUDED = FORBIDDEN + LOCAL_ONLY
 
 
 class BundleError(Exception):
@@ -57,11 +48,6 @@ def stage(harness: Harness, root: Path, into: Path) -> Path:
         else:
             shutil.copy2(source, destination)
 
-    # A payload names `skills` as a directory, so anything local-only inside it arrives
-    # with the rest and is removed here rather than filtered during the copy.
-    for local in LOCAL_ONLY:
-        shutil.rmtree(into / local, ignore_errors=True)
-
     # A payload that already names the manifest has copied it. When the declared
     # destination differs from the repo path, copy it there as well.
     manifest = into / spec.manifest_dest
@@ -81,7 +67,7 @@ def check_stage(staged: Path, harness: Harness) -> list[str]:
     ]
     problems += [
         f"{harness.name}: stage must not carry {forbidden}/"
-        for forbidden in EXCLUDED
+        for forbidden in FORBIDDEN
         if (staged / forbidden).exists()
     ]
     return problems
@@ -109,7 +95,7 @@ def verify(out: Path, harness: Harness) -> list[str]:
     problems = []
     if harness.bundle.manifest_dest not in names:
         problems.append(f"{harness.name}: archive has no {harness.bundle.manifest_dest}")
-    for forbidden in EXCLUDED:
+    for forbidden in FORBIDDEN:
         if any(name.startswith(f"{forbidden}/") for name in names):
             problems.append(f"{harness.name}: archive must not contain {forbidden}/")
 

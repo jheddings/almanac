@@ -27,8 +27,6 @@ def fake_repo(tmp_path):
     (tmp_path / ".cursor-plugin" / "commands" / "init.md").write_text("stub")
     (tmp_path / "skills" / "init").mkdir(parents=True)
     (tmp_path / "skills" / "init" / "SKILL.md").write_text("stub")
-    (tmp_path / "skills" / "assess").mkdir(parents=True)
-    (tmp_path / "skills" / "assess" / "SKILL.md").write_text("development only")
     (tmp_path / "templates" / "almanac").mkdir(parents=True)
     (tmp_path / "templates" / "almanac" / "README.md").write_text("contract")
     (tmp_path / "README.md").write_text("readme")
@@ -132,33 +130,3 @@ def test_install_command_is_declared_for_harnesses_that_have_a_cli(tmp_path):
 def test_install_is_an_error_for_a_harness_with_no_installer(tmp_path):
     with pytest.raises(bundle.BundleError):
         bundle.install_command(harnesses.get("claude"), tmp_path / "stage")
-
-
-@pytest.mark.parametrize("name", BUNDLED)
-def test_stage_never_carries_the_development_only_skill(name, fake_repo, tmp_path):
-    """`skills/` ships wholesale, so a local-only skill leaves with it unless stripped."""
-    harness = harnesses.get(name)
-    into = tmp_path / "stage"
-    bundle.stage(harness, fake_repo, into)
-    assert (into / "skills" / "init").is_dir()
-    assert not (into / "skills" / "assess").exists()
-
-
-@pytest.mark.parametrize("name", BUNDLED)
-def test_check_stage_rejects_a_stage_carrying_the_development_only_skill(
-    name, fake_repo, tmp_path
-):
-    harness = harnesses.get(name)
-    into = tmp_path / "stage"
-    bundle.stage(harness, fake_repo, into)
-    (into / "skills" / "assess").mkdir(parents=True)
-    (into / "skills" / "assess" / "SKILL.md").write_text("leaked")
-    assert bundle.check_stage(into, harness)
-
-
-def test_verify_rejects_an_archive_carrying_the_development_only_skill(tmp_path):
-    out = tmp_path / "leaky.zip"
-    with zipfile.ZipFile(out, "w") as archive:
-        archive.writestr(".claude-plugin/plugin.json", "{}")
-        archive.writestr("skills/assess/SKILL.md", "leaked")
-    assert bundle.verify(out, harnesses.get("claude"))
