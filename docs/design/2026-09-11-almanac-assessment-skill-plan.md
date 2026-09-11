@@ -4,16 +4,13 @@
 > superpowers:subagent-driven-development (recommended) or superpowers:executing-plans
 > to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
-**Goal:** Add `almanac:assess`, a development-only fourth skill that critiques the
-almanac mechanism from a fresh agent's cold read, and make it structurally impossible to
-ship.
+**Goal:** Add `almanac:assess`, a development-only skill that critiques the almanac
+mechanism from a fresh agent's cold read, in a location nothing distributes.
 
-**Architecture:** The skill is an ordinary `skills/<name>/SKILL.md`, so the existing
-structural suite covers it for free. The bundler gains a second exclusion list — one for
-paths that were never in a payload, one for paths a payload copies and the stage must
-strip — and a test asserts no archive carries the new skill. A stub under
-`.claude/skills/` gives Claude Code a route to a file its plugin archive deliberately
-omits.
+**Architecture:** The skill is an ordinary `SKILL.md` at `.claude/skills/assess/`, a
+path no manifest and no payload names. The structural suite's skill discovery is widened
+to reach it, so the hygiene conventions and the exclusion-list drift check apply to it
+exactly as they do to the shipped three.
 
 **Tech Stack:** Markdown skills per the Agent Skills specification, Python 3 with pytest
 for the structural suite, `just` as the verb layer, prettier at 88 columns for all
@@ -23,179 +20,59 @@ prose.
 
 ---
 
+## Why not `skills/`, and what was already reverted
+
+An earlier revision of this plan put the skill in `skills/` and taught the bundler to
+strip it from every archive. That was built, reviewed, and reverted in `cfdd565`,
+because the premise was wrong: **the archive is not how this plugin reaches adopters.**
+
+`.claude-plugin/marketplace.json` declares `source: "./"`, so the documented Claude Code
+install resolves the plugin at the repository root and discovers `skills/` from the
+cloned tree. The Cursor marketplace file says the same. The codex manifest points at
+`./skills/` and builds no archive at all. The release workflow creates a draft release
+and attaches nothing. Only Antigravity installs from an archive.
+
+Do not reintroduce a bundler exclusion. A `LOCAL_ONLY` entry naming a path that does not
+exist strips nothing while every check still reports success, and the path it would name
+is no longer where the skill lives.
+
 ## Deviation from the design doc
 
-The design doc's implementation list says a note goes in both `README.md` and
-`CONTRIBUTING.md`. Only `CONTRIBUTING.md` gets one. `README.md` is named in every
-harness payload and ships to adopters, so documenting an instrument they will never
-receive would describe a skill that is absent from their install. `CONTRIBUTING.md` is
-in no payload and is read by exactly the audience the note is for.
+`README.md` gets no note about this skill. It is named in every harness payload and
+ships to adopters, so it would describe a skill the reader's install does not contain.
+`CONTRIBUTING.md` is in no payload and is read by exactly the audience the note is for.
 
 ---
 
 ## File structure
 
-| File                             | Responsibility                                                                             |
-| -------------------------------- | ------------------------------------------------------------------------------------------ |
-| `tools/bundle.py`                | Gains `LOCAL_ONLY` and `EXCLUDED`; `stage()` strips, `check_stage()` and `verify()` reject |
-| `tests/test_bundle.py`           | Proves the stripping happens and that a leaked archive is rejected                         |
-| `skills/assess/SKILL.md`         | The skill: boundaries, six stages, the honesty rules, the report shape                     |
-| `.claude/skills/assess/SKILL.md` | A stub naming the real file, carrying no method                                            |
-| `tests/test_repo_checks.py`      | Proves the stub stays a stub                                                               |
-| `CONTRIBUTING.md`                | Records that the fourth skill is development-only; corrects the resolver count             |
+| File                             | Responsibility                                                         |
+| -------------------------------- | ---------------------------------------------------------------------- |
+| `.claude/skills/assess/SKILL.md` | The skill: boundaries, six stages, the honesty rules, the report shape |
+| `tests/support/almanac.py`       | Discovers skills from both roots, so nothing is silently exempt        |
+| `tests/test_skill_hygiene.py`    | Proves the second root is actually reached                             |
+| `.justfile`                      | `just validate` runs the spec validator over both roots                |
+| `docs/almanac/<slug>.md`         | Records that `skills/` ships to adopters whatever the bundler does     |
+| `CONTRIBUTING.md`                | Records why the development-only skill lives outside `skills/`         |
 
 ---
 
-## Task 1: The bundler strips the development-only skill
+## Task 1: The skill, and the coverage that reaches it
 
-Write this first. Once it is in place, the skill cannot ship from the moment it exists.
-
-**Files:**
-
-- Modify: `tools/bundle.py:23` and the bodies of `stage`, `check_stage`, `verify`
-- Test: `tests/test_bundle.py`
-
-- [ ] **Step 1: Add the fixture path and write three failing tests**
-
-In `tests/test_bundle.py`, add one line to the `fake_repo` fixture, immediately after
-the line creating `skills/init/SKILL.md`:
-
-```python
-    (tmp_path / "skills" / "assess").mkdir(parents=True)
-    (tmp_path / "skills" / "assess" / "SKILL.md").write_text("development only")
-```
-
-Then append these three tests to the end of the file:
-
-```python
-@pytest.mark.parametrize("name", BUNDLED)
-def test_stage_never_carries_the_development_only_skill(name, fake_repo, tmp_path):
-    """`skills/` ships wholesale, so a local-only skill leaves with it unless stripped."""
-    harness = harnesses.get(name)
-    into = tmp_path / "stage"
-    bundle.stage(harness, fake_repo, into)
-    assert (into / "skills" / "init").is_dir()
-    assert not (into / "skills" / "assess").exists()
-
-
-@pytest.mark.parametrize("name", BUNDLED)
-def test_check_stage_rejects_a_stage_carrying_the_development_only_skill(
-    name, fake_repo, tmp_path
-):
-    harness = harnesses.get(name)
-    into = tmp_path / "stage"
-    bundle.stage(harness, fake_repo, into)
-    (into / "skills" / "assess").mkdir(parents=True)
-    (into / "skills" / "assess" / "SKILL.md").write_text("leaked")
-    assert bundle.check_stage(into, harness)
-
-
-def test_verify_rejects_an_archive_carrying_the_development_only_skill(tmp_path):
-    out = tmp_path / "leaky.zip"
-    with zipfile.ZipFile(out, "w") as archive:
-        archive.writestr(".claude-plugin/plugin.json", "{}")
-        archive.writestr("skills/assess/SKILL.md", "leaked")
-    assert bundle.verify(out, harnesses.get("claude"))
-```
-
-- [ ] **Step 2: Run the tests and confirm they fail**
-
-```bash
-uv run pytest tests/test_bundle.py -k "development_only" -v
-```
-
-Expected: all three fail. The stage test fails on the `assert not ... exists()`, because
-`stage()` copies `skills/` wholesale. The other two fail because `check_stage` and
-`verify` return an empty problem list.
-
-- [ ] **Step 3: Add the exclusion lists to `tools/bundle.py`**
-
-Replace the existing `FORBIDDEN` definition at `tools/bundle.py:23`:
-
-```python
-# Never named by any payload. docs/almanac/ holds this repo's own entries; an adopter
-# gets the template and writes their own.
-FORBIDDEN = ("docs",)
-
-# Named by a payload, and stripped from the stage anyway. `skills/` ships wholesale, so
-# a skill that is an instrument for maintaining this repo rather than part of the plugin
-# stays out by name. Shipping one would hand an adopter a critique of a design they did
-# not write.
-LOCAL_ONLY = ("skills/assess",)
-
-# What must not reach an archive, whatever put it there.
-EXCLUDED = FORBIDDEN + LOCAL_ONLY
-```
-
-- [ ] **Step 4: Strip the local-only paths in `stage()`**
-
-In `stage()`, immediately before the `# A payload that already names the manifest`
-comment, add:
-
-```python
-    # A payload names `skills` as a directory, so anything local-only inside it arrives
-    # with the rest and is removed here rather than filtered during the copy.
-    for local in LOCAL_ONLY:
-        shutil.rmtree(into / local, ignore_errors=True)
-```
-
-- [ ] **Step 5: Widen the two checks**
-
-In `check_stage()`, change the second comprehension to read `EXCLUDED`:
-
-```python
-    problems += [
-        f"{harness.name}: stage must not carry {forbidden}/"
-        for forbidden in EXCLUDED
-        if (staged / forbidden).exists()
-    ]
-```
-
-In `verify()`, change the loop to read `EXCLUDED`:
-
-```python
-    for forbidden in EXCLUDED:
-        if any(name.startswith(f"{forbidden}/") for name in names):
-            problems.append(f"{harness.name}: archive must not contain {forbidden}/")
-```
-
-- [ ] **Step 6: Run the tests and confirm they pass**
-
-```bash
-uv run pytest tests/test_bundle.py -v
-```
-
-Expected: PASS, with no regression in the existing `docs` tests.
-
-- [ ] **Step 7: Commit**
-
-```bash
-git add tools/bundle.py tests/test_bundle.py
-git commit -m "feat(bundle): strip development-only skills from every payload"
-```
-
----
-
-## Task 2: The skill
+These are one task because they are genuinely coupled. The skill is what makes the
+discovery change testable, and the discovery change is what stops the skill being exempt
+from every convention the suite enforces.
 
 **Files:**
 
-- Create: `skills/assess/SKILL.md`
+- Create: `.claude/skills/assess/SKILL.md`
+- Modify: `tests/support/almanac.py` (the `skills()` function, near line 78)
+- Modify: `tests/test_skill_hygiene.py`
+- Modify: `.justfile` (the `validate` recipe)
 
-The structural suite already covers this file the moment it exists, so the failing test
-comes for free.
+- [ ] **Step 1: Write the skill**
 
-- [ ] **Step 1: Confirm the suite is green before the file exists**
-
-```bash
-uv run pytest tests/test_skill_hygiene.py -q
-```
-
-Expected: PASS, and the parametrized ids name only `init`, `record`, `audit`.
-
-- [ ] **Step 2: Write the frontmatter**
-
-Create `skills/assess/SKILL.md` starting with exactly this.
+Create `.claude/skills/assess/SKILL.md` starting with exactly this frontmatter.
 `test_description_states_when_to_use_it` requires the string "use when", and
 `test_frontmatter_carries_only_name_and_description` rejects any other key.
 
@@ -213,15 +90,13 @@ description: >-
 ---
 ```
 
-- [ ] **Step 3: Write the body**
-
-Write these sections in this order, in the repo's existing skill voice — second person,
-load-bearing claims in bold, a stated reason after every instruction that could be
-dropped.
+Then write the body, in the voice the shipped skills already use: second person,
+load-bearing claims in bold, a stated reason after every instruction that could
+otherwise be dropped. Use these sections, in this order.
 
 **`# Assess the Almanac`** — Open with what the skill produces: a critique of the
 mechanism from a first reading, not a verdict about any entry. State that a fresh
-session under one harness is the intended condition, and that the report is comparable
+session under one harness is the intended condition, and that reports are comparable
 across harnesses because the walk is identical and only the friction differs.
 
 **`## What this is not`** — Two paragraphs, each naming the sibling that owns the
@@ -235,10 +110,10 @@ ground:
   assessment reporting a behavioral finding is reporting a claim it has no standing to
   make.
 
-**`## Before you start`** — The staging rule, and it is the mechanism, not a preference.
-State it as a prohibition with its reason:
+**`## Before you start`** — The staging rule. It is the mechanism, not a preference, so
+state it as a prohibition with its reason:
 
-> Do not open `docs/almanac/README.md`, the repository's `README.md`, or anything under
+> Do not open the almanac's `README.md`, the repository's `README.md`, or anything under
 > `docs/design/` until Stage 3. Stages 1 and 2 are worth having only because they happen
 > before the design explains itself. An agent told what the listing is supposed to
 > achieve cannot afterwards report what it actually understood from the listing alone.
@@ -250,10 +125,10 @@ first contact and is read in Stage 1.
 "These steps search this tree, and never look up" paragraph **verbatim** from
 `skills/record/SKILL.md`. Do not reword.
 `test_every_skill_that_resolves_the_almanac_names_the_same_exclusions` compares the
-backticked path list across every skill containing the glob `**/almanac/README.md`, and
-a reworded copy either drifts or silently drops out of the check. Only the consequence
-clause after the list is per-skill: here, assessing the wrong almanac produces a health
-report about a directory nobody relies on.
+backticked path list across every skill whose body contains the glob
+`**/almanac/README.md`, and a reworded copy either drifts or silently drops out of the
+check. Only the consequence clause after the list is per-skill: here, assessing the
+wrong almanac produces a health report about a directory nobody relies on.
 
 **`## Stage 1 — First contact`** — Four things, recorded before anything is explained:
 
@@ -262,8 +137,8 @@ report about a directory nobody relies on.
 - `ls` the almanac directory and nothing else. From the filenames alone, write down what
   this repository appears to know and what it appears to require.
 - Which titles cannot be decoded without opening the file.
-- Whether you would have read the listing to the end, given its length, and at what
-  point attention would realistically have dropped.
+- Whether you would have read the listing to the end, given its length, and where
+  attention would realistically have dropped.
 
 **`## Stage 2 — Retrieval probe`** — Still no contract. Take the moments this repository
 actually contains, derived from the listing rather than invented: about to commit, about
@@ -314,15 +189,16 @@ section is load-bearing and must not be compressed:
 1. **Clean is an expected outcome.** Say so plainly and stop. A run that finds nothing
    is a result, in the same way a branch that teaches nothing recordable is a normal
    branch.
-2. **A cost the contract already admits is not a finding.** The repository's own
+2. **A cost the contract already admits is not a finding.** This repository's
    `README.md` confesses its costs at length, so rediscovering one is not news. It
    becomes reportable only with evidence, seen during this walk, that it has actually
    materialized here.
 3. **Every finding names three things:** the text you read, the moment the problem
    bites, and what a future agent does wrong as a result. A finding missing any of the
    three is an opinion about style, and it goes in no report.
-4. **Harness-specific and universal findings stay separated.** Four reports are meant to
-   be read against each other. Merging the two kinds makes that impossible.
+4. **Harness-specific and universal findings stay separated.** Reports from four
+   harnesses are meant to be read against each other, and merging the two kinds makes
+   that impossible.
 5. **The report states this skill's own limit.** Invoking it primed you, so you cannot
    report whether you would have consulted the almanac unprompted. Say that in the
    Limits section rather than letting the staging imply a rigor it does not have.
@@ -336,145 +212,200 @@ matching what `init` and `audit` already do:
   maintainer would act on** — not a matter of taste, and not a restatement of an
   admitted cost. If nothing clears the bar, say so and make no offer.
 
-**`## Common mistakes`** — Match the shape of the list at the end of
-`skills/audit/SKILL.md`. At minimum: reading the contract before Stage 1 and reporting
-the result as a cold read; restating the README's admitted costs as discoveries;
-reporting a behavioral claim; merging harness-specific findings into universal ones;
-producing findings because the skill was invoked; assessing whether an entry is true.
+**`## Common mistakes`** — Match the shape of the list ending `skills/audit/SKILL.md`.
+At minimum: reading the contract before Stage 1 and reporting the result as a cold read;
+restating the README's admitted costs as discoveries; reporting a behavioral claim;
+merging harness-specific findings into universal ones; producing findings because the
+skill was invoked rather than because any exist; assessing whether an entry is true.
 
-- [ ] **Step 4: Format, then run the whole suite**
-
-```bash
-npx prettier --write skills/assess/SKILL.md
-just preflight
-```
-
-Expected: PASS. `just validate` now runs `skills-ref validate` over four directories,
-and `test_skill_hygiene.py` now parametrizes over four skills including the
-exclusion-list drift check.
-
-- [ ] **Step 5: Confirm the bundler actually strips it**
-
-This is the check that matters, and it reads the finished archive rather than the
-staging directory.
+Format it before going further:
 
 ```bash
-just bundle claude
-unzip -l dist/almanac-plugin-*.zip | grep -c assess
+npx prettier --write .claude/skills/assess/SKILL.md
 ```
 
-Expected: `0`. If `just bundle claude` cannot run because the Claude CLI validator is
-unavailable, run this instead and expect no output:
+- [ ] **Step 2: Write the failing test**
+
+Append to `tests/test_skill_hygiene.py`:
+
+```python
+def test_discovery_reaches_the_development_only_skill():
+    """A skill outside `skills/` is exempt from every check above unless discovery finds it.
+
+    That exemption is silent: the parametrized tests simply stop being generated for it,
+    including the exclusion-list drift check, and nothing fails.
+    """
+    assert "assess" in {skill.name for skill in SKILLS}
+```
+
+- [ ] **Step 3: Run it and confirm it fails**
+
+```bash
+uv run pytest tests/test_skill_hygiene.py::test_discovery_reaches_the_development_only_skill -v
+```
+
+Expected: FAIL. `skills()` globs `skills/*/SKILL.md` only, so the new skill is not among
+the discovered names. This failure is the point of the step: it proves the discovery
+change in Step 4 is load-bearing rather than decorative.
+
+- [ ] **Step 4: Widen discovery**
+
+In `tests/support/almanac.py`, add a module constant beside the other path constants
+near the top:
+
+```python
+# Both places a skill lives. `skills/` is what the plugin ships; `.claude/skills/` holds
+# development-only skills, which reach no adopter because no manifest and no payload
+# names that directory. Conventions below apply to both — a skill this helper does not
+# find is silently exempt from every check that parametrizes over it.
+SKILL_ROOTS = (REPO_ROOT / "skills", REPO_ROOT / ".claude" / "skills")
+```
+
+Then replace the body of `skills()`:
+
+```python
+def skills() -> list[Skill]:
+    found = []
+    for root in SKILL_ROOTS:
+        for skill_md in sorted(root.glob("*/SKILL.md")):
+            frontmatter, body = split_frontmatter(skill_md.read_text())
+            found.append(
+                Skill(
+                    path=skill_md,
+                    name=skill_md.parent.name,
+                    frontmatter=frontmatter or {},
+                    body=body,
+                )
+            )
+    return found
+```
+
+- [ ] **Step 5: Run the full suite**
+
+```bash
+uv run pytest
+```
+
+Expected: PASS. The new skill is now parametrized into every hygiene test and into the
+exclusion-list drift check. If the drift check fails, the resolution block in Step 1 was
+reworded rather than copied — fix the skill, not the test.
+
+- [ ] **Step 6: Validate the skill against the spec**
+
+Update the `validate` recipe in `.justfile` so it covers both roots:
+
+```make
+# validate all skills against the vendor-neutral Agent Skills spec
+validate:
+    for dir in skills/*/ .claude/skills/*/; do npx skills-ref validate "$dir"; done
+```
+
+Then run it:
+
+```bash
+just validate
+```
+
+Expected: every directory validates, including `.claude/skills/assess/`.
+
+- [ ] **Step 7: Confirm nothing ships the new skill**
+
+```bash
+just bundle claude && unzip -l dist/almanac-plugin-*.zip | grep -c assess
+```
+
+Expected: `0`. If the Claude CLI validator is unavailable and `just bundle claude`
+cannot run, stage without archiving instead and expect an empty list:
 
 ```bash
 uv run python -c "
-from tools import bundle, harnesses
 from pathlib import Path
 import tempfile
+from tools import bundle, harnesses
 with tempfile.TemporaryDirectory() as tmp:
-    stage = bundle.stage(harnesses.get('claude'), Path('.'), Path(tmp) / 'stage')
-    print([p for p in stage.rglob('assess')])
+    staged = bundle.stage(harnesses.get('claude'), Path('.'), Path(tmp) / 'stage')
+    print(sorted(str(p) for p in staged.rglob('assess')))
 "
 ```
 
-- [ ] **Step 6: Commit**
+- [ ] **Step 8: Commit**
 
 ```bash
-git add skills/assess/SKILL.md
+git add .claude/skills/assess/SKILL.md tests/support/almanac.py tests/test_skill_hygiene.py .justfile
 git commit -m "feat(assess): add a development-only almanac assessment skill"
 ```
 
 ---
 
-## Task 3: The Claude Code stub
+## Task 2: Record what the reverted work taught us
 
-Claude Code loads skills from an installed plugin archive, and Task 1 removed the skill
-from every archive. Without this, the one harness the repo is developed under is the one
-that cannot invoke the skill.
+This is an almanac entry, and it must follow this repository's own contract. Read
+`docs/almanac/README.md` before writing it, and follow `almanac:record` if you can load
+it.
 
 **Files:**
 
-- Create: `.claude/skills/assess/SKILL.md`
-- Modify: `tests/test_repo_checks.py`
+- Create: `docs/almanac/everything-in-skills-ships-to-adopters.md` (adjust the slug if a
+  better claim-shaped one presents itself; the filename must state the claim)
 
-- [ ] **Step 1: Write the failing test**
+- [ ] **Step 1: Confirm the claim independently**
 
-Append to `tests/test_repo_checks.py`:
-
-```python
-STUB = almanac.REPO_ROOT / ".claude" / "skills" / "assess" / "SKILL.md"
-REAL = "skills/assess/SKILL.md"
-
-
-def test_the_assess_stub_exists_and_names_the_real_skill():
-    """Claude Code installs from an archive that deliberately omits the skill."""
-    assert STUB.is_file(), f"{STUB} is missing"
-    assert REAL in STUB.read_text(), f"{STUB} must name {REAL}"
-
-
-def test_the_assess_stub_carries_no_method():
-    """Two copies of a procedure diverge, and the stale one wins whichever is read first."""
-    _, body = almanac.split_frontmatter(STUB.read_text())
-    assert len(body.split()) < 120, (
-        "the stub has grown a procedure of its own — it may only point at "
-        f"{REAL}"
-    )
-```
-
-`tests/test_repo_checks.py` already imports `almanac` from `tests.support`, so no new
-import is needed.
-
-- [ ] **Step 2: Run the test and confirm it fails**
+Do not take this plan's word for it. Establish each of these yourself and keep the
+output:
 
 ```bash
-uv run pytest tests/test_repo_checks.py -k assess -v
+cat .claude-plugin/marketplace.json
+grep -n "skills" .codex-plugin/plugin.json
+grep -rn "payload" harnesses.toml
+sed -n '1,40p' .github/workflows/release.yml
 ```
 
-Expected: FAIL on the missing file.
+You are confirming that the marketplace manifest declares `source: "./"`, that the codex
+manifest points at `./skills/`, and that the release workflow attaches no archive.
 
-- [ ] **Step 3: Write the stub**
+- [ ] **Step 2: Write the entry**
 
-Create `.claude/skills/assess/SKILL.md`:
+It is a `kind: fact` — reality can refute it, since changing the marketplace source or
+the manifests would make it false. So it carries a `verify` line, and the line must fail
+when the claim fails. A `verify` line asserting that `.claude-plugin/marketplace.json`
+declares `source: "./"` is the load-bearing one.
 
-```markdown
----
-name: assess
-description: >-
-    Use when you want a health review of this repository's almanac mechanism rather than
-    its contents — "assess the almanac", "is the almanac framework working", "review the
-    almanac mechanics". This is a pointer, not a procedure.
----
+Required frontmatter is `title`, `kind`, `recorded`, `source`, plus `verify` and
+`verified` for a fact, and optionally `tags`. **No other fields.** Quote any value
+containing `#` or `:` — an unquoted `verify` line parses as a comment and nothing warns
+you. `recorded` and `verified` are `2026-09-11`. `source` is this branch and the review
+that found it.
 
-# Assess the Almanac
+The body states the fact, then **Why it matters**, then **What to do**. What to do: a
+skill that must not reach adopters does not go in `skills/`, whatever the bundler is
+taught.
 
-This skill is maintained at `skills/assess/SKILL.md` in this repository, alongside the
-shipped skills, so the structural suite covers it. It is excluded from every harness
-payload, which is why Claude Code cannot reach it through an installed plugin and needs
-this pointer.
-
-Read `skills/assess/SKILL.md` and follow it exactly. Nothing here restates it: two
-copies of a procedure diverge, and the stale one wins whichever is read first.
-```
-
-- [ ] **Step 4: Run the test and confirm it passes**
+- [ ] **Step 3: Format and run the suite**
 
 ```bash
-npx prettier --write .claude/skills/assess/SKILL.md
-uv run pytest tests/test_repo_checks.py -k assess -v
+npx prettier --write docs/almanac/
+uv run pytest
 ```
 
-Expected: PASS.
+Expected: PASS. `tests/test_entry_frontmatter.py` enforces the field contract, and
+`tests/test_verify_lines.py` checks the verify line's shape.
+
+- [ ] **Step 4: Run your own verify line**
+
+Run exactly what you wrote in the `verify` field and confirm the output matches what the
+claim predicts. An entry whose verify line was never run is not a verified entry, and
+`verified` may only carry a date on which someone actually ran it.
 
 - [ ] **Step 5: Commit**
 
 ```bash
-git add .claude/skills/assess/SKILL.md tests/test_repo_checks.py
-git commit -m "feat(assess): point Claude Code at a skill its archive omits"
+git add docs/almanac/
+git commit -m "docs(almanac): record that skills/ ships to adopters whatever the bundler does"
 ```
 
 ---
 
-## Task 4: Record the arrangement in CONTRIBUTING
+## Task 3: Record the arrangement in CONTRIBUTING
 
 **Files:**
 
@@ -483,27 +414,27 @@ git commit -m "feat(assess): point Claude Code at a skill its archive omits"
 - [ ] **Step 1: Correct the resolver count**
 
 `CONTRIBUTING.md` currently reads "Three skills resolve the almanac, so this list has
-already needed extending twice". `assess` makes four. Change the count to four. Leave
+already needed extending twice". `assess` makes four. Change the count to four and leave
 the rest of the sentence alone.
 
 - [ ] **Step 2: Add a short subsection on development-only skills**
 
-Add it under the skill-conventions material, after the resolution discussion. It must
-state three things and no more:
+Place it with the other skill conventions, after the resolution discussion. It states
+three things and no more:
 
-- `skills/assess/` is an instrument for maintaining this repository, not part of the
-  plugin. Shipping it would hand an adopter a critique of a design they did not write.
-- It stays out of every archive through `LOCAL_ONLY` in `tools/bundle.py`, and three
-  tests in `tests/test_bundle.py` make the exclusion load-bearing rather than
-  remembered.
-- Claude Code and Antigravity install from an archive, so neither reaches it;
-  `.claude/skills/assess/SKILL.md` is the pointer that closes the Claude Code gap. Codex
-  and Cursor read the tree directly and need nothing.
+- A development-only skill lives in `.claude/skills/`, not `skills/`. Everything in
+  `skills/` reaches adopters through the marketplace route, which resolves the plugin at
+  the repository root; see the almanac entry from Task 2.
+- `tests/support/almanac.py` discovers both roots, so the hygiene conventions and the
+  exclusion-list drift check apply to it exactly as to a shipped skill, and
+  `just validate` covers both.
+- Claude Code discovers `.claude/skills/` on its own. Another harness that does not can
+  be handed the path, which is the fallback the arrangement relies on.
 
 Do not add a note to `README.md`. It ships in every payload, and it would describe a
 skill the reader's install does not contain.
 
-- [ ] **Step 3: Format and run the full suite**
+- [ ] **Step 3: Format and run the full checks**
 
 ```bash
 npx prettier --write CONTRIBUTING.md
@@ -516,22 +447,22 @@ Expected: PASS.
 
 ```bash
 git add CONTRIBUTING.md
-git commit -m "docs(contributing): record how a development-only skill stays unshipped"
+git commit -m "docs(contributing): record where a development-only skill lives, and why"
 ```
 
 ---
 
-## Task 5: Use the skill on this repository, then finish
+## Task 4: Use the skill, then finish the branch
 
 The plugin is expected to work on itself, and a skill nobody has run is a skill nobody
 has tested.
 
 - [ ] **Step 1: Run it**
 
-In a fresh session, invoke `almanac:assess` against this repository and read the report
-it produces. Judge it against the honesty rules rather than its conclusions: does it
-stage the reading correctly, does every finding carry its three parts, does it separate
-harness-specific from universal, and does it say plainly when it found nothing?
+In a fresh session, invoke the skill against this repository and read the report. Judge
+it against the honesty rules rather than its conclusions: does it stage the reading
+correctly, does every finding carry its three parts, does it separate harness-specific
+from universal, and does it say plainly when it found nothing?
 
 - [ ] **Step 2: Fix what the run exposes, in this branch**
 
@@ -540,23 +471,20 @@ the almanac are not part of this branch and go to the issue offer.
 
 - [ ] **Step 3: Answer the almanac question out loud**
 
-Before opening the pull request, answer explicitly: did this branch teach us anything an
-entry should carry? Most branches produce none, and zero is a normal outcome. The
-likeliest candidate here is the payload behaviour — `skills/` ships as a directory, so a
-new skill ships by default. Weigh it honestly against the three admission tests, noting
-that `tests/test_bundle.py` now makes that failure loud rather than silent, which is the
-usual reason not to record something.
+Before opening the pull request, answer explicitly: did this branch teach us anything
+else an entry should carry? Task 2 already recorded the one clear candidate. Most
+branches produce none, and zero is a normal outcome for whatever remains.
 
 - [ ] **Step 4: Open the pull request**
 
 ```bash
 git push -u origin feat/assess-skill
 gh pr create --title "feat(assess): add a development-only almanac assessment skill" \
-  --body "Adds almanac:assess, a development-only fourth skill that critiques the almanac mechanism from a fresh agent's cold read.
+  --body "Adds a development-only skill that critiques the almanac mechanism from a fresh agent's cold read, staged so the cold read happens before the design explains itself.
 
 The trial harness answers the functional half of the same question, so this skill makes no behavioral claim: invoking it primes the agent that would be the subject, and the report says so.
 
-skills/ ships as a directory, so the bundler now strips a local-only list from every stage and rejects any archive carrying one. Claude Code and Antigravity install from an archive, so .claude/skills/assess/SKILL.md is the pointer that closes that gap.
+It lives in .claude/skills/ rather than skills/. An earlier revision put it in skills/ and taught the bundler to strip it from every archive; that was reverted, because the marketplace manifest declares source ./ and the documented install discovers skills/ from the cloned tree. An almanac entry records that.
 
 Design: docs/design/2026-09-11-almanac-assessment-skill-design.md"
 ```

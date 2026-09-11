@@ -37,33 +37,38 @@ to make.
 
 ## Decisions
 
-### A fourth skill, in `skills/`, excluded from every payload
+### A fourth skill, outside `skills/`
 
-It lives at `skills/assess/SKILL.md`, beside `init`, `record`, and `audit`. The reason
-is coverage rather than tidiness: the structural suite already parses
-`skills/*/SKILL.md`, so the hygiene tests, the frontmatter contract, and the
-resolution-exclusion drift check apply to the new skill with nothing added.
-`just validate` runs the spec validator over it for the same reason.
+It lives at `.claude/skills/assess/SKILL.md`. The obvious home was `skills/`, beside
+`init`, `record`, and `audit`, and that home is unsafe: **everything in `skills/`
+reaches adopters**, and no bundler change prevents it.
 
-The cost is that `harnesses.toml` payloads name `skills` wholesale, so the bundler
-copies the whole directory. That needs an explicit path exclusion, and a mistake there
-ships a development instrument to every adopter. A test asserting that no archive
-contains `skills/assess` is what makes the exclusion load-bearing rather than
-remembered.
+`.claude-plugin/marketplace.json` declares `source: "./"`, so the documented Claude Code
+install resolves the plugin at the repository root and discovers `skills/` from the
+cloned tree. The Cursor marketplace file says the same. The codex manifest points at
+`./skills/` and builds no archive at all. The release workflow creates a draft release
+and attaches nothing. Only Antigravity installs from an archive, so an archive exclusion
+would have guarded the one route almost nobody takes while leaving the documented ones
+open.
 
-### Per-harness reach, and the stub that fills the gap
+`.claude/` is named by no manifest and no payload, so nothing distributes it. Claude
+Code discovers it as a project skill when a session opens this checkout, which is the
+best ergonomics available. Where another harness does not read that directory, the skill
+is an ordinary markdown file and naming its path in the prompt works — which is the
+fallback the design relies on rather than a workaround.
 
-The four harnesses do not reach `skills/` the same way.
+### What the move costs, and how it is paid
 
-Codex consumes the repo tree directly and Cursor loads a plugin directory in place, so
-both find the skill with nothing added. Claude Code and Antigravity install from an
-archive that the exclusion above deliberately empties, so neither would see it.
+Leaving `skills/` gives up the structural suite. `tests/support/almanac.py` discovers
+skills by globbing `skills/*/SKILL.md`, and two tests key off that glob to assert every
+skill resolving the almanac names the same exclusion list. A skill outside it drops out
+of that check with nothing failing, which is the silent exemption those tests were
+written to prevent.
 
-A short stub at `.claude/skills/assess/SKILL.md` closes the Claude Code gap by naming
-the real file. It carries no method of its own, which is what keeps the two from
-drifting; this is the same shape as the Cursor command stubs that already name the
-shipped skills. Under a harness with neither route, naming the path in the prompt works,
-and the skill is an ordinary markdown file precisely so that fallback exists.
+So discovery is extended to both locations, and `just validate` runs the spec validator
+over the new directory too. The conventions the suite enforces — the frontmatter shape,
+the description form, the exclusion-list agreement — are as worth holding for this skill
+as for a shipped one.
 
 ### The walk, staged so the cold read stays cold
 
@@ -146,8 +151,10 @@ restatement of an admitted cost.
 available approximation, and it is an approximation. The skill says so rather than
 letting the staging imply a rigor it does not have.
 
-**A fourth directory under `skills/` is a fourth thing that can ship by accident.** The
-test makes that loud rather than silent, which is the most the design can do.
+**A skill outside `skills/` is discovered differently on every harness.** Claude Code
+finds it; the others may need the path named. That is the price of a location nothing
+ships, and it is the right way round — a skill that is harder to invoke is recoverable,
+and one that reaches adopters is not.
 
 **Reports are not retained by default.** Session-first output keeps the instrument
 light, but nothing accumulates unless the operator accepts the write offer, so a
@@ -155,10 +162,12 @@ cross-harness comparison is assembled by hand.
 
 ## Implementation
 
-- `skills/assess/SKILL.md`, carrying the resolution block verbatim from the sibling
-  skills.
-- A path exclusion in `tools/bundle.py` covering `skills/assess`, with a test in
-  `tests/test_bundle.py` asserting no archive contains it.
-- `.claude/skills/assess/SKILL.md`, a stub naming the real file.
-- A line in `README.md` and `CONTRIBUTING.md` recording that the fourth skill is
-  development-only and never ships.
+- `.claude/skills/assess/SKILL.md`, carrying the resolution block verbatim from the
+  sibling skills.
+- `tests/support/almanac.py` discovering skills from `.claude/skills/` as well, so the
+  hygiene and exclusion-drift tests cover it, and `just validate` doing the same.
+- An almanac entry recording that `skills/` ships to adopters through the marketplace
+  route whatever the bundler does.
+- A line in `CONTRIBUTING.md` recording why the development-only skill lives where it
+  does. Not in `README.md`: that ships in every payload, and it would describe a skill
+  the reader's install does not contain.
