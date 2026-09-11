@@ -8,6 +8,8 @@
 
 basedir := justfile_directory()
 
+mod skel 'tools/skel.just'
+
 # sync the environment, install hooks, and run the full preflight
 default: setup preflight
 

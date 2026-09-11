@@ -18,6 +18,7 @@ REPO_ROOT = Path(__file__).resolve().parents[2]
 ALMANAC_README = "README.md"
 TEMPLATE_ALMANAC = REPO_ROOT / "templates" / "almanac" / "README.md"
 LIVE_ALMANAC = REPO_ROOT / "docs" / "almanac"
+FIXTURE_ALMANAC = REPO_ROOT / "skel" / "docs" / "almanac"
 
 # Frontmatter contract for an almanac entry. The template states this in prose; here it
 # is executable, which is what makes the "no other fields" invariant enforceable rather
@@ -90,6 +91,13 @@ def entry_paths() -> list[Path]:
     if not LIVE_ALMANAC.is_dir():
         return []
     return sorted(p for p in LIVE_ALMANAC.glob("*.md") if p.name != ALMANAC_README)
+
+
+def fixture_entry_paths() -> list[Path]:
+    """Every entry in the harness-test fixture's almanac."""
+    if not FIXTURE_ALMANAC.is_dir():
+        return []
+    return sorted(p for p in FIXTURE_ALMANAC.glob("*.md") if p.name != ALMANAC_README)
 
 
 def example_blocks() -> list[tuple[Path, str, str]]:

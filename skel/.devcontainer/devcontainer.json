@@ -1,0 +1,13 @@
+{
+    "name": "skinner",
+    "image": "mcr.microsoft.com/devcontainers/python:3.12",
+    "features": {
+        "ghcr.io/devcontainers/features/git:1": {}
+    },
+    "postCreateCommand": "curl -LsSf https://astral.sh/uv/install.sh | sh && curl -sSf https://just.systems/install.sh | bash -s -- --to /usr/local/bin",
+    "customizations": {
+        "vscode": {
+            "extensions": ["charliermarsh.ruff"]
+        }
+    }
+}
