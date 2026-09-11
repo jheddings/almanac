@@ -130,5 +130,27 @@ def test_discovery_reaches_the_development_only_skill():
 
     That exemption is silent: the parametrized tests simply stop being generated for it,
     including the exclusion-list drift check, and nothing fails.
+
+    The assertion is on the path rather than the name, because the name alone is
+    satisfied by a skill sitting under `skills/` — which is the arrangement this
+    development-only location exists to avoid, since everything under `skills/` reaches
+    adopters through the marketplace whatever the bundler does.
     """
-    assert "assess" in {skill.name for skill in SKILLS}
+    development_only = almanac.REPO_ROOT / ".claude" / "skills" / "assess" / "SKILL.md"
+    assert development_only in {skill.path for skill in SKILLS}
+
+
+def test_skill_names_are_unique_across_the_roots():
+    """Two roots can hold the same name; every check keyed by name would see only one.
+
+    `test_every_skill_that_resolves_the_almanac_names_the_same_exclusions` builds a dict
+    keyed by name, so a duplicate drops one skill out of the drift comparison with
+    nothing failing — and the parametrized tests above would report two cases under one
+    id.
+    """
+    names = [skill.name for skill in SKILLS]
+    duplicated = sorted({name for name in names if names.count(name) > 1})
+    assert not duplicated, (
+        f"the same skill name appears under more than one of {almanac.SKILL_ROOTS}: "
+        f"{duplicated}"
+    )

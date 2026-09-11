@@ -39,7 +39,16 @@ style:
 
 # validate all skills against the vendor-neutral Agent Skills spec
 validate:
-    for dir in skills/*/ .claude/skills/*/; do npx skills-ref validate "$dir"; done
+    #!/usr/bin/env bash
+    set -euo pipefail
+    # `set -e` stops at the first invalid skill. A bare `for` loop reports only its last
+    # iteration's status, so a failure in any earlier directory would exit 0 unnoticed.
+    # The `-d` guard skips a root that isn't there, keeping an unexpanded glob out of
+    # the validator's hands.
+    for dir in skills/*/ .claude/skills/*/; do
+        [ -d "$dir" ] || continue
+        npx skills-ref validate "$dir"
+    done
 
 # confirm the manifests agree — a mismatch breaks installation for whoever installs
 manifests harness="": venv

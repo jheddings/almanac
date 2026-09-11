@@ -12,21 +12,15 @@ description: >-
 
 # Assess the Almanac
 
-This skill produces a **critique of the almanac mechanism as it reads on first contact**
-— whether the listing is legible, whether the right entry fires at the right moment,
-whether the contract and the skills say the same thing. It is not a verdict about any
-entry, and nothing here establishes whether a recorded claim is still true.
+This skill produces a **critique of the almanac mechanism from a first reading** — what
+a fresh agent takes from it, what it retrieves, and where its pieces contradict each
+other. It is not a verdict about any entry, and nothing here establishes whether a
+recorded claim is still true.
 
 The intended condition is a **fresh session under one harness**, with this skill invoked
 before anything else in the repository has been read. That is what makes the walk worth
 running: the findings are about what an agent understands before the design explains
 itself, and an agent that has already read the design cannot produce them.
-
-Reports are comparable across harnesses because the walk is identical — the same stages,
-the same probes, in the same order. What differs between runs is the friction each
-harness adds: what it surfaces unasked, what it can load, what it can run. Two reports
-read side by side therefore separate a problem in the mechanism from a problem in the
-tool.
 
 ## What this is not
 
@@ -38,34 +32,38 @@ and well-placed, because what is under assessment is retrieval and coherence, no
 If a claim looks wrong to you while you walk, say that the audit exists and move on; do
 not verify it, and do not report a verdict.
 
-**Not the trial harness.** That measures what an agent did — whether a lazily loaded
-rule actually got loaded, whether a longer listing still got read to the end — by
-driving a harness through a fixture repository unattended and reading what came out.
-**This skill cannot measure behavior, because invoking it primes the agent that would be
-the subject.** You were told to go and look at the almanac, so nothing you do afterwards
-is evidence about whether you would have looked. An assessment reporting a behavioral
-finding is reporting a claim it has no standing to make, and it will be read as
-measurement by whoever receives it.
+**Not the trial harness.** That measures what an agent did, by driving a harness through
+a fixture repository unattended and reading what came back. **This skill cannot measure
+behavior, because invoking it primes the agent that would be the subject.** You were
+told to go and look at the almanac, so nothing you do afterwards is evidence about
+whether you would have looked. An assessment reporting a behavioral finding is reporting
+a claim it has no standing to make, and it will be read as measurement by whoever
+receives it.
 
 ## Before you start
 
-The staging below is the mechanism, not a preference.
+> Do not open anything whose job is to explain this almanac's design until Stage 3 — the
+> almanac's `README.md`, the repository's `README.md`, `CONTRIBUTING.md`, anything under
+> `docs/design/`, and anything else that says why the mechanism is built the way it is.
+> Stages 1 and 2 are worth having only because they happen before the design explains
+> itself. An agent told what the listing is supposed to achieve cannot afterwards report
+> what it actually understood from the listing alone.
 
-> Do not open the almanac's `README.md`, the repository's `README.md`, or anything under
-> `docs/design/` until Stage 3. Stages 1 and 2 are worth having only because they happen
-> before the design explains itself. An agent told what the listing is supposed to
-> achieve cannot afterwards report what it actually understood from the listing alone.
+The ban is on explanation, not on the repository. Build files, CI configuration, and the
+project's own history stay open throughout, and Stage 2 needs them.
 
-There is one exception: **the instruction file the harness surfaced on its own** —
-`AGENTS.md`, `CLAUDE.md`, or whatever this tool loads without being asked. That file is
-part of first contact by definition, and Stage 1 reads it. Do not go looking for the
-instruction files the harness did not surface; which ones it did is itself a Stage 1
-observation.
+There is one exception: **the instruction files the harness surfaced on its own** —
+`AGENTS.md`, `CLAUDE.md`, or whatever this tool loaded without being asked. Those are
+first contact by definition, and Stage 1 reads them. Do not go looking for the ones it
+did not surface; which ones it did is itself a Stage 1 observation.
 
-If one of the staged documents was already open in this session before the skill was
+If one of the banned documents was already open in this session before the skill was
 invoked, say so in the report's Limits section and do not describe Stage 1 as cold.
 
 ## Stage 0 — Locate the almanac
+
+Resolution needs to know which files exist, not what they say. **Check for
+`docs/almanac/README.md` with a directory listing and leave it closed until Stage 3.**
 
 In order — stop at the first step that resolves:
 
@@ -85,46 +83,62 @@ separate subject, and this tree's is the one that resolves. An enclosing almanac
 outside this assessment: it is a different mechanism serving a different tree, and its
 health says nothing about this one's.
 
-Hold the resolved **directory**. Every stage below reads from it.
+Hold the resolved **directory**, and name it in the report. Step 2 can land on a
+worktree's copy, and two reports that assessed different directories otherwise look
+comparable.
 
 ## Stage 1 — First contact
 
 Record four things, and record them now, while nothing has been explained. They cannot
-be reconstructed at Stage 3, because by then you will know what the listing was trying
-to achieve.
+be reconstructed at Stage 3.
 
-- **Which instruction file the harness surfaced without being asked**, and whether the
-  trigger to consult the almanac was in it. Quote the trigger if it was there. If the
-  harness surfaced nothing at all, that is the first finding of the run: an almanac
-  nobody is told to read is an almanac nobody reads.
+- **Which instruction files the harness surfaced without being asked.** Name each one
+  and mark it **repository-level** — checked into this tree, so every agent meets it —
+  or **operator-level**, this user's own global instructions, which travel with them and
+  are not part of this repository. Say whether the trigger to consult the almanac
+  appeared in a repository-level file, and quote it. **Judge only the repository's.** An
+  operator-level trigger makes the almanac look wired up when it is wired up for one
+  person, and if no repository-level file was surfaced at all, that is the first finding
+  of the run.
 - **`ls` the almanac directory, and nothing else.** No grep, nothing opened. From the
   filenames alone, write down what this repository appears to know and what it appears
-  to require of you. The filename index is the artifact the whole design rests on, and
-  this paragraph is the only measurement of it you will get.
-- **Which titles you cannot decode without opening the file.** A title that needs its
-  body to be understood has already failed at the one job the index gives it.
-- **Whether you would have read the listing to the end**, given its length, and where
-  your attention would realistically have dropped. Answer that honestly rather than
-  charitably. The length at which the index stops working is exactly what this question
-  exists to find, and a polite answer destroys the measurement.
+  to require of you.
+- **Which titles you cannot decode without opening the file.** List them.
+- **The shape of the listing, measured rather than estimated:** how many entries; the
+  length of the longest slug; whether the whole listing fits on one screen at your usual
+  width; and how far down it you had read before you began forming the answer to the
+  bullet above. Report the numbers. What you would have done with a longer listing is a
+  claim about behavior, and this skill has no standing to make one.
 
 ## Stage 2 — Retrieval probe
 
 Still no contract and still no skills. You have the listing and the notes from Stage 1.
 
-Take the moments this repository actually contains, derived from the listing rather than
-invented — a moment nobody here ever meets tests nothing. About to commit. About to open
-a pull request. Prose that looks wrong. Setting up a worktree. A build that came back
-green.
+**Derive the moments from what this repository does, not from what it has already
+recorded.** A moment read off the listing tests nothing: it is served by construction,
+so every probe hits and the stage reports clean retrieval without ever having looked for
+a gap.
+
+Build the list from the work instead:
+
+- the recipes in `.justfile`, and what each one is for;
+- the jobs in `.github/workflows/`, and what they gate;
+- the last several merged pull requests — `gh pr list --state merged --limit 10` — and
+  what they were touching.
+
+From those, name at least six moments an agent working here actually reaches,
+**including at least two the listing does not obviously serve.** If every moment on your
+list has an entry waiting for it, you took them from the listing; go back to the three
+sources. Two or three familiar ones are fine as illustrations — about to commit, setting
+up a worktree, a build that came back green — but they cannot be the whole list.
 
 For each moment, name **the entry that fires from its title alone** — not the entry you
-could find by searching for it, but the one whose filename would stop you as you scanned
-the listing. Then say whether **a single keyword grep** would surface it, using the
-keyword you would actually have typed in that moment rather than one read back off the
-filename.
+could find by searching for it, but the one whose filename would stop you as you
+scanned. Then **run a single keyword grep** with the keyword that moment suggests, and
+record the command and its output verbatim. The grep you ran is the evidence; the one
+you imagine you would have typed is not.
 
-Then the two findings this stage exists for. Both are failures of the filename index,
-and neither is visible to anyone reading entry bodies:
+Then the two findings this stage exists for:
 
 - **An entry that fires for no moment.** Its body may be excellent and it will never
   load. Name it.
@@ -134,15 +148,16 @@ and neither is visible to anyone reading entry bodies:
 
 ## Stage 3 — Read the contract and the skills
 
-Now read the almanac's `README.md`, the repository's instruction file in full, and the
-sibling skills.
+The ban lifts here. Read the almanac's `README.md`, the repository's instruction files
+in full, the sibling skills, the repository's `README.md`, and `docs/design/`.
 
 **The reconciliation is the point.** You are holding notes written before the
 explanation landed. Compare what the mechanism intended against what you actually took
 from it, and say where the two diverge. That divergence is the finding, and it is
 unavailable to anybody who read the contract first.
 
-Then five coherence checks:
+Then five coherence checks. All five ask what the texts say; whether this harness can
+run anything is Stage 4's:
 
 - **The fact and rule split as the live entries actually use it**, not as the contract
   describes it. Read each entry's `kind` against its title and decide whether the
@@ -159,14 +174,23 @@ Then five coherence checks:
   `${CLAUDE_PLUGIN_ROOT}/templates/almanac/README.md` if that variable is set, otherwise
   `templates/almanac/README.md` relative to the workspace root, otherwise the plugin's
   installed directory as your harness exposes it. Report a gap; upgrade nothing.
-- **Whether the commands the contract prints run as written under this harness.** Run
-  them. A command quoted in a contract that fails when pasted is a defect nobody
-  catches, because everyone assumes somebody ran it once.
+- **Whether the commands the contract prints are complete and correct as written.** Read
+  them; do not run them here. The retrieval commands under "Using the almanac" carry
+  placeholders — `<almanac-dir>`, `<keyword>` — so they cannot be pasted literally, and
+  what this check asks is whether the surrounding text makes the substitution obvious
+  and the flags right. **Never run an entry's `verify` line.** That is the audit's, and
+  a verdict reached here would be the truth claim this skill has just declared it does
+  not make.
 
 ## Stage 4 — Harness fit
 
-What this harness could not do. Answer each one concretely — run it, or try it — rather
-than assuming it from what you know about harnesses in general:
+This stage owns tool availability, and no other stage does. One test routes a finding:
+**would it disappear under a different harness?** Yes, and it is harness-specific and
+belongs here and in the harness-specific half of the report. No, and it is universal,
+whichever stage turned it up.
+
+Answer each one concretely — run it, or try it — rather than assuming it from what you
+know about harnesses in general:
 
 - **Do the skills load, and under what name?** `almanac:record`, some other spelling, a
   file path you had to name yourself, or not at all.
@@ -176,10 +200,12 @@ than assuming it from what you know about harnesses in general:
 - **Does the plugin-root variable resolve?** Print it. Every revision-stamp check in the
   plugin starts there, and an unset variable sends each of them down a different
   fallback.
-- **Are the grep and ripgrep invocations the contract hands you available as written?**
-  Including their flags. An `--exclude` or `--glob` this harness's tooling will not
-  accept turns the contract's one-command retrieval check into a dead end at the moment
-  it is needed.
+- **Do the contract's retrieval commands run here?** Take the ones under "Using the
+  almanac", substitute the placeholders for the resolved directory and a real keyword,
+  and run them — the listing and the grep, flags included. An `--exclude` or `--glob`
+  this harness's tooling will not accept turns the contract's one-command retrieval
+  check into a dead end at the moment it is needed. Run nothing else the contract
+  prints; an entry's `verify` line is the audit's.
 
 ## Stage 5 — Report
 
@@ -187,7 +213,8 @@ Deliver the report in the session, in this section order and no other. The order
 fixed so that two runs — successive runs under one harness, or parallel runs under four
 — can be read against each other line by line.
 
-1. **What ran** — the harness, the date, and what was read at each stage.
+1. **What ran** — the harness, the date, the almanac directory Stage 0 resolved, and
+   what was read at each stage.
 2. **First contact** — the Stage 1 record, as written at the time.
 3. **Retrieval** — the Stage 2 record, including both failure shapes, and explicitly
    saying so when one of them is empty.
@@ -209,11 +236,10 @@ one because a run felt too clean to need it.
    branch. Padding a clean run with observations you would not have volunteered is how a
    healthy mechanism acquires a maintenance backlog.
 2. **A cost the contract already admits is not a finding.** This repository's
-   `README.md` confesses its costs at length — lazily loaded rules, a listing that
-   grows, rules that no audit can reach. Rediscovering one is not news, and reporting it
-   as news buries whatever the run actually found. It becomes reportable only with
-   evidence, seen during this walk, that the admitted cost has actually materialized
-   here.
+   `README.md` confesses its costs at length, and Stage 3 is where you meet them.
+   Rediscovering one is not news, and reporting it as news buries whatever the run
+   actually found. It becomes reportable only with evidence, seen during this walk, that
+   the admitted cost has actually materialized here.
 3. **Every finding names three things:** the text you read, the moment the problem
    bites, and what a future agent does wrong as a result. A finding missing any of the
    three is an opinion about style, and it goes in no report. The third part is the one
@@ -229,12 +255,13 @@ one because a run felt too clean to need it.
 ## Then offer
 
 Two offers, after the report is delivered, and neither is taken without approval.
-`almanac:init` proposes and `almanac:audit` proposes; nothing in this plugin writes
-unreviewed, and an assessment is the last thing that should.
 
 - **Offer to write the report to disk.** Propose
   `docs/review/<date>-<harness>-assessment.md` rather than assuming it — the directory
-  may not exist, and where reports live is the repository's call, not this skill's.
+  may not exist, and where reports live is the repository's call. A shipped skill would
+  never name that path, because a hardcoded destination sends an adopting repo's agent
+  into a directory it does not have; this one may, because it is development-only and
+  reaches no repository but this one.
 - **Offer to file the obvious defects as issues.** State the bar: **a defect in the
   mechanism a maintainer would act on** — not a matter of taste, and not a restatement
   of an admitted cost. If nothing clears the bar, say so and make no offer. An offer to
@@ -242,21 +269,15 @@ unreviewed, and an assessment is the last thing that should.
 
 ## Common mistakes
 
-- **Reading the contract before Stage 1 and reporting the result as a cold read.** The
-  staging is the only instrument this skill has. Once you know what the listing was
-  designed to do, your account of what you understood from it is a reconstruction, and
-  it will read as a measurement.
-- **Restating the README's admitted costs as discoveries.** The contract names them
-  itself. Reporting one without evidence that it has materialized here is not a finding,
-  and it displaces the ones that are.
-- **Reporting a behavioral claim.** "An agent would skip this entry" is a measurement,
-  and invoking this skill destroyed your standing to make it. Say what the text does;
-  leave what agents do to the trial.
-- **Merging harness-specific findings into universal ones.** The merge is invisible in a
-  single report and only surfaces when four are compared — by which point the mechanism
-  has been changed to fix one tool.
-- **Producing findings because the skill was invoked** rather than because any exist. An
-  assessment that never comes back clean is an assessment that measures nothing.
-- **Assessing whether an entry is true.** That is `almanac:audit`, it needs commands
-  this walk never runs, and a truth verdict reached here carries the authority of one
-  that was actually checked.
+- **Reading an explanatory document before Stage 1**, then reporting the result as a
+  cold read — see "Before you start".
+- **Restating an admitted cost as a discovery** — rule 2.
+- **Reporting a behavioral claim**, about an agent or about yourself — see "What this is
+  not".
+- **Merging harness-specific findings into universal ones** — rule 4, and the routing
+  test in Stage 4.
+- **Producing findings because the skill was invoked** rather than because any exist —
+  rule 1.
+- **Taking Stage 2's moments from the listing**, which guarantees every probe hits.
+- **Assessing whether an entry is true**, or running its `verify` line — that is
+  `almanac:audit`.
