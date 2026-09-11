@@ -125,9 +125,11 @@ Build the list from the work instead:
 - the jobs in `.github/workflows/`, and what they gate;
 - the last several merged pull requests — `gh pr list --state merged --limit 10` — and
   what they were touching. Skip the bot and dependency-update ones; they move a lockfile
-  and stand in for no moment. Take **what changed** from the rest and nothing else: a
-  pull request whose prose explains the almanac's design is banned like any other
-  explanation, history or not.
+  and stand in for no moment. Raise the limit until a few non-bot pull requests are in
+  hand, because a window that returns nothing but bots leaves this source empty without
+  saying so. Take **what changed** from the rest and nothing else: a pull request whose
+  prose explains the almanac's design is banned like any other explanation, history or
+  not.
 
 From those, name at least six moments an agent working here actually reaches. Two or
 three familiar ones are fine as illustrations — about to commit, setting up a worktree,
@@ -156,6 +158,10 @@ Then the two findings this stage exists for:
 - **A moment served by no entry.** Two causes, and they take different fixes: either
   nothing was ever recorded, or something was recorded under a title that does not state
   the claim. Say which you think it is.
+
+Weigh how discriminating the probe was. **A probe in which every moment was served is
+weak evidence about retrieval** — it barely exercises the sampling that would find a gap
+— so say how many moments your enumeration produced and how many you carried forward.
 
 ## Stage 3 — Read the contract and the skills
 
@@ -300,10 +306,7 @@ Two offers, after the report is delivered, and neither is taken without approval
 
 - **Offer to write the report to disk.** Propose
   `docs/review/<date>-<harness>-assessment.md` rather than assuming it — the directory
-  may not exist, and where reports live is the repository's call. A shipped skill would
-  never name that path, because a hardcoded destination sends an adopting repo's agent
-  into a directory it does not have; this one may, because it is development-only and
-  reaches no repository but this one.
+  may not exist, and where reports live is the repository's call.
 - **Offer to file the obvious defects as issues.** State the bar: **a defect in the
   mechanism a maintainer would act on** — not a matter of taste, and not a restatement
   of an admitted cost. If nothing clears the bar, say so and make no offer. An offer to
