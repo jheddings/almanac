@@ -35,6 +35,17 @@ cannot measure behavior, because invoking it primes the agent that would be the 
 An assessment that reports behavioral findings is reporting a claim it has no standing
 to make.
 
+The `audit` boundary is the one that takes work to hold, because the assessment does
+read entry bodies and does count what is in them. **Measuring the unguarded surface
+belongs here; judging it belongs to the audit.** How much of the directory rests on
+assertions no `verify` line covers, and how many facts carry a line nothing could re-run
+in this tree, are both structural properties of the mechanism — countable without
+opening a question about any claim's truth, and nothing else measures them. Whether any
+one of those assertions still holds is a verdict, needs evidence produced by running
+something, and is exactly what the audit exists to produce. The seam is what keeps both
+reports readable: a maintainer reading a coverage count knows it is a shape, and reading
+an audit verdict knows something ran.
+
 ## Decisions
 
 ### A fourth skill, outside `skills/`
@@ -111,15 +122,29 @@ and `docs/design/`. The explanation lands against notes already written, so the
 reconciliation is honest rather than retrospective. Coherence checks belong here: the
 fact and rule split as the live entries actually use it, precedence stated the same way
 in the contract and in the skills, anything duplicated between `AGENTS.md` and an entry,
-the `<!-- almanac-template: N -->` stamp against the canonical template, and whether the
-commands the contract prints are complete and correct as text. Running them is Stage
+the `<!-- almanac-template: N -->` stamp against the canonical template, whether the
+commands the contract prints are complete and correct as text, and whether the claims
+the contract makes about the skills still match those skills. Running commands is Stage
 4's, under one routing test: a finding that would disappear under a different harness is
 harness fit, not coherence.
+
+Stage 3 then closes with two **measurements** of what the mechanism does not cover: how
+many entries carry concrete body assertions of the kind that rots — a named command, a
+path, a flag, a count, a named implementation — and how many facts carry a `verify` line
+that could not be re-run in this tree at all, because it describes a historical event or
+a state that no longer exists. Both report a count and a list of filenames. Neither
+reports whether any body detail is correct. This is the first point in the walk where
+entry bodies are read, and it is safe there: the cold stages are over and their records
+are already written.
 
 **Stage 4 — Harness fit.** What this harness could not do. Whether the skills load and
 under what name, whether subagents exist for the audit's fan-out, whether the
 plugin-root variable resolves, whether the grep and ripgrep invocations the contract
-hands you are available.
+hands you are available, and what the facts' `verify` lines require before they could
+run — credentials, network, a live service, an absent tool — against what this harness
+supplies. That last is the harness-comparable half of the fact-tier measurement above:
+an entry that cannot be checked because a token is invalid is a statement about the
+environment, not about the entry.
 
 **Stage 5 — Report, then offer.**
 
@@ -147,7 +172,12 @@ the load-bearing part of the skill.
 ### Output: session first, then two offers
 
 The report is delivered in the session, in a fixed section order so that successive runs
-and parallel harnesses stay comparable.
+and parallel harnesses stay comparable: what ran, first contact, retrieval, coherence,
+coverage, harness fit, findings, limits. **Coverage sits between coherence and harness
+fit** because the two measurements are neither — they are not a contradiction between
+texts and they do not vary with the tool — and giving them their own section keeps the
+counts out of a findings list, where a number with no verdict attached would read as
+one.
 
 After the report, the skill offers to write it to disk and offers to file the obvious
 defects as issues in the repository. The write offer proposes a dated, harness-named

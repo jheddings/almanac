@@ -207,7 +207,7 @@ unavailable to anybody who read the contract first. **If the contract reads as
 unsurprising, the likeliest reason is the priming rather than genuine agreement** — say
 so alongside any "no divergence" you report about retrieval.
 
-Then five coherence checks. They ask what the texts say; whether this harness can run
+Then six coherence checks. They ask what the texts say; whether this harness can run
 anything is Stage 4's, with the single exemption the fourth bullet names:
 
 - **The fact and rule split as the live entries actually use it**, not as the contract
@@ -238,6 +238,42 @@ anything is Stage 4's, with the single exemption the fourth bullet names:
   and the flags right. **Never run an entry's `verify` line.** That is the audit's, and
   a verdict reached here would be the truth claim this skill has just declared it does
   not make.
+- **Claims the contract makes about the skills, checked against the skills.** The
+  contract describes what `record` and `audit` do, and those descriptions drift when a
+  skill is changed and the contract is not. Read each such claim and confirm the named
+  skill still behaves that way in its own text. Two live shapes, as illustrations and
+  not as a taxonomy: the contract may say a body assertion is unguarded because no audit
+  re-runs it while `almanac:audit` now has its workers read bodies and spot-check them,
+  and a count stated in one place — how many rules bind an audit worker — may be
+  contradicted in another. Report the contradictions you find; do not add a check per
+  shape, or this list grows by one every time somebody finds another.
+
+### The unguarded surface
+
+Two measurements close Stage 3, and **they are measurements only. Each reports a count
+and a list of filenames. Neither reports whether any body detail is correct, and neither
+reaches a verdict about an entry.** The moment this skill says a body is wrong it has
+become a worse copy of `almanac:audit`, and the clean seam between the two instruments
+is what makes both reports readable. Do not soften that constraint when editing here.
+
+**This is the first point in the walk where you read entry bodies, and it is safe
+here.** The cold stages are behind you and their records are already written, so nothing
+you read now can contaminate a first impression.
+
+- **How much unguarded body surface the directory carries.** A `verify` line covers the
+  title claim and nothing else, so everything else a body asserts is unaudited by
+  construction — and nothing measures how much of that there is. Read the bodies and
+  count the entries carrying a concrete assertion of the kind that rots: a named
+  command, a path, a flag, a count, a named implementation. Report the number and the
+  filenames. Whether any of them still holds is the audit's question, not yours.
+- **How much of the fact tier can actually be audited.** Read each fact's `verify` line
+  — read it; do not run it — and ask one question: could it be re-run in this tree at
+  all? A line describing a historical pull request, or a state that no longer exists,
+  cannot, so that entry sits in the tier that exists because it is re-checkable while
+  behaving like a rule. Report the count and the filenames. **The admitted-cost
+  exemption does not reach this.** The contract admits that rules cannot be audited; it
+  does not admit that some facts cannot either, so this is new evidence rather than a
+  rediscovery, and rule 2 does not bar it.
 
 ## Stage 4 — Harness fit
 
@@ -263,6 +299,14 @@ know about harnesses in general:
   this harness's tooling will not accept turns the contract's one-command retrieval
   check into a dead end at the moment it is needed. Run nothing else the contract
   prints; an entry's `verify` line is the audit's.
+- **What the `verify` lines need, and whether this harness has it.** Go through the
+  facts' lines — reading them, not running them — and name what each one requires before
+  it could run at all: credentials, network access, a live service, a tool that may be
+  absent. Then say whether this harness supplies it. This is the harness-comparable half
+  of the fact-tier measurement in Stage 3, and it is exactly the signal a cross-harness
+  run exists to produce. **An entry that cannot be checked because a token is invalid is
+  a statement about the environment, not about the entry** — a report that blurs the two
+  hands a maintainer a defect list with nothing wrong on it.
 
 ## Common mistakes
 
@@ -281,7 +325,8 @@ The numbered rules they point at are in "What keeps this honest", below.
 - **Taking Stage 2's moments from the listing**, which guarantees every probe hits.
 - **Grepping the almanac without `-l` and the `README.md` exclusion**, which prints the
   contract into a stage that has not read it.
-- **Assessing whether an entry is true**, or running its `verify` line — that is
+- **Assessing whether an entry is true**, running its `verify` line, or turning a count
+  of unguarded body surface into a claim that some body is wrong — all three are
   `almanac:audit`.
 
 ## Stage 5 — Report
@@ -295,11 +340,13 @@ fixed so that two runs — successive runs under one harness, or parallel runs u
 2. **First contact** — the Stage 1 record, as written at the time.
 3. **Retrieval** — the Stage 2 record, including both failure shapes, and explicitly
    saying so when one of them is empty.
-4. **Coherence** — the Stage 3 reconciliation and the five checks.
-5. **Harness fit** — the Stage 4 answers.
-6. **Findings** — universal first, harness-specific second, each carrying its three
+4. **Coherence** — the Stage 3 reconciliation and the six checks.
+5. **Coverage** — what the mechanism does not cover: the two Stage 3 measurements, as
+   counts and filenames, with no verdict attached to either.
+6. **Harness fit** — the Stage 4 answers.
+7. **Findings** — universal first, harness-specific second, each carrying its three
    parts.
-7. **Limits** — what this run could not establish, the three levels of priming under
+8. **Limits** — what this run could not establish, the three levels of priming under
    "What this is not" among them.
 
 ## What keeps this honest
