@@ -137,7 +137,10 @@ def test_discovery_reaches_the_development_only_skill():
     adopters through the marketplace whatever the bundler does.
     """
     development_only = almanac.REPO_ROOT / ".claude" / "skills" / "assess" / "SKILL.md"
-    assert development_only in {skill.path for skill in SKILLS}
+    assert development_only in {skill.path for skill in SKILLS}, (
+        f"{development_only} was not discovered, so it is exempt from every check in "
+        f"this file — discovery reaches {almanac.SKILL_ROOTS}"
+    )
 
 
 def test_skill_names_are_unique_across_the_roots():

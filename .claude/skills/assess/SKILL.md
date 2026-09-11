@@ -104,11 +104,11 @@ be reconstructed at Stage 3.
   filenames alone, write down what this repository appears to know and what it appears
   to require of you.
 - **Which titles you cannot decode without opening the file.** List them.
-- **The shape of the listing, measured rather than estimated:** how many entries; the
-  length of the longest slug; whether the whole listing fits on one screen at your usual
-  width; and how far down it you had read before you began forming the answer to the
-  bullet above. Report the numbers. What you would have done with a longer listing is a
-  claim about behavior, and this skill has no standing to make one.
+- **The shape of the listing, counted rather than estimated:** how many entries, how
+  long the longest slug is, and how many of those entries you actually named in the two
+  bullets above. Report those three numbers and stop there. Where your attention would
+  have dropped, or what you would have done with a longer listing, is a claim about
+  behavior, and this skill has no standing to make one.
 
 ## Stage 2 — Retrieval probe
 
@@ -124,19 +124,30 @@ Build the list from the work instead:
 - the recipes in `.justfile`, and what each one is for;
 - the jobs in `.github/workflows/`, and what they gate;
 - the last several merged pull requests — `gh pr list --state merged --limit 10` — and
-  what they were touching.
+  what they were touching. Skip the bot and dependency-update ones; they move a lockfile
+  and stand in for no moment. Take **what changed** from the rest and nothing else: a
+  pull request whose prose explains the almanac's design is banned like any other
+  explanation, history or not.
 
-From those, name at least six moments an agent working here actually reaches,
-**including at least two the listing does not obviously serve.** If every moment on your
-list has an entry waiting for it, you took them from the listing; go back to the three
-sources. Two or three familiar ones are fine as illustrations — about to commit, setting
-up a worktree, a build that came back green — but they cannot be the whole list.
+From those, name at least six moments an agent working here actually reaches. Two or
+three familiar ones are fine as illustrations — about to commit, setting up a worktree,
+a build that came back green — but they cannot be the whole list.
+
+**If every moment on your list turns out to be served, that is a legitimate result.** An
+almanac that covers its repository is what a healthy one looks like. Before reporting
+it, re-read your list against the three sources and confirm the moments came from there
+rather than from the listing, then say plainly that they did. Never invent a moment
+nobody here reaches in order to give the stage something to report.
 
 For each moment, name **the entry that fires from its title alone** — not the entry you
 could find by searching for it, but the one whose filename would stop you as you
-scanned. Then **run a single keyword grep** with the keyword that moment suggests, and
-record the command and its output verbatim. The grep you ran is the evidence; the one
-you imagine you would have typed is not.
+scanned. Then **run a single keyword grep, in the filename-only form** —
+`grep -rl --exclude=README.md <keyword> <almanac-dir>/` — and record the command and its
+output verbatim. Neither flag is optional here. `-l` returns paths instead of bodies,
+and the exclusion keeps the almanac's own `README.md` out of the results; without both,
+a keyword that happens to match that file prints it, and you have read at Stage 2 the
+document Stage 3 exists to introduce. The grep you ran is the evidence; the one you
+imagine you would have typed is not.
 
 Then the two findings this stage exists for:
 
@@ -148,16 +159,17 @@ Then the two findings this stage exists for:
 
 ## Stage 3 — Read the contract and the skills
 
-The ban lifts here. Read the almanac's `README.md`, the repository's instruction files
-in full, the sibling skills, the repository's `README.md`, and `docs/design/`.
+The ban lifts here, on everything it covered. Read the almanac's `README.md`, the
+repository's instruction files in full, the sibling skills, the repository's
+`README.md`, `CONTRIBUTING.md`, and `docs/design/`.
 
 **The reconciliation is the point.** You are holding notes written before the
 explanation landed. Compare what the mechanism intended against what you actually took
 from it, and say where the two diverge. That divergence is the finding, and it is
 unavailable to anybody who read the contract first.
 
-Then five coherence checks. All five ask what the texts say; whether this harness can
-run anything is Stage 4's:
+Then five coherence checks. They ask what the texts say; whether this harness can run
+anything is Stage 4's, with the single exemption the fourth bullet names:
 
 - **The fact and rule split as the live entries actually use it**, not as the contract
   describes it. Read each entry's `kind` against its title and decide whether the
@@ -173,7 +185,10 @@ run anything is Stage 4's:
   the way `almanac:audit` resolves it —
   `${CLAUDE_PLUGIN_ROOT}/templates/almanac/README.md` if that variable is set, otherwise
   `templates/almanac/README.md` relative to the workspace root, otherwise the plugin's
-  installed directory as your harness exposes it. Report a gap; upgrade nothing.
+  installed directory as your harness exposes it. Report a gap; upgrade nothing. **This
+  is the exemption to the routing above**, because resolving the canonical copy is a
+  harness question: if none of the three resolves here, the comparison is unavailable
+  and that is a Stage 4 finding, not a defect in the contract.
 - **Whether the commands the contract prints are complete and correct as written.** Read
   them; do not run them here. The retrieval commands under "Using the almanac" carry
   placeholders — `<almanac-dir>`, `<keyword>` — so they cannot be pasted literally, and
@@ -206,6 +221,26 @@ know about harnesses in general:
   this harness's tooling will not accept turns the contract's one-command retrieval
   check into a dead end at the moment it is needed. Run nothing else the contract
   prints; an entry's `verify` line is the audit's.
+
+## Common mistakes
+
+Read these before writing the report, while there is still something to do about them.
+The numbered rules they point at are in "What keeps this honest", below.
+
+- **Reading an explanatory document before Stage 1**, then reporting the result as a
+  cold read — see "Before you start".
+- **Restating an admitted cost as a discovery** — rule 2.
+- **Reporting a behavioral claim**, about an agent or about yourself — see "What this is
+  not".
+- **Merging harness-specific findings into universal ones** — rule 4, and the routing
+  test in Stage 4.
+- **Producing findings because the skill was invoked** rather than because any exist —
+  rule 1.
+- **Taking Stage 2's moments from the listing**, which guarantees every probe hits.
+- **Grepping the almanac without `-l` and the `README.md` exclusion**, which prints the
+  contract into a stage that has not read it.
+- **Assessing whether an entry is true**, or running its `verify` line — that is
+  `almanac:audit`.
 
 ## Stage 5 — Report
 
@@ -250,7 +285,14 @@ one because a run felt too clean to need it.
    mechanism gets changed to fix a tool.
 5. **The report states this skill's own limit.** Invoking it primed you, so you cannot
    report whether you would have consulted the almanac unprompted. Say that in the
-   Limits section rather than letting the staging imply a rigor it does not have.
+   Limits section rather than letting the staging imply a rigor it does not have. The
+   priming runs deeper than the invocation, and it is not removable: Stage 2 cannot
+   instruct a retrieval probe without naming retrieval, so by telling you to find the
+   entry that fires from its title alone it hands you the contract's central claim two
+   stages early. The walk therefore tests **whether the right entry fires**, and cannot
+   test whether an unbriefed agent would work out for itself that the titles are the
+   index. When the contract reads as unsurprising at Stage 3, that is the likeliest
+   reason — so say it alongside any "no divergence" you report about retrieval.
 
 ## Then offer
 
@@ -266,18 +308,3 @@ Two offers, after the report is delivered, and neither is taken without approval
   mechanism a maintainer would act on** — not a matter of taste, and not a restatement
   of an admitted cost. If nothing clears the bar, say so and make no offer. An offer to
   file nothing in particular is how a clean run becomes a backlog anyway.
-
-## Common mistakes
-
-- **Reading an explanatory document before Stage 1**, then reporting the result as a
-  cold read — see "Before you start".
-- **Restating an admitted cost as a discovery** — rule 2.
-- **Reporting a behavioral claim**, about an agent or about yourself — see "What this is
-  not".
-- **Merging harness-specific findings into universal ones** — rule 4, and the routing
-  test in Stage 4.
-- **Producing findings because the skill was invoked** rather than because any exist —
-  rule 1.
-- **Taking Stage 2's moments from the listing**, which guarantees every probe hits.
-- **Assessing whether an entry is true**, or running its `verify` line — that is
-  `almanac:audit`.

@@ -41,10 +41,9 @@ style:
 validate:
     #!/usr/bin/env bash
     set -euo pipefail
-    # `set -e` stops at the first invalid skill. A bare `for` loop reports only its last
-    # iteration's status, so a failure in any earlier directory would exit 0 unnoticed.
-    # The `-d` guard skips a root that isn't there, keeping an unexpanded glob out of
-    # the validator's hands.
+    # A `for` loop's exit status is its last iteration's alone, so `set -e` is what makes
+    # an invalid skill in any directory fail the recipe. The `-d` guard skips a root that
+    # isn't there, keeping an unexpanded glob out of the validator's hands.
     for dir in skills/*/ .claude/skills/*/; do
         [ -d "$dir" ] || continue
         npx skills-ref validate "$dir"
