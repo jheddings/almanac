@@ -1,13 +1,24 @@
 """Drive a harness through the fixture unattended, and archive the evidence.
 
-A trial runs in a throwaway directory, so nothing above the fixture contributes
-instruction files of its own. It feeds the prompts to a single session in order, which
-is what makes a rule firing on the last prompt evidence that the almanac survived the
-whole session rather than only its opening.
+A trial runs in a throwaway directory, so nothing above the fixture in the tree
+contributes instruction files of its own. Where a harness row names the variable, its
+configuration directory is redirected as well: skills and plugins installed on the host
+reach a session that no working directory can exclude.
+
+It feeds the prompts to a single session in order, which is what makes a rule firing on
+the last prompt evidence that the almanac survived the whole session rather than only
+its opening.
 
 The report the agent writes is a claim. The transcript archived beside it is what a
 reader checks that claim against — one trial reported following a rule while the
-directory on disk said otherwise, so the two are kept together deliberately.
+directory on disk said otherwise, so the two are kept together deliberately. What a
+transcript can settle varies by harness: some record every command and its output,
+others only the calls, and the git history is the half that reads the same everywhere.
+
+Validation asks whether the archive holds something to read. The per-prompt counts
+beside it say which prompt left it there — a session can satisfy every structural
+prerequisite on the strength of its last prompt alone, and the exit statuses report
+that as three clean successes.
 """
 
 from __future__ import annotations
@@ -24,9 +35,17 @@ from pathlib import Path
 from tools import skel
 from tools.harnesses import Harness
 
+# Where a harness's configuration is pointed for the duration of a run. It sits beside
+# the run rather than inside it, so an agent listing its working directory does not find
+# a directory the fixture never shipped.
+AGENT_HOME = "agent-home"
+
 REVIEW_DIR = "docs/review"
 TRANSCRIPT_NAME = "session.jsonl"
 MANIFEST_NAME = "manifest.json"
+
+# Opening a session is a single round trip, so it gets far less rope than a prompt.
+CREATE_TIMEOUT = 60
 
 # A trial that has stopped making progress should fail rather than hold the terminal
 # open indefinitely. Generous, because a real feature plus a report takes minutes.
@@ -108,23 +127,51 @@ def _find_transcript(
     return max(matches, key=lambda p: p.stat().st_mtime) if matches else None
 
 
-def _session(harness: Harness, run_dir: Path) -> str:
+def _agent_env(harness: Harness, home: Path) -> dict[str, str]:
+    """The environment every command in the run inherits, configuration redirected.
+
+    The throwaway working directory keeps instruction files *above the fixture* out of
+    a run. It does nothing about the ones a harness loads from the user's configuration
+    directory, which no working directory excludes: one trial read three skills out of
+    the host's plugin cache, and a design gate in one of them stalled two prompts of the
+    three.
+
+    Which variable moves that directory is the harness's business, so the table names
+    it. A harness that names none runs exactly as before.
+    """
+    env = skel.clean_env()
+    env.update({key: value.format(home=home) for key, value in harness.trial.env})
+    return env
+
+
+def _session(harness: Harness, run_dir: Path, env: dict[str, str]) -> str:
     """The id `first` and `resume` will attach to.
 
     When `create` is set, the harness names the session — Cursor's `create-chat`
     prints a UUID — and an empty or failed create is not a prompt failure: nothing
     has been asked yet, so there is nothing to archive.
+
+    Every way this can fail names the harness. `create` is the first command a trial
+    runs, so a CLI that is not installed surfaces here before anything else, and a bare
+    `FileNotFoundError` says nothing about which harness the operator is missing.
     """
     if not harness.trial.create:
         return str(uuid.uuid4())
-    done = subprocess.run(
-        list(harness.trial.create),
-        cwd=run_dir,
-        capture_output=True,
-        text=True,
-        timeout=60,
-        env=skel.clean_env(),
-    )
+    try:
+        done = subprocess.run(
+            list(harness.trial.create),
+            cwd=run_dir,
+            capture_output=True,
+            text=True,
+            timeout=CREATE_TIMEOUT,
+            env=env,
+        )
+    except subprocess.TimeoutExpired:
+        raise TrialError(
+            f"{harness.name}: create did not return within {CREATE_TIMEOUT}s"
+        ) from None
+    except (OSError, subprocess.SubprocessError) as failure:
+        raise TrialError(f"{harness.name}: create could not run: {failure}") from None
     if done.returncode != 0:
         raise TrialError(f"{harness.name}: create exited {done.returncode}")
     session = done.stdout.strip()
@@ -158,8 +205,12 @@ def run(
     try:
         run_dir = skel.new_run(skel.FIXTURE, workspace, harness.name, stamp)
         initial_head = skel._git(run_dir, "rev-parse", "HEAD").strip()
-        session = _session(harness, run_dir)
-        results = _drive(harness, run_dir, session, prompts, texts)
+        home = workspace / AGENT_HOME
+        home.mkdir(parents=True, exist_ok=True)
+        env = _agent_env(harness, home)
+        session = _session(harness, run_dir, env)
+        results = _drive(harness, run_dir, session, prompts, texts, env)
+        _report(results)
         transcript, discovered_session = _collect(harness, run_dir, session)
         manifest_session = session if _names_session(harness) else discovered_session
         problems = _validation_problems(
@@ -174,6 +225,7 @@ def run(
             results,
             transcript,
             problems,
+            _config_home_used(harness, home),
         )
         archive = _archive(run_dir, out_dir, workspace)
         if problems:
@@ -187,7 +239,56 @@ def run(
         shutil.rmtree(workspace, ignore_errors=True)
 
 
-def _drive(harness, run_dir, session, prompts, texts) -> list[dict]:
+def _git_output(run_dir: Path, *args: str) -> str | None:
+    """What git said, or None if it could not say anything.
+
+    A trial archives whatever exists, including a run whose repository an agent left
+    unreadable, so a failure here degrades the manifest rather than losing the archive.
+    """
+    try:
+        done = subprocess.run(
+            ["git", "-C", str(run_dir), *args],
+            capture_output=True,
+            text=True,
+            env=skel.clean_env(),
+            timeout=60,
+        )
+    except (OSError, subprocess.SubprocessError):
+        return None
+    return done.stdout if done.returncode == 0 else None
+
+
+def _state(run_dir: Path) -> dict:
+    """How much the run directory holds, counted rather than judged.
+
+    Commits are counted across every ref rather than from `HEAD`: work left on a branch
+    that was never merged is still work, and a count taken from `HEAD` alone reports it
+    as an empty run.
+
+    `dirty` catches the other half — an agent that wrote files and never committed
+    them moves no commit count at all.
+    """
+    commits = _git_output(run_dir, "rev-list", "--count", "--all")
+    dirty = _git_output(run_dir, "status", "--porcelain")
+    return {
+        "commits": int(commits.strip()) if commits else None,
+        "dirty": len(dirty.splitlines()) if dirty is not None else None,
+    }
+
+
+def _report(results: list[dict]) -> None:
+    """Say what the run produced, so the operator sees it without opening the
+    archive.
+    """
+    last = results[-1] if results else {}
+    print(
+        f"\n── prompts {len(results)} · commits {last.get('commits')} "
+        f"· uncommitted {last.get('dirty')}",
+        flush=True,
+    )
+
+
+def _drive(harness, run_dir, session, prompts, texts, env) -> list[dict]:
     """Feed each prompt to the same session, stopping at the first that fails.
 
     Output is not captured: a trial takes minutes, and watching it is the only progress
@@ -204,12 +305,12 @@ def _drive(harness, run_dir, session, prompts, texts) -> list[dict]:
         print(f"\n── prompt {index + 1}/{len(prompts)}: {name}\n", flush=True)
         try:
             done = subprocess.run(
-                command, cwd=run_dir, timeout=PROMPT_TIMEOUT, env=skel.clean_env()
+                command, cwd=run_dir, timeout=PROMPT_TIMEOUT, env=env
             )
             status = done.returncode
         except subprocess.TimeoutExpired:
             status = None
-        results.append({"prompt": name, "exit": status})
+        results.append({"prompt": name, "exit": status, **_state(run_dir)})
         if status != 0:
             reason = "timed out" if status is None else f"exited {status}"
             print(f"\n!! {name} {reason} — archiving what exists", flush=True)
@@ -259,8 +360,28 @@ def _validation_problems(
     return problems
 
 
+def _config_home_used(harness: Harness, home: Path) -> bool | None:
+    """Whether the harness wrote anything where it was told its configuration lives.
+
+    A variable a harness does not read sets nothing and fails nothing, and an untouched
+    home reads exactly like a well-behaved one. An empty directory here says the
+    harness kept its configuration somewhere the run does not control.
+    """
+    if not harness.trial.env:
+        return None
+    return any(home.iterdir())
+
+
 def _write_manifest(
-    harness, run_dir, session, stamp, prompts, results, transcript, problems
+    harness,
+    run_dir,
+    session,
+    stamp,
+    prompts,
+    results,
+    transcript,
+    problems,
+    config_home_used,
 ):
     """What the archive needs to stay interpretable.
 
@@ -284,6 +405,8 @@ def _write_manifest(
                     "resume": list(harness.trial.resume),
                 },
                 "transcript": transcript,
+                "env": dict(harness.trial.env),
+                "config_home_used": config_home_used,
                 "fixture_entries": sorted(
                     p.name
                     for p in (skel.FIXTURE / "docs/almanac").glob("*.md")
