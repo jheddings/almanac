@@ -40,6 +40,19 @@ whether you would have looked. An assessment reporting a behavioral finding is r
 a claim it has no standing to make, and it will be read as measurement by whoever
 receives it.
 
+**The priming goes three levels deep, and none of it is removable.** The invocation is
+the first: you were told to go and look, so you cannot report whether you would have
+looked unprompted. The second is the design — Stage 1 asks which titles you cannot
+decode unopened, and Stage 2 cannot instruct a retrieval probe without naming retrieval,
+so both hand you the contract's central claim before you reach it. **The walk therefore
+tests how well the mechanism performs once you know what it is for, and never tests
+discovery of the mechanism itself.** The third is the entries: Stage 1 necessarily loads
+the whole listing, so by Stage 2 you have read every claim in the directory. Stage 2's
+sourcing discipline governs **where a moment came from** and cannot make you blind to
+what is already in there, which makes **a moment whose entry you recognised on sight
+weaker evidence than one you did not.** No ordering of the stages fixes any of this —
+Stage 1 has to come first. These three are what the report's Limits section carries.
+
 ## Before you start
 
 > Do not open anything whose job is to explain this almanac's design until Stage 3 — the
@@ -190,7 +203,9 @@ repository's instruction files in full, the sibling skills, the repository's
 **The reconciliation is the point.** You are holding notes written before the
 explanation landed. Compare what the mechanism intended against what you actually took
 from it, and say where the two diverge. That divergence is the finding, and it is
-unavailable to anybody who read the contract first.
+unavailable to anybody who read the contract first. **If the contract reads as
+unsurprising, the likeliest reason is the priming rather than genuine agreement** — say
+so alongside any "no divergence" you report about retrieval.
 
 Then five coherence checks. They ask what the texts say; whether this harness can run
 anything is Stage 4's, with the single exemption the fourth bullet names:
@@ -284,7 +299,8 @@ fixed so that two runs — successive runs under one harness, or parallel runs u
 5. **Harness fit** — the Stage 4 answers.
 6. **Findings** — universal first, harness-specific second, each carrying its three
    parts.
-7. **Limits** — what this run could not establish.
+7. **Limits** — what this run could not establish, the three levels of priming under
+   "What this is not" among them.
 
 ## What keeps this honest
 
@@ -310,22 +326,9 @@ one because a run felt too clean to need it.
    harnesses are meant to be read against each other, and merging the two kinds makes
    that impossible — a defect in one tool reads as a defect in the mechanism, and the
    mechanism gets changed to fix a tool.
-5. **The report states this skill's own limit.** Invoking it primed you, so you cannot
-   report whether you would have consulted the almanac unprompted. Say that in the
-   Limits section rather than letting the staging imply a rigor it does not have. The
-   priming runs deeper than the invocation, and it is not removable: Stage 1 asks which
-   titles you cannot decode unopened, and Stage 2 cannot instruct a retrieval probe
-   without naming retrieval, so both questions hand you the contract's central claim
-   before you reach it. **The walk therefore tests how well the mechanism performs once
-   you know what it is for, and never tests discovery of the mechanism itself.** When
-   the contract reads as unsurprising at Stage 3, that is the likeliest reason — so say
-   it alongside any "no divergence" you report about retrieval. The same holds one level
-   down, about the entries rather than the design: Stage 1 necessarily loads the whole
-   listing, so by Stage 2 you have read every claim in the directory. Stage 2's sourcing
-   discipline governs **where a moment came from**; it cannot make you blind to what is
-   already in there. A moment whose entry you recognised on sight is therefore weaker
-   evidence than one you did not, and no ordering of the stages fixes that — Stage 1 has
-   to come first.
+5. **The report states this skill's own limit.** The three levels of priming are set out
+   under "What this is not", and the Limits section is where they go. Write them there
+   rather than letting the staging imply a rigor it does not have.
 
 ## Then offer
 
