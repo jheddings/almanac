@@ -21,7 +21,7 @@ def _ids(skill):
 
 
 def test_skills_were_discovered():
-    assert SKILLS, "no skills found under skills/*/SKILL.md"
+    assert SKILLS, f"no */SKILL.md found under any of {almanac.SKILL_ROOTS}"
 
 
 @pytest.mark.parametrize("skill", SKILLS, ids=_ids)
@@ -123,3 +123,12 @@ def test_every_skill_that_resolves_the_almanac_names_the_same_exclusions():
         "exclusion lists have drifted between skills: "
         + json.dumps({k: sorted(v) for k, v in by_skill.items()}, indent=2)
     )
+
+
+def test_discovery_reaches_the_development_only_skill():
+    """A skill outside `skills/` is exempt from every check above unless discovery finds it.
+
+    That exemption is silent: the parametrized tests simply stop being generated for it,
+    including the exclusion-list drift check, and nothing fails.
+    """
+    assert "assess" in {skill.name for skill in SKILLS}

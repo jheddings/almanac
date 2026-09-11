@@ -39,7 +39,7 @@ style:
 
 # validate all skills against the vendor-neutral Agent Skills spec
 validate:
-    for dir in skills/*/; do npx skills-ref validate "$dir"; done
+    for dir in skills/*/ .claude/skills/*/; do npx skills-ref validate "$dir"; done
 
 # confirm the manifests agree — a mismatch breaks installation for whoever installs
 manifests harness="": venv
