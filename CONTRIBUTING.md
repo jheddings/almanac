@@ -54,10 +54,12 @@ trigger, so it stays in each repo's `AGENTS.md`.
 
 ## Skill structure
 
-Each skill lives in `skills/<skill-name>/SKILL.md` with YAML frontmatter (`name`,
-`description`) followed by the skill body, per the
+A skill that ships lives in `skills/<skill-name>/SKILL.md` with YAML frontmatter
+(`name`, `description`) followed by the skill body, per the
 [Agent Skills specification](https://agentskills.io/specification). Supporting material
-goes in `references/`, `scripts/`, or `assets/` subdirectories.
+goes in `references/`, `scripts/`, or `assets/` subdirectories. A development-only skill
+takes the same shape under `.claude/skills/` instead — see
+[Development-only skills](#development-only-skills).
 
 ### Naming
 
@@ -119,10 +121,39 @@ The **exclusion path list** is the part that must not drift, and
 `test_every_skill_that_resolves_the_almanac_names_the_same_exclusions` enforces it
 mechanically. The consequence clause that follows the list is legitimately per-skill —
 recording into the wrong almanac and auditing the wrong one fail differently — so the
-test compares paths, not prose. Three skills resolve the almanac, so this list has
+test compares paths, not prose. Four skills resolve the almanac, so this list has
 already needed extending twice; a hand-edit that misses one is otherwise silent.
 `tests/test_discovery_rule.py` also asserts the shipped prose names every path the
 executable copy of the rule excludes, so the two cannot diverge.
+
+### Development-only skills
+
+A skill that is an instrument for maintaining this repository rather than something
+adopters receive lives in `.claude/skills/<skill-name>/SKILL.md`, not `skills/`.
+`assess` is the one that exists. Nothing in `skills/` can be held back from adopters by
+a bundler change — see the almanac entry
+[`anything-in-skills-ships-to-adopters-whatever-the-archive-excludes`](docs/almanac/anything-in-skills-ships-to-adopters-whatever-the-archive-excludes.md),
+and do not restate its argument here, because a second copy of a claim diverges from the
+first.
+
+Living outside `skills/` costs it nothing in review. `tests/support/almanac.py`
+discovers both roots, so every convention above — the naming rules, the frontmatter
+shape, the description form, the exclusion-list drift check — applies to a
+development-only skill exactly as to a shipped one, and `just validate` covers both
+directories.
+
+Claude Code discovers `.claude/skills/` by itself when a session opens this checkout. A
+harness that does not can be handed the path in the prompt, and the arrangement depends
+on that fallback rather than treating it as a workaround.
+
+One consequence is worth stating rather than leaving to be discovered:
+**`skills-ref validate` never runs against `.claude/skills/` in CI.** The
+`validate-skill` workflow filters on `skills/**` and its parser assumes a two-segment
+path prefix, and the pre-commit hooks do not invoke the validator at all. The Agent
+Skills spec is therefore enforced on a development-only skill only when somebody runs
+`just check` locally. That is a deliberate trade: widening the workflow means branching
+its parser for a skill that reaches nobody, and the structural suite already covers the
+conventions that matter.
 
 ### Read the repo's README before writing
 

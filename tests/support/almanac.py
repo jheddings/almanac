@@ -16,6 +16,12 @@ import yaml
 REPO_ROOT = Path(__file__).resolve().parents[2]
 
 ALMANAC_README = "README.md"
+
+# Both places a skill lives. `skills/` is what the plugin ships; `.claude/skills/` holds
+# development-only skills, which reach no adopter because no manifest and no payload
+# names that directory. Conventions below apply to both — a skill this helper does not
+# find is silently exempt from every check that parametrizes over it.
+SKILL_ROOTS = (REPO_ROOT / "skills", REPO_ROOT / ".claude" / "skills")
 TEMPLATE_ALMANAC = REPO_ROOT / "templates" / "almanac" / "README.md"
 LIVE_ALMANAC = REPO_ROOT / "docs" / "almanac"
 
@@ -72,16 +78,17 @@ def split_frontmatter(text: str) -> tuple[dict | None, str]:
 
 def skills() -> list[Skill]:
     found = []
-    for skill_md in sorted((REPO_ROOT / "skills").glob("*/SKILL.md")):
-        frontmatter, body = split_frontmatter(skill_md.read_text())
-        found.append(
-            Skill(
-                path=skill_md,
-                name=skill_md.parent.name,
-                frontmatter=frontmatter or {},
-                body=body,
+    for root in SKILL_ROOTS:
+        for skill_md in sorted(root.glob("*/SKILL.md")):
+            frontmatter, body = split_frontmatter(skill_md.read_text())
+            found.append(
+                Skill(
+                    path=skill_md,
+                    name=skill_md.parent.name,
+                    frontmatter=frontmatter or {},
+                    body=body,
+                )
             )
-        )
     return found
 
 
