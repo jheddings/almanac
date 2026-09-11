@@ -87,18 +87,23 @@ was in the repository's. Only the repository's counts: an operator's personal
 configuration can supply a trigger and make an unwired almanac look wired. Then `ls` and
 nothing else: from filenames alone, what does this agent believe the repository knows
 and requires? Which titles it cannot decode without opening one. Then measurables about
-the listing — how many entries, how long the longest slug, whether it fits one screen.
-Deliberately not what the agent would have done with a longer one: that is a behavioral
-claim this skill has no standing to make.
+the listing — how many entries, how long the longest slug, and how many of those entries
+the agent actually named above. All three are countable from its own output.
+Deliberately not what the agent would have done with a longer listing, and not how far
+down it had read: the first is a behavioral claim this skill has no standing to make,
+and the second is a number an agent cannot honestly produce and will therefore invent.
 
 **Stage 2 — Retrieval probe, still without the contract.** The moments come from what
 the repository **does** — its task runner, its CI jobs, its recently merged pull
 requests — and never from the listing. A moment read off the listing is by construction
 one the listing serves, so a probe built that way can never find a gap and returns a
-clean result having tested nothing. At least two moments must be ones the listing does
-not obviously serve. For each, which entry fires from the title alone, and what a
-keyword grep actually returned when run. An entry that fires for no moment and a moment
-served by no entry are both findings.
+clean result having tested nothing. There is deliberately **no quota** of unserved
+moments: requiring some would make a fully-served list read as procedural error when the
+honest explanation is that the almanac covers its repository, and an agent held to a
+quota invents the gap. The sourcing discipline carries the stage instead. For each
+moment, which entry fires from the title alone, and what a filename-only grep returned
+when run. An entry that fires for no moment and a moment served by no entry are both
+findings.
 
 **Stage 3 — Read the contract and the skills.** Everything the staging withheld is
 unbanned here: the almanac's contract, the repository's `README.md`, `CONTRIBUTING.md`,
@@ -107,7 +112,9 @@ reconciliation is honest rather than retrospective. Coherence checks belong here
 fact and rule split as the live entries actually use it, precedence stated the same way
 in the contract and in the skills, anything duplicated between `AGENTS.md` and an entry,
 the `<!-- almanac-template: N -->` stamp against the canonical template, and whether the
-commands the contract prints run as written under this harness.
+commands the contract prints are complete and correct as text. Running them is Stage
+4's, under one routing test: a finding that would disappear under a different harness is
+harness fit, not coherence.
 
 **Stage 4 — Harness fit.** What this harness could not do. Whether the skills load and
 under what name, whether subagents exist for the audit's fan-out, whether the
@@ -162,6 +169,13 @@ letting the staging imply a rigor it does not have.
 finds it; the others may need the path named. That is the price of a location nothing
 ships, and it is the right way round — a skill that is harder to invoke is recoverable,
 and one that reaches adopters is not.
+
+**The skill names a repository-local path.** `CONTRIBUTING.md` warns that writing a path
+into a skill is the signal you have crossed the line into local convention, and a
+shipped skill naming `docs/review/` would send an adopting repository's agent into a
+directory it does not have. This one may, because it is development-only and reaches no
+repository but this one. That reasoning belongs here rather than in the skill, where it
+would be three lines addressed to a maintainer in a document an agent executes.
 
 **Reports are not retained by default.** Session-first output keeps the instrument
 light, but nothing accumulates unless the operator accepts the write offer, so a
