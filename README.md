@@ -20,6 +20,13 @@ This plugin initializes the repository-level pieces and carries the two procedur
 keep such a directory honest. Consulting the almanac is deliberately **not** a skill —
 see [Design positions](#design-positions).
 
+Home, issues, and discussions: **<https://github.com/jheddings/almanac>**. Bug reports
+and feature requests go to [Issues](https://github.com/jheddings/almanac/issues);
+questions and design conversations to
+[Discussions](https://github.com/jheddings/almanac/discussions). This file ships inside
+every packaged bundle, so it is the one place an adopter can find upstream without
+digging through a manifest.
+
 ## Skills
 
 | Skill            | Use it when                                                            |
@@ -284,8 +291,9 @@ quietly blur into one.
 ## Development
 
 `docs/almanac/` in this repo is a live almanac, not a copy of the template for
-demonstration — the plugin is expected to work on itself. It starts empty, and that is
-the expected outcome: most branches teach you nothing worth recording.
+demonstration — the plugin is expected to work on itself. Every entry in it was recorded
+because something here surprised somebody; an empty almanac is a perfectly good state,
+and most branches teach nothing worth recording.
 
 The canonical contract text is `templates/almanac/README.md`; this repo's copy is an
 instance of it, and `just drift` fails if they diverge outside the local block. See

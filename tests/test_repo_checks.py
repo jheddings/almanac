@@ -111,6 +111,46 @@ def test_the_contract_and_the_scope_test_agree_on_the_subject():
     )
 
 
+def test_the_lifecycle_skills_read_the_revision_stamp():
+    """`init` is the one skill nobody re-runs, so it cannot be the only reader.
+
+    A repository adopts the contract once. If `record` and `audit` never compare the
+    local stamp against the canonical one, a repo drifts arbitrarily far behind while
+    both keep running against the stale copy, and the gap surfaces only as the skill
+    and the contract contradicting each other mid-task.
+    """
+    for name in ("record", "audit"):
+        body = _prose(next(s for s in almanac.skills() if s.name == name).body)
+        assert "almanac-template" in body, (
+            f"{name} no longer reads the revision stamp, so an adopter's stale "
+            "contract is undetectable from the only skills they re-run"
+        )
+        assert "revision" in body, f"{name} reads the stamp but names no revision gap"
+
+
+def test_the_contract_scopes_what_verify_covers():
+    """A body assertion is unguarded, and the contract has to say so.
+
+    `verify` tests the title claim. Without this, "a fact carrying a verify line can be
+    re-checked in seconds" reads as whole-entry coverage, and a green audit is taken as
+    a warrant for every assertion in the body.
+    """
+    template = _prose(almanac.TEMPLATE_ALMANAC.read_text())
+    assert "covers the title claim and nothing else" in template, (
+        "the contract no longer scopes what a verify line covers"
+    )
+
+    record = _prose(next(s for s in almanac.skills() if s.name == "record").body)
+    assert "covered by the `verify` line" in record, (
+        "record no longer holds body assertions to the verify line"
+    )
+
+    audit = _prose(next(s for s in almanac.skills() if s.name == "audit").body)
+    assert "bodyFindings" in audit, (
+        "audit no longer requires body assertions back from its workers"
+    )
+
+
 def _prose(text):
     """Collapse emphasis and line breaks so a phrase survives a prettier rewrap."""
     return re.sub(r"\s+", " ", text.replace("*", "").replace("_", ""))

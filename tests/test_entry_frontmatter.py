@@ -1,9 +1,11 @@
 """Every almanac entry satisfies the frontmatter contract the template states.
 
-This repo's almanac is deliberately empty, so most of these parametrize over nothing
-today. They exist so the contract is enforced the moment an entry lands — and so the
-"no frontmatter fields beyond those specified" invariant is a failing build rather than
-a sentence somebody has to remember.
+These parametrize over whatever entries the almanac holds, so the contract is enforced
+on every one of them — and so the "no frontmatter fields beyond those specified"
+invariant is a failing build rather than a sentence somebody has to remember. The
+entry-driven tests go vacuous on an empty directory, which is why the checker itself is
+exercised directly below against a conforming entry, a conforming rule, and a mutation
+per violation.
 """
 
 from __future__ import annotations

@@ -64,6 +64,25 @@ separate subject, and this tree's is the one that resolves. An enclosing almanac
 outside this audit: its entries are re-verified against the tree they describe, not this
 one.
 
+**Check the contract's revision before you audit against it.** The README opens with
+`<!-- almanac-template: N -->`, naming the revision of the shared contract this
+repository adopted. Compare it against the canonical template's, resolved the way
+`almanac:init` resolves it — `${CLAUDE_PLUGIN_ROOT}/templates/almanac/README.md` if that
+variable is set, otherwise `templates/almanac/README.md` relative to the workspace root,
+otherwise the plugin's installed directory as your harness exposes it. If they differ,
+say so once in your report:
+
+> This repository's almanac contract is revision 1; the installed plugin ships
+> revision 6. Where they disagree, follow the local contract. Re-running `almanac:init`
+> proposes the upgrade.
+
+It matters here for a specific reason: this skill's verdicts are reached against the
+local contract's format, so an audit run against a stale one can report a directory as
+healthy while every entry in it conforms to a contract the plugin has since revised.
+Name the gap; do not upgrade anything, and do not let it change a verdict. A matching
+revision is not proof the texts agree — the stamp is maintained by hand and has shipped
+un-bumped across contract edits before.
+
 Hold the resolved **directory** and enumerate from it. Then list every entry file in it,
 **excluding `README.md`** (it is the contract, not a claim):
 
@@ -91,20 +110,29 @@ Give each worker this task, verbatim in substance:
 
 > For each file listed, read the entry. Every file you are given is a `kind: fact`
 > entry. Its frontmatter carries a `title` (the claim) and usually a `verify` line (how
-> to re-check it cheaply); the body states the consequence. Run the `verify` line, or
-> the closest **faithful** read-only equivalent if the command has drifted — a renamed
-> path, a moved file, a flag that changed spelling. "Faithful" means it tests the same
-> load-bearing detail the claim rests on, not merely the neighbourhood that detail lives
-> in. Then compare the actual output against what the claim predicts and assign one
-> verdict:
+> to re-check it cheaply). Run the `verify` line, or the closest **faithful** read-only
+> equivalent if the command has drifted — a renamed path, a moved file, a flag that
+> changed spelling. "Faithful" means it tests the same load-bearing detail the claim
+> rests on, not merely the neighbourhood that detail lives in. Then compare the actual
+> output against what the claim predicts and assign one verdict:
 >
 > - **`holds`** — you ran a check and its output confirms the claim.
 > - **`falsified`** — you ran a check and its output contradicts the claim.
 > - **`unverifiable`** — you could not run a conclusive check: the command no longer
 >   works, the path moved and no faithful equivalent exists, or verifying would need
 >   credentials, network access, or production.
+>
+> **Then read the body for assertions the `verify` line does not cover.** The verdict
+> above is about the title claim; a body routinely carries more — an inventory of what a
+> command touches, a count of comparable things, a note about which callers are exempt,
+> a path or filename said to be written. Each of those is a claim a future agent will
+> act on, and nothing has ever re-checked it. List the ones that are concrete enough to
+> be wrong, spot-check as many as you can with cheap read-only commands, and report each
+> as `holds`, `falsified`, or `unchecked` with its own command and verbatim output. Do
+> not fold these into the entry's verdict — a false body assertion does not make the
+> title claim false, and it must not be reported as though it did.
 
-Four rules bind every worker. They are not style preferences — each one is a way the
+Five rules bind every worker. They are not style preferences — each one is a way the
 audit manufactures a false result if it is dropped, so **restate them in the prompt**
 rather than assuming they carry over:
 
@@ -123,17 +151,21 @@ rather than assuming they carry over:
 4. **Quote output verbatim.** Not a summary, not a paraphrase, not an interpretation.
    Trim long output, but what comes back must be literal. If there was no output, say
    "no output" and name the exit status observed.
+5. **A body assertion left unchecked is `unchecked`, never silence.** Omitting it reads
+   as coverage the run never had, which is the same laundering rule 1 forbids at the
+   entry level. Name it and say why no cheap check existed.
 
 Require these fields back per entry, and reject a result that omits any of them:
 
-| Field            | Must contain                                                    |
-| ---------------- | --------------------------------------------------------------- |
-| `file`           | the path exactly as given                                       |
-| `title`          | the entry's `title` frontmatter value                           |
-| `verdict`        | exactly one of `holds` / `falsified` / `unverifiable`           |
-| `command`        | literally what ran — or "none", with the reason, if nothing did |
-| `evidence`       | verbatim output                                                 |
-| `proposedAction` | what a maintainer should do, concretely                         |
+| Field            | Must contain                                                                                                                                             |
+| ---------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `file`           | the path exactly as given                                                                                                                                |
+| `title`          | the entry's `title` frontmatter value                                                                                                                    |
+| `verdict`        | exactly one of `holds` / `falsified` / `unverifiable`                                                                                                    |
+| `command`        | literally what ran — or "none", with the reason, if nothing did                                                                                          |
+| `evidence`       | verbatim output                                                                                                                                          |
+| `proposedAction` | what a maintainer should do, concretely                                                                                                                  |
+| `bodyFindings`   | one row per body assertion: the claim, `holds`/`falsified`/`unchecked`, command, verbatim output — or "none", if the body asserts nothing past its title |
 
 **These rules and this table were once a schema, validated mechanically.** An earlier
 version of this skill enforced them at the subagent boundary, where a worker returning
@@ -177,6 +209,19 @@ dropped, a worker that failed — has been checked by nobody. Silence is absence
 evidence, and it must never be reported as "all clear." Re-run those files before
 concluding anything about them, and if they still come back empty, name them in your
 report as unaudited.
+
+**A falsified body assertion is a correction, not a verdict.** It does not change the
+entry's verdict and it never justifies deleting the entry — the title claim may be true
+and freshly verified. What it earns is the same treatment as any other wrong claim:
+repair the body through the gate in Step 4, per `almanac:record`'s correction procedure.
+An entry whose title `holds` and whose body carries a false bullet is the case this
+field exists to catch, because every other signal on it reads healthy.
+
+**An entry may `hold` and still be misleading.** `verified` says the title claim was
+re-checked on that date and nothing more, so do not let a directory of green verdicts
+stand in for an audited body. Where a body assertion came back `unchecked` and would be
+expensive to get wrong, say so in the report rather than letting the entry's verdict
+speak for it.
 
 Weigh how discriminating the run was, too. An audit where everything held is weak
 evidence: it barely exercises the parts that catch staleness.
@@ -250,3 +295,9 @@ and note what changed, per the almanac's `README.md`.
 - **Auditing a subset and reporting it as "the almanac."** Name what you covered.
 - **Letting the rules disappear from the report.** They are entries an audit cannot
   reach; an audit that stops mentioning them reads as coverage it never had.
+- **Re-running `verify` and calling the entry audited.** The line covers the title
+  claim. A body that asserts more has been checked by nobody, and a `holds` verdict is
+  silent about it.
+- **Folding a false body assertion into the entry's verdict.** It is not `falsified` —
+  that is a statement about the title claim. Report it under `bodyFindings` and correct
+  the body.
