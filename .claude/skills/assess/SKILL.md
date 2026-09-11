@@ -89,8 +89,8 @@ comparable.
 
 ## Stage 1 — First contact
 
-Record four things, and record them now, while nothing has been explained. They cannot
-be reconstructed at Stage 3.
+Record four things, and record them now, while the design has not been explained. They
+cannot be reconstructed at Stage 3.
 
 - **Which instruction files the harness surfaced without being asked.** Name each one
   and mark it **repository-level** — checked into this tree, so every agent meets it —
@@ -143,11 +143,11 @@ For each moment, name **the entry that fires from its title alone** — not the 
 could find by searching for it, but the one whose filename would stop you as you
 scanned. Then **run a single keyword grep, in the filename-only form** —
 `grep -rl --exclude=README.md <keyword> <almanac-dir>/` — and record the command and its
-output verbatim. Neither flag is optional here. `-l` returns paths instead of bodies,
-and the exclusion keeps the almanac's own `README.md` out of the results; without both,
-a keyword that happens to match that file prints it, and you have read at Stage 2 the
-document Stage 3 exists to introduce. The grep you ran is the evidence; the one you
-imagine you would have typed is not.
+output verbatim. `-l` returns paths instead of bodies, and the exclusion keeps the
+almanac's own `README.md` out of the results; without both, a keyword that happens to
+match that file prints it, and you have read at Stage 2 the document Stage 3 exists to
+introduce. The grep you ran is the evidence; the one you imagine you would have typed is
+not.
 
 Then the two findings this stage exists for:
 
@@ -286,13 +286,13 @@ one because a run felt too clean to need it.
 5. **The report states this skill's own limit.** Invoking it primed you, so you cannot
    report whether you would have consulted the almanac unprompted. Say that in the
    Limits section rather than letting the staging imply a rigor it does not have. The
-   priming runs deeper than the invocation, and it is not removable: Stage 2 cannot
-   instruct a retrieval probe without naming retrieval, so by telling you to find the
-   entry that fires from its title alone it hands you the contract's central claim two
-   stages early. The walk therefore tests **whether the right entry fires**, and cannot
-   test whether an unbriefed agent would work out for itself that the titles are the
-   index. When the contract reads as unsurprising at Stage 3, that is the likeliest
-   reason — so say it alongside any "no divergence" you report about retrieval.
+   priming runs deeper than the invocation, and it is not removable: Stage 1 asks which
+   titles you cannot decode unopened, and Stage 2 cannot instruct a retrieval probe
+   without naming retrieval, so both questions hand you the contract's central claim
+   before you reach it. **The walk therefore tests how well the mechanism performs once
+   you know what it is for, and never tests discovery of the mechanism itself.** When
+   the contract reads as unsurprising at Stage 3, that is the likeliest reason — so say
+   it alongside any "no divergence" you report about retrieval.
 
 ## Then offer
 
