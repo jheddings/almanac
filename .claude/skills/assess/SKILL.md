@@ -105,10 +105,14 @@ cannot be reconstructed at Stage 3.
   to require of you.
 - **Which titles you cannot decode without opening the file.** List them.
 - **The shape of the listing, counted rather than estimated:** how many entries, how
-  long the longest slug is, and how many of those entries you actually named in the two
-  bullets above. Report those three numbers and stop there. Where your attention would
-  have dropped, or what you would have done with a longer listing, is a claim about
-  behavior, and this skill has no standing to make one.
+  long the longest slug is, and how many of those entries you named in the two bullets
+  above — **named meaning you paraphrased the claim**, not merely that the file was in
+  the listing you read. Report those three numbers and stop there. The third is
+  informative only once the listing is long enough that a reader stops before the end;
+  where every title can be paraphrased in a single pass, report the count and draw
+  nothing from it. Where your attention would have dropped, or what you would have done
+  with a longer listing, is a claim about behavior, and this skill has no standing to
+  make one.
 
 ## Stage 2 — Retrieval probe
 
@@ -143,13 +147,27 @@ nobody here reaches in order to give the stage something to report.
 
 For each moment, name **the entry that fires from its title alone** — not the entry you
 could find by searching for it, but the one whose filename would stop you as you
-scanned. Then **run a single keyword grep, in the filename-only form** —
+scanned. **If two titles both fire, do not quietly pick the better one.** Either narrow
+the moment until exactly one fires — which usually means you were holding two moments —
+or record the collision, because two entries competing for a single moment is a
+retrieval finding in its own right: whichever one an agent opens first may not be the
+one that applies.
+
+Then **run a single keyword grep, in the filename-only form** —
 `grep -rl --exclude=README.md <keyword> <almanac-dir>/` — and record the command and its
 output verbatim. `-l` returns paths instead of bodies, and the exclusion keeps the
 almanac's own `README.md` out of the results; without both, a keyword that happens to
 match that file prints it, and you have read at Stage 2 the document Stage 3 exists to
 introduce. The grep you ran is the evidence; the one you imagine you would have typed is
 not.
+
+**A hit list covering most of the directory is a fact about your keyword, not about
+retrieval.** `-l` suppresses the matched line but still matches file content, and every
+entry carries structural text above its claim — `record` matches the `recorded:` field
+in every entry there is. Check the hits against the slugs: if files whose titles have
+nothing to do with the keyword came back, it matched structure rather than a claim.
+Discard that keyword and pick another. Reporting its coverage as retrieval is worse than
+running no probe at all, because it arrives looking like the strongest result available.
 
 Then the two findings this stage exists for:
 
@@ -191,10 +209,13 @@ anything is Stage 4's, with the single exemption the fourth bullet names:
   the way `almanac:audit` resolves it —
   `${CLAUDE_PLUGIN_ROOT}/templates/almanac/README.md` if that variable is set, otherwise
   `templates/almanac/README.md` relative to the workspace root, otherwise the plugin's
-  installed directory as your harness exposes it. Report a gap; upgrade nothing. **This
-  is the exemption to the routing above**, because resolving the canonical copy is a
-  harness question: if none of the three resolves here, the comparison is unavailable
-  and that is a Stage 4 finding, not a defect in the contract.
+  installed directory as your harness exposes it. That chain is written for a repository
+  that installed the plugin; **when the tree you are assessing is itself the plugin, the
+  canonical copy is the one in this tree and the plugin-root variable is not the
+  route.** Report a gap; upgrade nothing. **This is the exemption to the routing
+  above**, because resolving the canonical copy is otherwise a harness question: if none
+  of the fallbacks resolves here, the comparison is unavailable and that is a Stage 4
+  finding, not a defect in the contract.
 - **Whether the commands the contract prints are complete and correct as written.** Read
   them; do not run them here. The retrieval commands under "Using the almanac" carry
   placeholders — `<almanac-dir>`, `<keyword>` — so they cannot be pasted literally, and
@@ -298,7 +319,13 @@ one because a run felt too clean to need it.
    before you reach it. **The walk therefore tests how well the mechanism performs once
    you know what it is for, and never tests discovery of the mechanism itself.** When
    the contract reads as unsurprising at Stage 3, that is the likeliest reason — so say
-   it alongside any "no divergence" you report about retrieval.
+   it alongside any "no divergence" you report about retrieval. The same holds one level
+   down, about the entries rather than the design: Stage 1 necessarily loads the whole
+   listing, so by Stage 2 you have read every claim in the directory. Stage 2's sourcing
+   discipline governs **where a moment came from**; it cannot make you blind to what is
+   already in there. A moment whose entry you recognised on sight is therefore weaker
+   evidence than one you did not, and no ordering of the stages fixes that — Stage 1 has
+   to come first.
 
 ## Then offer
 
