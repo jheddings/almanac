@@ -1,4 +1,4 @@
-<!-- almanac-template: 5 -->
+<!-- almanac-template: 6 -->
 
 # Almanac
 
@@ -43,6 +43,12 @@ Three moments should send you back to the listing:
 **Entries are assertions, not suggestions.** A `rule` is binding — follow it, and raise
 a disagreement rather than resolving it yourself. A `fact` carrying a `verify` line can
 be re-checked in seconds; run it before acting on anything expensive.
+
+**A `verify` line covers the title claim and nothing else.** Whatever else a body states
+— an inventory of what a command touches, a count, a note about which callers are exempt
+— is unguarded: no audit re-runs it, and a `verified` date says nothing about it. Read
+body detail as the entry's reasoning rather than as separately warranted fact, and
+re-derive it before acting on it alone.
 
 **If a fact contradicts what you are seeing, the entry is a suspect, not an authority.**
 Reality wins. An entry that reality has refuted is worth deleting, and correcting one is
@@ -232,8 +238,11 @@ that gets skipped. Before opening a PR, ask explicitly — _did this branch teac
 anything an entry should carry?_ Answer it out loud, even when the answer is no. Most
 branches produce no entry.
 
-**Correcting a fact.** Fix or delete it in the PR where you found it wrong. When a fix
-supersedes an entry rather than refuting it, update `recorded` and note what changed.
+**Correcting a fact.** A correction ships in the PR where you found the entry wrong. How
+to make one — repair in place or delete and rewrite, and what becomes of `recorded`,
+`verified`, and `source` — is method, and `almanac:record` carries it. Do not narrate
+the correction inside the entry: git holds what changed, why, and when, for the same
+reason the frontmatter holds no history of its own.
 
 **Correcting a rule is not an agent's call.** A `kind: rule` entry is changed only by
 whoever can change the decision behind it. Observing that nobody follows a rule is

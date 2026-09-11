@@ -56,6 +56,28 @@ Hold the resolved **directory**, not just the README, and write into that direct
 things this skill deliberately does not: the required frontmatter fields, the wrap
 width, where non-almanac content goes in this repo, and when a correction ships.
 
+**Check its revision while you are there.** The README opens with
+`<!-- almanac-template: N -->`, naming the revision of the shared contract this
+repository adopted. Compare it against the canonical template's, resolved the way
+`almanac:init` resolves it — `${CLAUDE_PLUGIN_ROOT}/templates/almanac/README.md` if that
+variable is set, otherwise `templates/almanac/README.md` relative to the workspace root,
+otherwise the plugin's installed directory as your harness exposes it. If the two
+differ, say so once before you write, in one line:
+
+> This repository's almanac contract is revision 1; the installed plugin ships
+> revision 6. Where they disagree, follow the local contract. Re-running `almanac:init`
+> proposes the upgrade.
+
+That is the whole obligation — name it and carry on. A repository adopts the almanac
+once and nothing else in its lifecycle mentions upgrading, so an agent that skips this
+leaves the operator with no prompt they will ever get. Do not upgrade the contract
+yourself; that is a separately reviewed change.
+
+**A matching revision is not proof the texts agree.** The stamp is maintained by hand
+and has shipped un-bumped across contract edits before, so equal revisions mean "no
+known gap," not "identical." Where the local contract and this skill disagree about a
+convention the README claims as local, the README still wins — see Precedence below.
+
 ## Precedence
 
 This skill owns the **method**: the admission tests, what disqualifies an entry, and the
@@ -220,6 +242,11 @@ as a refutation.
 - Write a fact plainly, then its consequence — **what breaks, and whether it breaks
   loudly**. Silent failures are the point; say so explicitly when a failure reads as
   success.
+- **Every factual assertion in the body has to be covered by the `verify` line, cheaply
+  derivable from it, or not stated as fact.** `verify` tests the title claim only, so a
+  body assertion is unguarded: no audit re-runs it, and a `verified` date says nothing
+  about it. State the ones that carry weight as claims the next agent must re-derive, or
+  leave them out.
 - A rule **moved** from another document is a move, not a copy: delete the original in
   the same change, or the two copies diverge and the stale one wins.
 - Give the corrective action if there is one, and cross-link entries in the same class.
@@ -230,6 +257,43 @@ as a refutation.
 An agent cannot review its own entry: whatever produced a wrong claim would equally
 approve it. Say clearly in your report what you recorded and on what evidence, so a
 human can.
+
+## Correcting an entry
+
+An entry you found wrong is corrected in the PR where you found it — **when** it ships
+is the README's call. How to make the correction is method, and it is these four
+decisions. Guessing them is what produces entries in formats their own repository
+disallows.
+
+**Repair in place, or delete and rewrite?** Ask what is wrong. A false **title** claim
+is a retrieval failure, not a wording problem: the filename is the index, so an agent
+scanning the listing is pulled in by a slug that lies, and no body edit fixes that.
+Delete the file and write the correct entry under the slug the true claim deserves. When
+the title holds and the body does not, repair the body in place.
+
+**`recorded`** — bump it when the claim changed. Leave it when only the wording did. If
+the behavior itself changed and the old fact is now history, that is the same bump: the
+entry states today's claim as of today.
+
+**`verified`** — bump it only if you ran the `verify` line as part of the correction,
+and to the date you ran it. Correcting an entry usually means you did. If you fixed a
+body assertion without re-running the line, leave the field alone; its one meaning is
+that somebody ran the check and the claim held, and a correction is not a licence to
+assert that.
+
+**`source`** — point it at the change that established the corrected claim. Left alone,
+it names the PR behind a claim the file no longer makes, which is stale provenance on
+the entry an agent will act on.
+
+**Do not narrate the correction in the entry.** No changelog line, no "previously this
+said", no note of what you fixed. Git carries what changed, why, and when, in a reviewed
+diff — the same reason the frontmatter carries no history of its own. An in-file note
+describes a past state of the file rather than the subject, so it is the one kind of
+body text guaranteed to go stale.
+
+**A rule is not yours to correct.** Only whoever can change the decision behind it can,
+and nobody following it is evidence about people rather than about the entry. Raise it;
+do not resolve it.
 
 ## Red flags — STOP
 
@@ -250,6 +314,13 @@ human can.
 - "No time to verify; I'll record it and confirm later" — later does not come.
 - "A verify line would be nice but I can't think of one" — if the claim cannot be
   re-checked cheaply, reconsider whether it is a fact, an impression, or a rule.
+- "The body detail is just context, so it doesn't need checking" — a future agent cannot
+  tell context from claim, and will act on both. Cover it, make it derivable, or cut it.
+- "I'll list everything the command touches; the first bullet is the claim and the rest
+  is colour" — the rest is what gets acted on while no audit can see it. That list is
+  the exact shape of an entry that verifies clean and misleads anyway.
+- "I noted in the entry what I corrected" — git carries that. An in-file correction note
+  is stale body text by construction.
 - "The README has no row for this, so the almanac is the closest fit" — a missing
   destination is a gap in the README, not a licence to record. Say so, then ask where it
   goes; stopping without asking abandons the claim.

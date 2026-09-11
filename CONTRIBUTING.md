@@ -177,8 +177,17 @@ reports drift but never upgrades the contract as a side effect of setup.
 text:
 
 1. Edit `templates/almanac/README.md`.
-2. Port the same edit into `docs/almanac/README.md`.
-3. Run `just drift` — it prints a unified diff of whatever you missed.
+2. Bump `<!-- almanac-template: N -->` in both copies, unless the edit is confined to
+   the local block.
+3. Port the same edit into `docs/almanac/README.md`.
+4. Run `just drift` — it prints a unified diff of whatever you missed.
+
+Step 2 is the one that gets skipped, and nothing catches it: `just drift` compares the
+two copies against each other, so an edit ported faithfully with the stamp left alone
+passes every check here. Revision 1 shipped four different texts that way (#4, #12,
+#13). The stamp is what tells an adopter their copy is stale, and `record` and `audit`
+now read it, so an un-bumped stamp reports a stale contract as current in every
+repository that adopted it.
 
 If a change genuinely belongs to one repo and not to adopters, it goes _inside_ the
 local block. If it doesn't fit there, it probably belongs in a skill instead.
