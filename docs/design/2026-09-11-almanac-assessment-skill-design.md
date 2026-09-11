@@ -81,26 +81,33 @@ understood from the listing alone.
 copied rather than reworded, because the drift test requires the exclusion list to match
 across every skill that resolves.
 
-**Stage 1 — First contact.** Which instruction file the harness surfaced without being
-asked, and whether the consult trigger was in it. Then `ls` and nothing else: from
-filenames alone, what does this agent believe the repository knows and requires? Which
-titles it cannot decode without opening one. Whether it would have read the listing to
-the end.
+**Stage 1 — First contact.** Which instruction files the harness surfaced without being
+asked, each marked repository-level or operator-level, and whether the consult trigger
+was in the repository's. Only the repository's counts: an operator's personal
+configuration can supply a trigger and make an unwired almanac look wired. Then `ls` and
+nothing else: from filenames alone, what does this agent believe the repository knows
+and requires? Which titles it cannot decode without opening one. Then measurables about
+the listing — how many entries, how long the longest slug, whether it fits one screen.
+Deliberately not what the agent would have done with a longer one: that is a behavioral
+claim this skill has no standing to make.
 
-**Stage 2 — Retrieval probe, still without the contract.** A handful of moments this
-repository genuinely contains — about to commit, about to open a pull request, prose
-looking wrong, setting up a worktree, a build that came back green. For each, which
-entry fires from the title alone, and whether one keyword grep would surface it. An
-entry that fires for no moment and a moment served by no entry are both findings, and
-they are the two failures the filename index is most exposed to.
+**Stage 2 — Retrieval probe, still without the contract.** The moments come from what
+the repository **does** — its task runner, its CI jobs, its recently merged pull
+requests — and never from the listing. A moment read off the listing is by construction
+one the listing serves, so a probe built that way can never find a gap and returns a
+clean result having tested nothing. At least two moments must be ones the listing does
+not obviously serve. For each, which entry fires from the title alone, and what a
+keyword grep actually returned when run. An entry that fires for no moment and a moment
+served by no entry are both findings.
 
-**Stage 3 — Read the contract and the skills.** The explanation now lands against notes
-already written, so the reconciliation is honest rather than retrospective. Coherence
-checks belong here: the fact and rule split as the live entries actually use it,
-precedence stated the same way in the contract and in the skills, anything duplicated
-between `AGENTS.md` and an entry, the `<!-- almanac-template: N -->` stamp against the
-canonical template, and whether the commands the contract prints run as written under
-this harness.
+**Stage 3 — Read the contract and the skills.** Everything the staging withheld is
+unbanned here: the almanac's contract, the repository's `README.md`, `CONTRIBUTING.md`,
+and `docs/design/`. The explanation lands against notes already written, so the
+reconciliation is honest rather than retrospective. Coherence checks belong here: the
+fact and rule split as the live entries actually use it, precedence stated the same way
+in the contract and in the skills, anything duplicated between `AGENTS.md` and an entry,
+the `<!-- almanac-template: N -->` stamp against the canonical template, and whether the
+commands the contract prints run as written under this harness.
 
 **Stage 4 — Harness fit.** What this harness could not do. Whether the skills load and
 under what name, whether subagents exist for the audit's fan-out, whether the
