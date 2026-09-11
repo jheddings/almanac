@@ -130,20 +130,36 @@ harness fit, not coherence.
 
 Stage 3 then closes with two **measurements** of what the mechanism does not cover: how
 many entries carry concrete body assertions of the kind that rots — a named command, a
-path, a flag, a count, a named implementation — and how many facts carry a `verify` line
-that could not be re-run in this tree at all, because it describes a historical event or
-a state that no longer exists. Both report a count and a list of filenames. Neither
-reports whether any body detail is correct. This is the first point in the walk where
-entry bodies are read, and it is safe there: the cold stages are over and their records
-are already written.
+path, a flag, a count, a named implementation — and what re-running each fact's `verify`
+line would cost, split into lines needing only files already in the tree and lines
+needing a credential, a network call, a live service, or state somebody has to construct
+first. Both report counts and filenames. Neither reports whether any body detail is
+correct. This is the first point in the walk where entry bodies are read, and it is safe
+there: the cold stages are over and their records are already written.
+
+The second measurement asks **cost, not possibility**, and the distinction was learned
+from a run. Asked whether a line could be re-run at all, an assessment of this
+repository returned zero unrunnable lines, while a real `almanac:audit` against the same
+entries came back `unverifiable` on four facts of six. Both were right. The historical
+pull request numbers live in each entry's `source`, never in its `verify`, and the lines
+themselves are generic and reproducible in principle; what stopped the audit was that
+re-running them meant constructing a conflicted pull request or holding a valid
+credential. So possibility is nearly always satisfied by a competently written line, and
+a Coverage section reporting zero would read as "the fact tier is fully auditable" while
+the instrument that actually tries cannot check most of it. **A fact whose check nobody
+will pay for occupies the re-checkable tier without being re-checked**, and from the
+listing it is indistinguishable from one verified monthly. That is the property worth
+counting.
 
 **Stage 4 — Harness fit.** What this harness could not do. Whether the skills load and
 under what name, whether subagents exist for the audit's fan-out, whether the
 plugin-root variable resolves, whether the grep and ripgrep invocations the contract
-hands you are available, and what the facts' `verify` lines require before they could
-run — credentials, network, a live service, an absent tool — against what this harness
-supplies. That last is the harness-comparable half of the fact-tier measurement above:
-an entry that cannot be checked because a token is invalid is a statement about the
+hands you are available, and whether this environment supplies what the expensive
+`verify` lines demand — is the credential valid, the network reachable, the service up,
+the tool installed. The seam with Stage 3 is the routing test the skill already uses:
+Stage 3 counts what the lines demand, which is a property of the entries and identical
+under every harness, and Stage 4 answers whether this environment has it, which is not.
+An entry that cannot be checked because a token is invalid is a statement about the
 environment, not about the entry.
 
 **Stage 5 — Report, then offer.**

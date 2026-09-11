@@ -266,14 +266,20 @@ you read now can contaminate a first impression.
   count the entries carrying a concrete assertion of the kind that rots: a named
   command, a path, a flag, a count, a named implementation. Report the number and the
   filenames. Whether any of them still holds is the audit's question, not yours.
-- **How much of the fact tier can actually be audited.** Read each fact's `verify` line
-  — read it; do not run it — and ask one question: could it be re-run in this tree at
-  all? A line describing a historical pull request, or a state that no longer exists,
-  cannot, so that entry sits in the tier that exists because it is re-checkable while
-  behaving like a rule. Report the count and the filenames. **The admitted-cost
-  exemption does not reach this.** The contract admits that rules cannot be audited; it
-  does not admit that some facts cannot either, so this is new evidence rather than a
-  rediscovery, and rule 2 does not bar it.
+- **What re-running the fact tier would cost.** Read each fact's `verify` line — read
+  it; do not run it — and sort it by what the check **demands**, which is a property of
+  the entry and the same under every harness. **Cheap**: it needs only files already in
+  this tree. **Expensive**: it needs a credential, a network call, a live service, or
+  state somebody has to construct first — a conflicted pull request, a second worktree,
+  a built archive. Report both counts with their filenames. Ask cost rather than
+  possibility, because a competently written line is nearly always runnable in
+  principle: **a count of zero unrunnable lines is not a report that the tier gets
+  audited, and must never be written as one.** What is worth knowing is that **a fact
+  whose check nobody will pay for sits in the re-checkable tier without being
+  re-checked** — indistinguishable, from the listing, from one that is verified every
+  month. **The admitted-cost exemption does not reach this.** The contract admits that
+  rules cannot be audited; it does not admit that some facts will not be, so this is new
+  evidence rather than a rediscovery, and rule 2 does not bar it.
 
 ## Stage 4 — Harness fit
 
@@ -299,14 +305,15 @@ know about harnesses in general:
   this harness's tooling will not accept turns the contract's one-command retrieval
   check into a dead end at the moment it is needed. Run nothing else the contract
   prints; an entry's `verify` line is the audit's.
-- **What the `verify` lines need, and whether this harness has it.** Go through the
-  facts' lines — reading them, not running them — and name what each one requires before
-  it could run at all: credentials, network access, a live service, a tool that may be
-  absent. Then say whether this harness supplies it. This is the harness-comparable half
-  of the fact-tier measurement in Stage 3, and it is exactly the signal a cross-harness
-  run exists to produce. **An entry that cannot be checked because a token is invalid is
-  a statement about the environment, not about the entry** — a report that blurs the two
-  hands a maintainer a defect list with nothing wrong on it.
+- **Whether this harness supplies what those `verify` lines demand.** Stage 3 sorted the
+  facts by what re-running them would cost; this is the other half — does this
+  environment actually have it? Take the expensive ones and answer per requirement: is
+  the credential valid here, is the network reachable, is the service up, is the tool
+  installed. **Stage 3's counts are identical under every harness and these answers are
+  not**, which is the routing test, so these belong in the harness-specific half of the
+  report. **An entry that cannot be checked because a token is invalid is a statement
+  about the environment, not about the entry** — a report that blurs the two hands a
+  maintainer a defect list with nothing wrong on it.
 
 ## Common mistakes
 
