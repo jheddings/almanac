@@ -148,6 +148,8 @@ If `AGENTS.md` exists, match its structure and propose the smallest addition tha
   is an entry;
 - list it at the start of a session, carry the titles, and load a body when one bears on
   what you are about to do;
+- a loaded body is reasoning, not a second warrant: only the title claim is covered by
+  `verify`, so re-derive body detail before acting on it alone;
 - grep it when behavior is unexpected, and consult it before silent or costly
   operations;
 - follow `docs/almanac/README.md` when recording;

@@ -151,6 +151,26 @@ def test_the_contract_scopes_what_verify_covers():
     )
 
 
+def test_the_consult_trigger_scopes_what_verify_covers():
+    """A loaded body is unguarded, and the always-on trigger has to say so.
+
+    `verify` covers the title claim. Agents who only follow AGENTS.md never open the
+    contract, so a body-guard that lives only there is invisible at the moment it
+    matters — consult, when the body is loaded and about to be acted on. `init` writes
+    that trigger in adopting repos; both copies have to name the scope.
+    """
+    trigger = _prose((almanac.REPO_ROOT / "AGENTS.md").read_text())
+    assert "only the title claim" in trigger, (
+        "AGENTS.md no longer tells a consulting agent that a loaded body is unguarded"
+    )
+
+    init = _prose(next(s for s in almanac.skills() if s.name == "init").body)
+    assert "only the title claim" in init, (
+        "init no longer installs the body-guard into the consult trigger, so adopters "
+        "never receive it"
+    )
+
+
 def _prose(text):
     """Collapse emphasis and line breaks so a phrase survives a prettier rewrap."""
     return re.sub(r"\s+", " ", text.replace("*", "").replace("_", ""))

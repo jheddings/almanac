@@ -30,7 +30,9 @@ authoritative, and [docs/almanac/README.md](docs/almanac/README.md) governs the 
 claims, so the listing alone tells you both what this repository knows and what it
 requires of you — commit format, branch naming, where work happens, and the silent
 failures you would never think to search for. Carry the titles; load a body only when
-one bears on what you are about to do.
+one bears on what you are about to do. A loaded body is reasoning, not a second warrant
+— only the title claim is covered by `verify`. Re-derive body detail before acting on it
+alone.
 
 That listing is the index and there is no other. Conventions this repository requires
 are entries, not sections in this file — so do not look for them here, and do not
